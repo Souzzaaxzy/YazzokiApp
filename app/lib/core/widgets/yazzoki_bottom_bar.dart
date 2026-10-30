@@ -39,16 +39,10 @@ class YazzokiBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Sem linha/borda no topo: a barra flutua limpa sobre o conteúdo (a
+    // linha azul antiga cortava visualmente a área acima dos botões).
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.navBarBackground,
-        border: Border(
-          top: BorderSide(
-            color: AppColors.primaryBlue,
-            width: AppDimensions.borderWidthThin,
-          ),
-        ),
-      ),
+      decoration: BoxDecoration(color: AppColors.navBarBackground),
       child: SafeArea(
         top: false,
         child: Padding(

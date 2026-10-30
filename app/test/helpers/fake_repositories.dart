@@ -393,7 +393,7 @@ class _FakePostRepository implements PostRepository {
     final p = _store.posts.firstWhere((x) => x.id == id);
     final me = _store.currentUserId;
     return p.copyWith(
-      reposted: me != null && _store.reposts.contains('$me>${id}'),
+      reposted: me != null && _store.reposts.contains('$me>$id'),
     );
   }
 

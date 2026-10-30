@@ -947,7 +947,10 @@ class _ProfileTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Mais respiro: as abas ganham altura própria e ficam ABAIXO dos
+    // contadores, sem disputar espaço com nada acima.
     return Container(
+      margin: const EdgeInsets.only(top: AppDimensions.spaceSm),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: AppColors.deepBlue, width: 1),
@@ -955,6 +958,8 @@ class _ProfileTabs extends StatelessWidget {
       ),
       child: TabBar(
         controller: controller,
+        // Mais alto para os ícones maiores não ficarem apertados.
+        indicatorSize: TabBarIndicatorSize.tab,
         indicatorColor: AppColors.electricBlue,
         indicatorWeight: 2,
         labelColor: AppColors.techWhite,
@@ -968,12 +973,12 @@ class _ProfileTabs extends StatelessWidget {
         // chasing arrows for Reposts. The count rides next to each mark.
         tabs: [
           _ProfileTab(
-            icon: (c) => GridIcon(color: c, size: 18),
+            icon: (c) => GridIcon(color: c, size: 23),
             count: postsCount,
             label: 'POSTS',
           ),
           _ProfileTab(
-            icon: (c) => RepostIcon(color: c, size: 18, strokeWidth: 1.7),
+            icon: (c) => RepostIcon(color: c, size: 23, strokeWidth: 1.7),
             count: repostsCount,
             label: 'REPOSTS',
           ),
@@ -1003,13 +1008,18 @@ class _ProfileTab extends StatelessWidget {
         AppColors.holographicBlue;
     return Semantics(
       label: label,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          icon(color),
-          const SizedBox(width: AppDimensions.spaceSm),
-          Text('$count', style: AppTextStyles.hud.copyWith(color: color)),
-        ],
+      // Altura mínima para os ícones maiores respirarem sem apertar.
+      child: SizedBox(
+        height: 56,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            icon(color),
+            const SizedBox(height: AppDimensions.spaceXs),
+            Text('$count', style: AppTextStyles.hud.copyWith(color: color)),
+          ],
+        ),
       ),
     );
   }
