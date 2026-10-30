@@ -35,7 +35,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   String? _avatarUrl;
   bool _pickingPhoto = false;
   bool _creating = false;
-  List<YazzokiUser> _friends = const [];
+  List<YazzokiUser> _followed = const [];
   final Set<String> _selectedIds = <String>{};
   bool _loadedFriends = false;
 
@@ -45,7 +45,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     if (_loadedFriends) return;
     _loadedFriends = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadFriends();
+      _loadFollowedUsers();
     });
   }
 
@@ -56,17 +56,17 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     super.dispose();
   }
 
-  Future<void> _loadFriends() async {
+  Future<void> _loadFollowedUsers() async {
     final state = AppStateScope.maybeOf(context);
     if (state == null) return;
     final current = state.currentUser;
     if (current == null) return;
     try {
-      final page = await state.loadFriends(current.id, pageSize: 30);
+      final page = await state.loadFollowing(current.id, pageSize: 30);
       if (!mounted) return;
       setState(() {
-        _friends = page.friends;
-        _selectedIds.removeWhere((id) => !page.friends.any((f) => f.id == id));
+        _followed = page.users;
+        _selectedIds.removeWhere((id) => !page.users.any((f) => f.id == id));
       });
     } catch (_) {
       // Best-effort: the "Criar Grupo" button still works with an empty pool.
@@ -146,7 +146,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   }
 
   List<YazzokiUser> get _selectedFriends =>
-      _friends.where((f) => _selectedIds.contains(f.id)).toList();
+      _followed.where((f) => _selectedIds.contains(f.id)).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +225,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 ),
                 const SizedBox(height: AppDimensions.spaceMd),
               ],
-              if (_friends.isEmpty)
+              if (_followed.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       vertical: AppDimensions.spaceXl),
@@ -236,7 +236,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                   ),
                 )
               else
-                _friendsList(selected),
+                _followedList(selected),
               const SizedBox(height: AppDimensions.spaceLg),
               YazzokiButton(
                 label: 'Criar Grupo',
@@ -317,10 +317,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     );
   }
 
-  Widget _friendsList(List<YazzokiUser> selected) {
+  Widget _followedList(List<YazzokiUser> selected) {
     return Column(
       children: [
-        for (final u in _friends)
+        for (final u in _followed)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: YazzokiCard(

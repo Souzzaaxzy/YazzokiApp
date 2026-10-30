@@ -648,7 +648,8 @@ void main() {
         final id = 'f$i';
         store.users[id] =
             YazzokiUser(id: id, nickname: 'amigo_$i', avatarSeed: 'amigo_$i');
-        store.friendships.add('f$i|u0');
+        repos.store.follows.add('f$i>u0');
+    repos.store.follows.add('u0>f$i');
       }
       final state = AppState(repositories: repos);
       await state.restoreSession();

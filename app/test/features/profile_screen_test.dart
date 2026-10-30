@@ -7,7 +7,7 @@ import 'package:yazzoki/core/widgets/yazzoki_card.dart';
 import 'package:yazzoki/core/widgets/user_avatar.dart';
 import 'package:yazzoki/features/home/home_screen.dart';
 import 'package:yazzoki/features/profile/edit_profile_screen.dart';
-import 'package:yazzoki/features/profile/friends_sheet.dart';
+import 'package:yazzoki/features/profile/follow_list_sheet.dart';
 import 'package:yazzoki/features/profile/profile_screen.dart';
 import 'package:yazzoki/models/post.dart';
 
@@ -24,17 +24,16 @@ void main() {
     expect(find.text('EDITAR PERFIL'), findsOneWidget);
     // Own profile has the floating "+" and no friendship button.
     expect(find.byIcon(Icons.add_rounded), findsOneWidget);
-    expect(find.text('SOLICITAR'), findsNothing);
-    expect(find.text('SOLICITADO'), findsNothing);
-    expect(find.text('AMIGOS'), findsNothing);
+    expect(find.text('SEGUIR'), findsNothing);
+    expect(find.text('SEGUINDO'), findsNothing);
   });
 
-  testWidgets('other user profile: shows Solicitado, no edit, no FAB', (tester) async {
+  testWidgets('other user profile: shows Seguir, no edit, no FAB', (tester) async {
     await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'));
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.textContaining('joao', findRichText: true), findsOneWidget);
-    expect(find.text('SOLICITAR'), findsOneWidget);
+    expect(find.text('SEGUIR'), findsOneWidget);
     expect(find.text('EDITAR PERFIL'), findsNothing);
     expect(find.byIcon(Icons.add_rounded), findsNothing);
     // Their posts keep rendering on their profile — with the NEUTRAL
@@ -44,36 +43,48 @@ void main() {
     expect(find.byIcon(Icons.favorite_rounded), findsNothing);
   });
 
-  testWidgets('tapping Solicitado sends the request and shows Solicitado',
+  testWidgets('tapping Seguir follows instantly and shows Seguindo',
       (tester) async {
     await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'));
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('SOLICITAR'), findsOneWidget);
+    expect(find.text('SEGUIR'), findsOneWidget);
 
-    await tester.tap(find.text('SOLICITAR'));
+    await tester.tap(find.text('SEGUIR'));
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('SOLICITADO'), findsOneWidget);
+    expect(find.text('SEGUINDO'), findsOneWidget);
   });
 
-  testWidgets('tapping Solicitado again cancels back to Solicitado',
+  testWidgets('tapping Seguindo again unfollows (back to Seguir)',
       (tester) async {
     await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'));
     await tester.pump(const Duration(milliseconds: 400));
 
-    // Send a request first.
-    await tester.tap(find.text('SOLICITAR'));
+    await tester.tap(find.text('SEGUIR'));
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('SOLICITADO'), findsOneWidget);
+    expect(find.text('SEGUINDO'), findsOneWidget);
 
-    // A second tap on the same button cancels the pending request → back to
-    // SOLICITAR. The server is the source of truth (fake store deletes the
-    // pending request row).
-    await tester.tap(find.text('SOLICITADO'));
+    // The same button unfollows — no confirmation dialog.
+    await tester.tap(find.text('SEGUINDO'));
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('SOLICITAR'), findsOneWidget);
+    expect(find.text('SEGUIR'), findsOneWidget);
+  });
+
+  testWidgets('shows SEGUIR DE VOLTA when they follow you but you do not',
+      (tester) async {
+    final repos = FakeRepositories();
+    // joao (u2) follows leonardo (u0), but leonardo does not follow back.
+    repos.store.follows.add('u2>u0');
+    final state = AppState(repositories: repos);
+    await state.restoreSession();
+    await state.loadFeed();
+    await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'),
+        state: state);
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('SEGUIR DE VOLTA'), findsOneWidget);
   });
 
   testWidgets('shows current user posts in the grid', (tester) async {
@@ -85,19 +96,22 @@ void main() {
     expect(find.byIcon(Icons.favorite_rounded), findsNothing);
   });
 
-  group('profile counters and friends sheet', () {
+  group('profile counters and follow sheets', () {
     testWidgets('shows the real Amigos/Posts counters from the server',
         (tester) async {
       final repos = FakeRepositories();
-      repos.store.friendships.add('u0|u2');
+      repos.store.follows.add('u0>u2');
+    repos.store.follows.add('u2>u0');
       final state = AppState(repositories: repos);
       await pumpYazzokiApp(tester, const ProfileScreen(), state: state);
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.text('Amigos'), findsOneWidget);
+      expect(find.text('Seguidores'), findsOneWidget);
+      expect(find.text('Seguindo'), findsOneWidget);
+      expect(find.text('Curtidas'), findsOneWidget);
       expect(find.text('Posts'), findsOneWidget);
-      // Leonardo: 1 accepted friendship + 1 owned post — both counters.
-      expect(find.text('1'), findsNWidgets(2));
+      // Leonardo: 1 follower + 1 following + 1 post all read "1".
+      expect(find.text('1'), findsNWidgets(3));
     });
 
     testWidgets('viewed profile shows THAT user counters, not the session',
@@ -105,36 +119,37 @@ void main() {
       await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'));
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.text('Amigos'), findsOneWidget);
+      // The four counters render for the VIEWED user (João), not leonardo.
+      expect(find.text('Seguidores'), findsOneWidget);
+      expect(find.text('Seguindo'), findsOneWidget);
+      expect(find.text('Curtidas'), findsOneWidget);
       expect(find.text('Posts'), findsOneWidget);
-      // João has exactly 1 post (0 friends) — his counters, not the
-      // session user's.
-      expect(find.text('1'), findsOneWidget);
     });
 
     testWidgets(
         'Amigos opens the friends bottom sheet with the real list, and the '
         'item opens that friend profile', (tester) async {
       final repos = FakeRepositories();
-      repos.store.friendships.add('u0|u2');
+      repos.store.follows.add('u0>u2');
+    repos.store.follows.add('u2>u0');
       final state = AppState(repositories: repos);
       await pumpYazzokiApp(tester, const ProfileScreen(), state: state);
       await tester.pump(const Duration(milliseconds: 400));
 
-      await tester.tap(find.text('Amigos'));
+      await tester.tap(find.text('Seguidores'));
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.byType(FriendsSheet), findsOneWidget);
-      expect(find.text('AMIGOS DE LEONARDO'), findsOneWidget);
+      expect(find.byType(FollowListSheet), findsOneWidget);
+      expect(find.textContaining('SEGUIDORES DE'), findsOneWidget);
       expect(find.text('joao'), findsOneWidget);
 
       await tester.tap(find.text('joao'));
       await tester.pump(const Duration(milliseconds: 800));
       await tester.pump(const Duration(milliseconds: 800));
 
-      // The friend's profile opened — friendship button reflects Friends.
-      expect(find.text('AMIGOS'), findsOneWidget);
+      // The followed user's profile opened — the button reflects Following.
+      expect(find.text('SEGUINDO'), findsOneWidget);
 
       // Going back must restore the own profile — never the friend data.
       tester.state<NavigatorState>(find.byType(Navigator).first).pop();
@@ -168,7 +183,7 @@ void main() {
       ));
       await tester.pump(const Duration(milliseconds: 800));
       await tester.pump(const Duration(milliseconds: 800));
-      expect(find.text('SOLICITAR'), findsOneWidget);
+      expect(find.text('SEGUIR'), findsOneWidget);
 
       // Back to the shell, then open the own profile tab.
       tester.state<NavigatorState>(find.byType(Navigator).first).pop();
@@ -338,71 +353,34 @@ void main() {
     });
   });
 
-  group('existing friendship (AMIGOS)', () {
-    // Builds an AppState where leonardo (u0) is ALREADY friends with joao
-    // (u2), so the profile button renders AMIGOS. Returns both so tests can
-    // inspect the fake server store (server is the source of truth).
-    Future<({AppState state, FakeRepositories repos})> friendsState() async {
+  group('existing follow (SEGUINDO)', () {
+    // Builds an AppState where leonardo (u0) already FOLLOWS joao (u2), so
+    // the profile button renders SEGUINDO. Returns both so tests can inspect
+    // the fake server store (server is the source of truth).
+    Future<({AppState state, FakeRepositories repos})> followingState() async {
       final repos = FakeRepositories();
-      repos.store.friendships.add('u0|u2');
+      repos.store.follows.add('u0>u2');
       final state = AppState(repositories: repos);
       await state.restoreSession();
       await state.loadFeed();
       return (state: state, repos: repos);
     }
 
-    testWidgets('shows AMIGOS and confirmation modal on tap',
+    testWidgets('shows SEGUINDO and unfollows on tap (no dialog)',
         (tester) async {
-      final seeded = await friendsState();
+      final seeded = await followingState();
       await pumpYazzokiApp(
           tester, const ProfileScreen(nickname: 'joao'), state: seeded.state);
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.text('AMIGOS'), findsOneWidget);
+      expect(find.text('SEGUINDO'), findsOneWidget);
 
-      // Tapping AMIGOS opens the Yazzoki-styled confirmation.
-      await tester.tap(find.text('AMIGOS'));
+      await tester.tap(find.text('SEGUINDO'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('Deixar de ser amigo de joao'),
-        findsOneWidget,
-      );
-      expect(find.text('NÃO'), findsOneWidget);
-      expect(find.text('SIM'), findsOneWidget);
-    });
-
-    testWidgets('NÃO keeps the friendship (no server change)', (tester) async {
-      final seeded = await friendsState();
-      await pumpYazzokiApp(
-          tester, const ProfileScreen(nickname: 'joao'), state: seeded.state);
-      await tester.pump(const Duration(milliseconds: 400));
-
-      await tester.tap(find.text('AMIGOS'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('NÃO'));
-      await tester.pumpAndSettle();
-
-      // Still AMIGOS, and the fake server still holds the friendship row.
-      expect(find.text('AMIGOS'), findsOneWidget);
-      expect(seeded.repos.store.friendships.contains('u0|u2'), isTrue);
-    });
-
-    testWidgets('SIM removes the friendship → back to SOLICITAR',
-        (tester) async {
-      final seeded = await friendsState();
-      await pumpYazzokiApp(
-          tester, const ProfileScreen(nickname: 'joao'), state: seeded.state);
-      await tester.pump(const Duration(milliseconds: 400));
-
-      await tester.tap(find.text('AMIGOS'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('SIM'));
-      await tester.pumpAndSettle();
-
-      // Friendship removed on the server and the button returns to SOLICITAR.
-      expect(seeded.repos.store.friendships.contains('u0|u2'), isFalse);
-      expect(find.text('SOLICITAR'), findsOneWidget);
+      // The follow row is gone on the server and the button returns to SEGUIR.
+      expect(seeded.repos.store.follows.contains('u0>u2'), isFalse);
+      expect(find.text('SEGUIR'), findsOneWidget);
     });
   });
 

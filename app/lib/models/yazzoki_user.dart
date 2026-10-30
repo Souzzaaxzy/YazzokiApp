@@ -12,7 +12,9 @@ class YazzokiUser {
     this.bannerUrl,
     this.publicId,
     this.publicIdLabel,
-    this.friendsCount = 0,
+    this.followersCount = 0,
+    this.followingCount = 0,
+    this.likesCount = 0,
     this.postsCount = 0,
     this.music,
   });
@@ -53,7 +55,9 @@ class YazzokiUser {
   /// friendships and posts owned by this user. Zero when the endpoint did
   /// not return them (e.g. search results) — the profile screen only
   /// renders counters after a profile load.
-  final int friendsCount;
+  final int followersCount;
+  final int followingCount;
+  final int likesCount;
   final int postsCount;
 
 
@@ -78,7 +82,9 @@ class YazzokiUser {
     String? bio,
     String? avatarSeed,
     String? avatarUrl,
-    int? friendsCount,
+    int? followersCount,
+    int? followingCount,
+    int? likesCount,
     int? postsCount,
     String? Function()? bannerUrl,
     int? Function()? publicId,
@@ -91,7 +97,9 @@ class YazzokiUser {
         bio: bio ?? this.bio,
         avatarSeed: avatarSeed ?? this.avatarSeed,
         avatarUrl: avatarUrl ?? this.avatarUrl,
-        friendsCount: friendsCount ?? this.friendsCount,
+        followersCount: followersCount ?? this.followersCount,
+        followingCount: followingCount ?? this.followingCount,
+        likesCount: likesCount ?? this.likesCount,
         postsCount: postsCount ?? this.postsCount,
         // Same nullable-resolver pattern so the banner can be cleared
         // (`bannerUrl: () => null`) as well as replaced.

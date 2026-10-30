@@ -32,6 +32,32 @@ The server is in `Souzzaaxzy/ServidorYazzoki`. Commands there:
 `npm run db:seed`, `npm test` (64 tests, vitest), `npm run dev`.
 Or just `docker compose up -d --build`.
 
+## Seguidores (Instagram) — substitui o sistema de amigos (out/2026)
+- **Modelo**: grafo DIRECIONADO `Follow` (`followerId → followingId`), sem
+  aprovação. `follows` no servidor (`src/modules/follow/`), `FollowState`
+  (`none | following | followsYou | mutual`) no app (`models/follow.dart`).
+- **Botão do perfil** (`features/profile/follow_button.dart`): SEGUIR →
+  SEGUINDO (mesmo botão desfaz o follow, sem diálogo) e SEGUIR DE VOLTA
+  quando a pessoa te segue mas você não a segue.
+- **Contadores** no perfil: Seguidores / Seguindo (abrem a
+  `FollowListSheet`) / Curtidas (soma de likes de TODOS os posts, só
+  leitura) / Posts. Os quatro usam `Expanded`+`FittedBox` (não estourar a
+  largura em telas pequenas).
+- **Gate de DM/grupo**: `canInteract` = QUALQUER lado segue o outro (era
+  amizade mútua). Mensagens de erro citam "seguir".
+- **Notificação** `FOLLOW` ("X começou a seguir você."); removida ao
+  desfazer o follow. Não existe mais card Aceitar/Recusar.
+- **Migração** `20261030000000_follows_replace_friends`: amizades aceitas
+  viram follows mútuos; `friend_requests`/`friendships` e
+  `notifications.friendRequestId` removidos.
+
+## Splash — tema neve + Japão (out/2026)
+- `features/splash/splash_screen.dart`: cena "Yuki" (CustomPaint, sem
+  assets de vídeo). Camadas: céu noturno + lua → neve distante + kana caindo
+  (Zen Old Mincho) → emblema (traços escritos de cima para baixo, depois o
+  selo hanko vermelho) → pétalas de sakura + neve próxima → vinheta.
+- SEM chuva binária/HUD/glitch. Navegação só depois do selo (gatilho 0.72).
+
 ## Architecture — Flutter (`app/lib/`)
 - `app/` — entry, routes, theme tokens. Fonts bundled (Inter + JetBrainsMono).
 - `core/` — widgets, animations, utils, services (AppState ChangeNotifier).

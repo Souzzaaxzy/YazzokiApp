@@ -43,7 +43,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _search = TextEditingController();
   List<YazzokiUser> _searchResults = const [];
-  List<YazzokiUser> _friends = const [];
+  List<YazzokiUser> _followed = const [];
   bool _searching = false;
   bool _searched = false;
   StreamSubscription<ChatMessage>? _chatSub;
@@ -77,21 +77,21 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       // Re-sync the friends row when a friendship changes elsewhere (e.g. a
       // friend removed from their profile) so the list never shows stale rows.
-      _friendsChangedSub = state.onFriendsChanged.listen((_) {
-        if (mounted) _loadFriends(state);
+      _followedChangedSub = state.onFollowsChanged.listen((_) {
+        if (mounted) _loadFollowedUsers(state);
       });
       _refresh();
     });
   }
 
   bool _primed = false;
-  StreamSubscription<void>? _friendsChangedSub;
+  StreamSubscription<void>? _followedChangedSub;
 
   @override
   void dispose() {
     _chatSub?.cancel();
     _deletedSub?.cancel();
-    _friendsChangedSub?.cancel();
+    _followedChangedSub?.cancel();
     _search.dispose();
     super.dispose();
   }
@@ -99,7 +99,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _refresh() async {
     final state = AppStateScope.maybeOf(context);
     if (state == null) return;
-    await Future.wait([_loadConversations(state), _loadFriends(state)]);
+    await Future.wait([_loadConversations(state), _loadFollowedUsers(state)]);
   }
 
   Future<void> _loadConversations(AppState state) async {
@@ -107,7 +107,7 @@ class _ChatScreenState extends State<ChatScreen> {
     await state.refreshUnreadConversations();
   }
 
-  Future<void> _loadFriends(AppState state) async {
+  Future<void> _loadFollowedUsers(AppState state) async {
     final current = state.currentUser;
     if (current == null) return;
     try {
@@ -120,17 +120,17 @@ class _ChatScreenState extends State<ChatScreen> {
       var total = -1;
       while (page == 1 || collected.length < total) {
         final result =
-            await state.loadFriends(current.id, page: page, pageSize: pageSize);
+            await state.loadFollowing(current.id, page: page, pageSize: pageSize);
         if (!mounted) return;
         total = result.total;
-        collected.addAll(result.friends);
+        collected.addAll(result.users);
         // No more results → avoid an infinite loop.
-        if (result.friends.isEmpty) break;
+        if (result.users.isEmpty) break;
         page++;
         if (page > 100) break; // hard safety cap
       }
       if (!mounted) return;
-      setState(() => _friends = collected);
+      setState(() => _followed = collected);
     } catch (_) {
       // Friends list best-effort; conversations still render.
     }
@@ -338,17 +338,17 @@ class _ChatScreenState extends State<ChatScreen> {
                     left: AppDimensions.spaceLg,
                     right: AppDimensions.spaceLg,
                     bottom: AppDimensions.spaceSm),
-                child: HudLabel(text: '👥 AMIGOS'),
+                child: HudLabel(text: '👥 SEGUINDO'),
               ),
             ),
             _akameFriendsBody(),
-            if (_friends.isEmpty)
+            if (_followed.isEmpty)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppDimensions.spaceLg),
                   child: Text(
-                    'Você ainda não possui amigos.',
+                    'Você ainda não segue ninguém.',
                     style: AppTextStyles.bodyMuted,
                     textAlign: TextAlign.center,
                   ),
@@ -401,7 +401,7 @@ class _ChatScreenState extends State<ChatScreen> {
           physics: const BouncingScrollPhysics(),
           padding:
               const EdgeInsets.symmetric(horizontal: AppDimensions.spaceLg),
-          itemCount: _friends.length + 1,
+          itemCount: _followed.length + 1,
           separatorBuilder: (_, __) =>
               const SizedBox(width: AppDimensions.spaceMd),
           itemBuilder: (context, i) {
@@ -410,7 +410,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 onTap: widget.onOpenAkame,
               );
             }
-            final friend = _friends[i - 1];
+            final friend = _followed[i - 1];
             return GestureDetector(
               onTap: () => _openSearchResult(friend),
               child: Column(
@@ -446,7 +446,7 @@ class _ChatScreenState extends State<ChatScreen> {
             title: 'SEM CONVERSAS',
             hud: 'CHAT VAZIO',
             subtitle: 'Suas conversas aparecerão aqui.\n'
-                'Comece uma conversa com um amigo.',
+                'Comece uma conversa com alguém que você segue.',
           ),
         ),
       );

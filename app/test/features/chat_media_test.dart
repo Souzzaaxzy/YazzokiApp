@@ -12,7 +12,8 @@ import '../helpers/test_app.dart';
 Future<AppState> seededChat({List<ChatMessage>? messages}) async {
   final repos = FakeRepositories();
   final store = repos.store;
-  store.friendships.add('u0|u2');
+  repos.store.follows.add('u0>u2');
+    repos.store.follows.add('u2>u0');
   store.chatMessagesByPair['u0|u2'] = messages ?? [];
   final state = AppState(repositories: repos);
   await state.restoreSession();

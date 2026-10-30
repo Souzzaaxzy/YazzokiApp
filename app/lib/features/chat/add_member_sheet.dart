@@ -63,10 +63,10 @@ class _AddMemberSheetState extends State<AddMemberSheet> {
     final current = state.currentUser;
     if (current == null) return;
     try {
-      final page = await state.loadFriends(current.id, pageSize: 50);
+      final page = await state.loadFollowing(current.id, pageSize: 50);
       if (!mounted) return;
       setState(() {
-        _friends = page.friends
+        _friends = page.users
             .where((f) =>
                 f.id != widget.ownerId &&
                 !widget.existingIds.contains(f.id) &&

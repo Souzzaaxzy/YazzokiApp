@@ -82,7 +82,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     final bio = tester.getRect(find.textContaining('Construindo o futuro'));
-    final friendsLabel = tester.getRect(find.text('Amigos'));
+    final friendsLabel = tester.getRect(find.text('Seguidores'));
 
     expect(friendsLabel.top, greaterThanOrEqualTo(bio.bottom - 1));
   });

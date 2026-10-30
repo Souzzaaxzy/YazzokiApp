@@ -16,7 +16,7 @@ import '../../models/akame_message.dart';
 import '../../models/search_history_entry.dart';
 import '../../models/comment.dart';
 import '../../models/conversation.dart';
-import '../../models/friend_request.dart';
+import '../../models/follow.dart';
 import '../../models/yazzoki_notification.dart';
 import '../../models/yazzoki_user.dart';
 import '../../models/post.dart';
@@ -173,11 +173,11 @@ class AppState extends ChangeNotifier {
   final _commentDeleted = StreamController<CommentDeletedEvent>.broadcast();
   Stream<CommentDeletedEvent> get onCommentDeleted => _commentDeleted.stream;
 
-  /// Emits whenever a friendship relationship changes (request sent/cancelled,
-  /// removed, accepted). Screens that render the live friends list subscribe
-  /// so removal on a profile reflects immediately when they become visible.
-  final _friendsChanged = StreamController<void>.broadcast();
-  Stream<void> get onFriendsChanged => _friendsChanged.stream;
+  /// Emits whenever a follow relationship changes (follow / unfollow).
+  /// Screens that render live follower/following lists subscribe so the
+  /// change reflects immediately when they become visible.
+  final _followsChanged = StreamController<void>.broadcast();
+  Stream<void> get onFollowsChanged => _followsChanged.stream;
 
   List<Post> get posts => List.unmodifiable(_posts);
   bool get isLoadingProfile => _loadingProfile;
@@ -361,7 +361,7 @@ class AppState extends ChangeNotifier {
   CommentRepository get _comments =>
       _repos?.comments ?? Services.instance.comments;
   UserRepository get _users => _repos?.users ?? Services.instance.users;
-  FriendRepository get _friends => _repos?.friends ?? Services.instance.friends;
+  FollowRepository get _follows => _repos?.follows ?? Services.instance.follows;
   NotificationRepository get _notificationRepo =>
       _repos?.notifications ?? Services.instance.notifications;
   ChatRepository get _chat => _repos?.chat ?? Services.instance.chat;
@@ -497,7 +497,7 @@ class AppState extends ChangeNotifier {
 
   /// Permanently deletes the account on the server, then clears every
   /// local trace (session + caches) like a logout. The server-side delete
-  /// cascades posts/comments/likes/friendships/notifications/devices.
+  /// cascades posts/comments/likes/follows/notifications/devices.
   Future<void> deleteAccount() async {
     _stopPush();
     await _auth.deleteAccount();
@@ -958,7 +958,7 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  /// Loads a profile (user + their posts + friendship state) from the
+  /// Loads a profile (user + their posts + follow state) from the
   /// server into its OWN keyed slot. This is the ONLY source for the
   /// profile screen — never the local feed cache, and never the data of
   /// another profile: a concurrent visit to B never rewrites A's slot.
@@ -972,7 +972,7 @@ class AppState extends ChangeNotifier {
       _profiles[key] = ProfileData(
         user: result.user,
         posts: result.posts,
-        friendship: result.friendship,
+        follow: result.follow,
       );
       // Keep the session user fresh when viewing our own profile — a copy
       // of name/bio/avatar only, identity fields (id/nickname) are NEVER
@@ -1045,105 +1045,82 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Sends a friend request to another user. On success the friendship
-  /// state of that user's viewed profile moves to Solicitado
-  /// (OUTGOING_PENDING) — only that profile's slot is touched.
-  Future<void> sendFriendRequest(String userId) async {
-    await _friends.send(userId);
-    _profiles.updateAll((key, profile) => profile.user.id == userId
-        ? profile.copyWith(friendship: Friendship.outgoingPending)
-        : profile);
-    _emitFriendsChanged();
-    notifyListeners();
-  }
-
-  /// Cancels the PENDING request the current user sent to [userId]. The
-  /// server removes the request + its notification; the profile state
-  /// returns to SOLICITAR (NONE). State is server-confirmed — a fresh
-  /// profile load after this reports NONE too.
-  Future<void> cancelFriendRequest(String userId) async {
-    await _friends.cancel(userId);
-    _profiles.updateAll((key, profile) => profile.user.id == userId
-        ? profile.copyWith(friendship: Friendship.none)
-        : profile);
-    _emitFriendsChanged();
-    notifyListeners();
-  }
-
-  /// Removes the ACCEPTED friendship between the current user and [userId].
-  /// The server validates the requester and deletes the row; the profile
-  /// state returns to SOLICITAR (NONE) and the Amigos counters of both
-  /// affected cached profiles (mine + the other user's) drop by one.
-  Future<void> removeFriend(String userId) async {
-    await _friends.removeFriend(userId);
+  /// Follows [userId] (instant, Instagram model). Only that user's viewed
+  /// profile slot is touched: state → Seguindo/Mútuo and the followed
+  /// user's followersCount bumps.
+  Future<void> followUser(String userId) async {
+    await _follows.follow(userId);
     final me = _currentUser?.id;
     _profiles.updateAll((key, profile) {
-      final uid = profile.user.id;
-      final isMine = uid == me;
-      final isOther = uid == userId;
-      if (!isMine && !isOther) return profile;
+      if (profile.user.id != userId) return profile;
       return profile.copyWith(
         user: profile.user.copyWith(
-          friendsCount:
-              (profile.user.friendsCount - 1).clamp(0, 1 << 31).toInt(),
+          followersCount: profile.user.followersCount + 1,
         ),
-        friendship: Friendship.none,
+        follow: profile.follow?.isFollowing == true
+            ? profile.follow
+            : FollowState.following,
       );
     });
-    _emitFriendsChanged();
+    // Our own profile's followingCount also grows by one.
+    if (me != null) {
+      _profiles.updateAll((key, profile) => profile.user.id == me
+          ? profile.copyWith(
+              user: profile.user.copyWith(
+                followingCount: profile.user.followingCount + 1,
+              ),
+            )
+          : profile);
+    }
+    _emitFollowsChanged();
     notifyListeners();
   }
 
-  /// Accepts a pending friend request received by the current user. The
-  /// actionable notification card disappears, the relation becomes Amigos
-  /// on both sides (server-managed) and the Amigos counters of the two
-  /// affected profiles (mine + the sender's, when cached) bump by one.
-  Future<void> acceptFriendRequest(String requestId) async {
-    // Resolve the sender BEFORE the actionable card disappears so the
-    // counters of the two affected profiles can be updated.
-    final senderId = _notifications
-        .where((n) => n.friendRequestId == requestId)
-        .map((n) => n.actorId)
-        .firstOrNull;
-    await _friends.accept(requestId);
-    _removeNotificationWhere((n) => n.friendRequestId == requestId);
+  /// Unfollows [userId] (instant). State → Seguir/Seguir de volta and the
+  /// counters adjust accordingly.
+  Future<void> unfollowUser(String userId) async {
+    await _follows.unfollow(userId);
     final me = _currentUser?.id;
     _profiles.updateAll((key, profile) {
-      final uid = profile.user.id;
-      final isMine = uid == me;
-      final isSender = uid == senderId;
-      if (!isMine && !isSender) return profile;
+      if (profile.user.id != userId) return profile;
+      // They may still follow us → the button shows "Seguir de volta".
+      final stillFollows = profile.follow == FollowState.mutual;
       return profile.copyWith(
-        user:
-            profile.user.copyWith(friendsCount: profile.user.friendsCount + 1),
-        friendship: isSender ? Friendship.friends : profile.friendship,
+        user: profile.user.copyWith(
+          followersCount:
+              (profile.user.followersCount - 1).clamp(0, 1 << 31).toInt(),
+        ),
+        follow: stillFollows ? FollowState.followsYou : FollowState.none,
       );
     });
-    _emitFriendsChanged();
+    if (me != null) {
+      _profiles.updateAll((key, profile) => profile.user.id == me
+          ? profile.copyWith(
+              user: profile.user.copyWith(
+                followingCount:
+                    (profile.user.followingCount - 1).clamp(0, 1 << 31).toInt(),
+              ),
+            )
+          : profile);
+    }
+    _emitFollowsChanged();
     notifyListeners();
   }
 
-  void _emitFriendsChanged() {
-    if (!_friendsChanged.isClosed) _friendsChanged.add(null);
+  void _emitFollowsChanged() {
+    if (!_followsChanged.isClosed) _followsChanged.add(null);
   }
 
-  /// Loads one page of the friends list of [userId] (own or another
-  /// user's profile — the server returns accepted friendships only).
-  Future<({List<YazzokiUser> friends, int total, int page, int pageSize})>
-      loadFriends(String userId, {int page = 1, int pageSize = 20}) {
-    return _friends.list(userId, page: page, pageSize: pageSize);
+  /// Loads one page of a user's FOLLOWERS list.
+  Future<({List<YazzokiUser> users, int total, int page, int pageSize})>
+      loadFollowers(String userId, {int page = 1, int pageSize = 20}) {
+    return _follows.followers(userId, page: page, pageSize: pageSize);
   }
 
-  /// Rejects a pending friend request. The card disappears and the sender
-  /// can request again later.
-  Future<void> rejectFriendRequest(String requestId) async {
-    await _friends.reject(requestId);
-    _removeNotificationWhere((n) => n.friendRequestId == requestId);
-    notifyListeners();
-  }
-
-  void _removeNotificationWhere(bool Function(YazzokiNotification n) kill) {
-    _notifications.removeWhere(kill);
+  /// Loads one page of the users a user FOLLOWS.
+  Future<({List<YazzokiUser> users, int total, int page, int pageSize})>
+      loadFollowing(String userId, {int page = 1, int pageSize = 20}) {
+    return _follows.following(userId, page: page, pageSize: pageSize);
   }
 
   /// Refreshes the session user from the server (GET /api/auth/me).
@@ -2483,7 +2460,7 @@ class AppState extends ChangeNotifier {
     _groupDeleted.close();
     _presence.close();
     _commentDeleted.close();
-    _friendsChanged.close();
+    _followsChanged.close();
     super.dispose();
   }
 }
@@ -2586,7 +2563,7 @@ class CommentDeletedEvent {
 }
 
 /// Immutable snapshot of a viewed profile: the viewed user, their posts
-/// and the friendship state between the session user and [user]. Stored in
+/// and the follow state between the session user and [user]. Stored in
 /// [AppState] keyed by lowercase nickname so the session user
 /// (currentUser) and every viewed profile (viewedUser) stay isolated —
 /// navigating A → B → C → A never corrupts A.
@@ -2594,21 +2571,21 @@ class ProfileData {
   const ProfileData({
     required this.user,
     required this.posts,
-    this.friendship,
+    this.follow,
   });
 
   final YazzokiUser user;
   final List<Post> posts;
-  final Friendship? friendship;
+  final FollowState? follow;
 
   ProfileData copyWith({
     YazzokiUser? user,
     List<Post>? posts,
-    Friendship? friendship,
+    FollowState? follow,
   }) =>
       ProfileData(
         user: user ?? this.user,
         posts: posts ?? this.posts,
-        friendship: friendship ?? this.friendship,
+        follow: follow ?? this.follow,
       );
 }

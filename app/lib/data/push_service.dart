@@ -33,7 +33,7 @@ class PushService {
       FlutterLocalNotificationsPlugin();
 
   /// Called when the user taps a native notification. Receives the routing
-  /// payload (type / actorNickname / postId / commentId / friendRequestId).
+  /// payload (type / actorNickname / postId / commentId).
   void Function(Map<String, dynamic> data)? onNavigate;
 
   /// Called when a real-time chat message arrives (kind `chat_message`).

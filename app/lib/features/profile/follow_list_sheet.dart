@@ -12,36 +12,50 @@ import '../../core/widgets/user_avatar.dart';
 import '../../data/api_config.dart';
 import '../../models/yazzoki_user.dart';
 
-/// Yazzoki friends bottom sheet — slides up from the bottom of the profile.
-/// Listed data always comes from the server (accepted friendships only),
-/// so the list and the profile counter can never diverge.
-class FriendsSheet extends StatefulWidget {
-  const FriendsSheet({super.key, required this.user});
+/// Which side of the follow graph a list shows.
+enum FollowListKind { followers, following }
+
+/// Yazzoki follow-list bottom sheet — slides up from the profile. It lists
+/// either the user's FOLLOWERS or the users they FOLLOW (Instagram model).
+/// Data always comes from the server, so the list and the profile counter
+/// can never diverge.
+class FollowListSheet extends StatefulWidget {
+  const FollowListSheet({
+    super.key,
+    required this.user,
+    required this.kind,
+  });
 
   final YazzokiUser user;
+  final FollowListKind kind;
 
   /// Opens the sheet with the platform bottom-sheet animation
   /// (bottom-to-top slide). The sheet itself is transparent; the styled
   /// container is the body decoration.
-  static Future<void> open(BuildContext context, YazzokiUser user) {
+  static Future<void> open(
+    BuildContext context,
+    YazzokiUser user,
+    FollowListKind kind,
+  ) {
     return showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       // ThemeWatcher keeps the sheet on the active palette when the theme
       // flips while it is open.
-      builder: (_) => ThemeWatcher(builder: (_) => FriendsSheet(user: user)),
+      builder: (_) =>
+          ThemeWatcher(builder: (_) => FollowListSheet(user: user, kind: kind)),
     );
   }
 
   @override
-  State<FriendsSheet> createState() => _FriendsSheetState();
+  State<FollowListSheet> createState() => _FollowListSheetState();
 }
 
-class _FriendsSheetState extends State<FriendsSheet> {
+class _FollowListSheetState extends State<FollowListSheet> {
   static const _pageSize = 20;
 
-  final List<YazzokiUser> _friends = [];
+  final List<YazzokiUser> _users = [];
   final ScrollController _scroll = ScrollController();
   late AppState _state;
   int _total = 0;
@@ -49,7 +63,7 @@ class _FriendsSheetState extends State<FriendsSheet> {
   bool _loading = false;
   Object? _error;
 
-  bool get _hasMore => _friends.length < _total;
+  bool get _hasMore => _users.length < _total;
 
   @override
   void initState() {
@@ -87,16 +101,22 @@ class _FriendsSheetState extends State<FriendsSheet> {
       _error = null;
     });
     try {
-      final result = await _state.loadFriends(
-        widget.user.id,
-        page: _page + 1,
-        pageSize: _pageSize,
-      );
+      final result = widget.kind == FollowListKind.followers
+          ? await _state.loadFollowers(
+              widget.user.id,
+              page: _page + 1,
+              pageSize: _pageSize,
+            )
+          : await _state.loadFollowing(
+              widget.user.id,
+              page: _page + 1,
+              pageSize: _pageSize,
+            );
       if (!mounted) return;
       setState(() {
         _page = result.page;
         _total = result.total;
-        _friends.addAll(result.friends);
+        _users.addAll(result.users);
       });
     } catch (error) {
       if (!mounted) return;
@@ -106,11 +126,11 @@ class _FriendsSheetState extends State<FriendsSheet> {
     }
   }
 
-  void _openFriend(YazzokiUser friend) {
-    // Close the sheet first, then open the friend's profile. The new
-    // profile screen loads ITS OWN keyed slot — currentUser is untouched.
+  void _openUser(YazzokiUser user) {
+    // Close the sheet first, then open that user's profile. The new profile
+    // screen loads ITS OWN keyed slot — currentUser is untouched.
     Navigator.of(context).pop();
-    openUserProfile(context, friend);
+    openUserProfile(context, user);
   }
 
   @override
@@ -160,7 +180,9 @@ class _FriendsSheetState extends State<FriendsSheet> {
                   children: [
                     Expanded(
                       child: HudLabel(
-                        text: 'Amigos de ${widget.user.nickname}',
+                        text: widget.kind == FollowListKind.followers
+                            ? 'Seguidores de ${widget.user.nickname}'
+                            : 'Seguindo (${widget.user.nickname})',
                       ),
                     ),
                     Text(
@@ -185,7 +207,7 @@ class _FriendsSheetState extends State<FriendsSheet> {
   }
 
   Widget _buildList() {
-    if (_friends.isEmpty) {
+    if (_users.isEmpty) {
       if (_loading) {
         return const Padding(
           padding: EdgeInsets.all(AppDimensions.spaceXxl),
@@ -209,7 +231,9 @@ class _FriendsSheetState extends State<FriendsSheet> {
         padding: const EdgeInsets.all(AppDimensions.spaceXxl),
         child: Center(
           child: Text(
-            'Nenhum amigo ainda.',
+            widget.kind == FollowListKind.followers
+                ? 'Nenhum seguidor ainda.'
+                : 'Não segue ninguém ainda.',
             style: AppTextStyles.bodyMuted,
           ),
         ),
@@ -218,11 +242,11 @@ class _FriendsSheetState extends State<FriendsSheet> {
     return ListView.separated(
       controller: _scroll,
       shrinkWrap: true,
-      itemCount: _friends.length + (_hasMore || _loading ? 1 : 0),
+      itemCount: _users.length + (_hasMore || _loading ? 1 : 0),
       separatorBuilder: (_, __) =>
           Divider(color: AppColors.deepBlue, height: 1, indent: 72),
       itemBuilder: (context, index) {
-        if (index >= _friends.length) {
+        if (index >= _users.length) {
           return const Padding(
             padding: EdgeInsets.all(AppDimensions.spaceMd),
             child: Center(
@@ -237,22 +261,22 @@ class _FriendsSheetState extends State<FriendsSheet> {
             ),
           );
         }
-        final friend = _friends[index];
+        final user = _users[index];
         return ListTile(
-          onTap: () => _openFriend(friend),
+          onTap: () => _openUser(user),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: AppDimensions.spaceLg,
             vertical: 2,
           ),
           leading: UserAvatar(
-              name: friend.nickname,
-              seed: friend.avatarSeed ?? friend.nickname,
-              imageUrl: friend.avatarUrl == null
+              name: user.nickname,
+              seed: user.avatarSeed ?? user.nickname,
+              imageUrl: user.avatarUrl == null
                   ? null
-                  : ApiConfig.resolveUrl(friend.avatarUrl!),
+                  : ApiConfig.resolveUrl(user.avatarUrl!),
               size: 37,
             ),
-          title: Text(friend.nickname, style: AppTextStyles.body),
+          title: Text(user.nickname, style: AppTextStyles.body),
           trailing: Icon(
             Icons.chevron_right_rounded,
             color: AppColors.holographicBlue,

@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../../models/comment.dart';
 import '../../models/conversation.dart';
 import '../local/chat_history_service.dart';
-import '../../models/friend_request.dart';
+import '../../models/follow.dart';
 import '../../models/yazzoki_notification.dart';
 import '../../models/yazzoki_user.dart';
 import '../../models/post.dart';
@@ -241,8 +241,8 @@ class UserRepository {
   final ApiClient _api;
 
   /// Fetches a public profile by nickname: user, posts and (for an
-  /// authenticated viewer) the friendship state Seguir/Solicitado/Amigos.
-  Future<({YazzokiUser user, List<Post> posts, Friendship? friendship})> profile(
+  /// authenticated viewer) the follow state (Seguir / Seguindo / Mútuo).
+  Future<({YazzokiUser user, List<Post> posts, FollowState? follow})> profile(
     String nickname,
   ) async {
     // Nicknames are full Unicode (emojis, spaces, symbols) — the path
@@ -254,9 +254,9 @@ class UserRepository {
     final list = (json['posts'] as List).cast<Map<String, dynamic>>();
     final posts =
         list.map(FeedPostDto.fromJson).map((d) => d.toModel()).toList();
-    final raw = json['friendship'];
-    final friendship = raw is String ? Friendship.fromApi(raw) : null;
-    return (user: user, posts: posts, friendship: friendship);
+    final raw = json['follow'];
+    final follow = raw is String ? FollowState.fromApi(raw) : null;
+    return (user: user, posts: posts, follow: follow);
   }
 
   Future<YazzokiUser> updateProfile({
@@ -292,68 +292,54 @@ class UserRepository {
 
 /// Friends repository — friend request lifecycle (send / list / accept /
 /// reject). All authorization is enforced by the server.
-class FriendRepository {
-  FriendRepository(this._api);
+/// Follow repository — the Instagram-style directed follow graph
+/// (instant follow / unfollow, followers and following lists).
+class FollowRepository {
+  FollowRepository(this._api);
 
   final ApiClient _api;
 
-  Future<FriendRequest> send(String userId) async {
-    final json =
-        await _api.post<Map<String, dynamic>>('/api/friend-requests/$userId');
-    return FriendRequestDto.fromJson(json).toModel();
+  /// Follows [userId] (instant, no approval). Idempotent server-side.
+  Future<void> follow(String userId) async {
+    await _api.post('/api/users/$userId/follow');
   }
 
-  Future<List<FriendRequest>> pending() async {
-    final json = await _api.get<Map<String, dynamic>>('/api/friend-requests');
-    final list = (json['requests'] as List).cast<Map<String, dynamic>>();
-    return list.map(FriendRequestDto.fromJson).map((d) => d.toModel()).toList();
+  /// Unfollows [userId] (instant). Idempotent server-side.
+  Future<void> unfollow(String userId) async {
+    await _api.delete('/api/users/$userId/follow');
   }
 
-  Future<void> accept(String requestId) async {
-    await _api.post('/api/friend-requests/$requestId/accept');
+  /// Current follow state with another user, per the server.
+  Future<FollowState> state(String userId) async {
+    final json = await _api
+        .get<Map<String, dynamic>>('/api/users/$userId/follow-state');
+    return FollowState.fromApi(json['state'] as String?);
   }
 
-  Future<void> reject(String requestId) async {
-    await _api.post('/api/friend-requests/$requestId/reject');
-  }
-
-  /// Cancels the PENDING request the CURRENT user sent to [userId]. The
-  /// server removes the request + its notification; the relationship
-  /// returns to NONE (SOLICITAR).
-  Future<void> cancel(String userId) async {
-    await _api.delete('/api/friend-requests/$userId');
-  }
-
-  /// Removes the ACCEPTED friendship between the CURRENT user and [userId].
-  /// The server validates the requester (only one side of the friendship
-  /// may remove it) and deletes the row; the relationship returns to NONE.
-  Future<void> removeFriend(String userId) async {
-    await _api.delete('/api/users/$userId/friends');
-  }
-
-  /// Current friendship state with another user, per the server.
-  Future<Friendship> state(String userId) async {
-    final json =
-        await _api.get<Map<String, dynamic>>('/api/users/$userId/friendship');
-    return Friendship.fromApi(json['state'] as String?);
-  }
-
-  /// Paginated friends list of a user (accepted friendships only). Used by
-  /// the profile "Amigos" bottom sheet; [total] matches the profile
+  /// Paginated list of a user's followers. [total] matches the profile
   /// counter because both come from the same server query.
-  Future<({List<YazzokiUser> friends, int total, int page, int pageSize})> list(
-    String userId, {
-    int page = 1,
-    int pageSize = 20,
-  }) async {
+  Future<({List<YazzokiUser> users, int total, int page, int pageSize})>
+      followers(String userId, {int page = 1, int pageSize = 20}) =>
+          _list('followers', userId, page, pageSize);
+
+  /// Paginated list of the users a user FOLLOWS.
+  Future<({List<YazzokiUser> users, int total, int page, int pageSize})>
+      following(String userId, {int page = 1, int pageSize = 20}) =>
+          _list('following', userId, page, pageSize);
+
+  Future<({List<YazzokiUser> users, int total, int page, int pageSize})> _list(
+    String kind,
+    String userId,
+    int page,
+    int pageSize,
+  ) async {
     final json = await _api.get<Map<String, dynamic>>(
-      '/api/users/$userId/friends',
+      '/api/users/$userId/$kind',
       queryParameters: {'page': page, 'pageSize': pageSize},
     );
-    final list = (json['friends'] as List).cast<Map<String, dynamic>>();
+    final list = (json['users'] as List).cast<Map<String, dynamic>>();
     return (
-      friends:
-          list.map(PublicUserDto.fromJson).map((d) => d.toModel()).toList(),
+      users: list.map(PublicUserDto.fromJson).map((d) => d.toModel()).toList(),
       total: (json['total'] as num?)?.toInt() ?? 0,
       page: (json['page'] as num?)?.toInt() ?? page,
       pageSize: (json['pageSize'] as num?)?.toInt() ?? pageSize,
@@ -1020,7 +1006,7 @@ class Repositories {
     required this.likes,
     required this.comments,
     required this.users,
-    required this.friends,
+    required this.follows,
     required this.notifications,
     required this.uploads,
     required this.chat,
@@ -1034,7 +1020,7 @@ class Repositories {
   final LikeRepository likes;
   final CommentRepository comments;
   final UserRepository users;
-  final FriendRepository friends;
+  final FollowRepository follows;
   final NotificationRepository notifications;
   final UploadRepository uploads;
   final ChatRepository chat;

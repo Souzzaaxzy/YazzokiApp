@@ -8,7 +8,7 @@ import 'package:yazzoki/data/repositories/sticker_repository.dart';
 import 'package:yazzoki/data/repositories/story_repository.dart';
 import 'package:yazzoki/models/comment.dart';
 import 'package:yazzoki/models/conversation.dart';
-import 'package:yazzoki/models/friend_request.dart';
+import 'package:yazzoki/models/follow.dart';
 import 'package:yazzoki/models/yazzoki_notification.dart';
 import 'package:yazzoki/models/yazzoki_user.dart';
 import 'package:yazzoki/models/post.dart';
@@ -30,7 +30,7 @@ class FakeRepositories extends Repositories {
     required super.likes,
     required super.comments,
     required super.users,
-    required super.friends,
+    required super.follows,
     required super.notifications,
     required super.uploads,
     required super.chat,
@@ -70,7 +70,7 @@ class FakeRepositories extends Repositories {
       likes: _FakeLikeRepository(store, fail: failLikes),
       comments: _FakeCommentRepository(store),
       users: _FakeUserRepository(store),
-      friends: _FakeFriendRepository(store),
+      follows: _FakeFollowRepository(store),
       notifications: _FakeNotificationRepository(store),
       uploads: const _FakeUploadRepository(),
       chat: _FakeChatRepository(store),
@@ -232,8 +232,7 @@ class FakeStore {
     likedCommentIds = <String>{};
     commentLikeCount = <String, int>{};
     notifications = <YazzokiNotification>[];
-    friendRequests = <String, FriendRequest>{};
-    friendships = <String>{};
+    follows = <String>{};
     chatMessagesByPair = <String, List<ChatMessage>>{};
   }
 
@@ -250,12 +249,9 @@ class FakeStore {
   /// Server-side persistent notifications (recipient = current user).
   late final List<YazzokiNotification> notifications;
 
-  /// Friend requests by id; status is a plain string (PENDING/ACCEPTED).
-  late final Map<String, FriendRequest> friendRequests;
-
-  /// Friendship pairs stored as `a|b` with ids sorted — one row per
-  /// friendship, no duplicates, just like the SQLite schema.
-  late final Set<String> friendships;
+  /// Follow edges stored as `followerId>followingId` — one row per directed
+  /// follow, mirroring the SQLite `follows` table.
+  late final Set<String> follows;
 
   /// Private chat messages by conversation (pair key `a|b`), in order.
   late final Map<String, List<ChatMessage>> chatMessagesByPair;
@@ -264,24 +260,17 @@ class FakeStore {
 
   YazzokiUser get currentUser => users[currentUserId]!;
 
-  String _pairKey(String a, String b) => a.compareTo(b) < 0 ? '$a|$b' : '$b|$a';
+  bool _follows(String a, String b) => follows.contains('$a>$b');
 
-  Friendship friendshipState(String otherUserId) {
+  FollowState followState(String otherUserId) {
     final me = currentUserId;
-    if (me == otherUserId) return Friendship.none;
-    if (friendships.contains(_pairKey(me!, otherUserId))) {
-      return Friendship.friends;
-    }
-    final pending = friendRequests.values.where((r) =>
-        r.status == 'PENDING' &&
-        ((r.sender.id == me && r.receiverId == otherUserId) ||
-            (r.sender.id == otherUserId && r.receiverId == me)));
-    for (final r in pending) {
-      return r.sender.id == me
-          ? Friendship.outgoingPending
-          : Friendship.incomingPending;
-    }
-    return Friendship.none;
+    if (me == null || me == otherUserId) return FollowState.none;
+    final iFollow = _follows(me, otherUserId);
+    final theyFollow = _follows(otherUserId, me);
+    if (iFollow && theyFollow) return FollowState.mutual;
+    if (iFollow) return FollowState.following;
+    if (theyFollow) return FollowState.followsYou;
+    return FollowState.none;
   }
 }
 
@@ -536,7 +525,7 @@ class _FakeUserRepository implements UserRepository {
   final FakeStore _store;
 
   @override
-  Future<({YazzokiUser user, List<Post> posts, Friendship? friendship})> profile(
+  Future<({YazzokiUser user, List<Post> posts, FollowState? follow})> profile(
     String nickname,
   ) async {
     final user = _store.users.values.firstWhere(
@@ -546,18 +535,22 @@ class _FakeUserRepository implements UserRepository {
     final userPosts =
         _store.posts.where((p) => p.authorNickname == nickname).toList();
     final isCurrent = user.id == _store.currentUserId;
-    // Real counters, like the server computes them: posts of THIS user and
-    // accepted friendships only.
-    final friendsCount = _store.friendships
-        .where((pair) => pair.split('|').contains(user.id))
-        .length;
+    // Real counters, like the server computes them: followers / following
+    // from the directed follow graph, likes across the user's posts.
+    final followersCount =
+        _store.follows.where((e) => e.endsWith('>${user.id}')).length;
+    final followingCount =
+        _store.follows.where((e) => e.startsWith('${user.id}>')).length;
+    final likesCount = userPosts.fold<int>(0, (sum, p) => sum + p.likes);
     return (
       user: user.copyWith(
         postsCount: userPosts.length,
-        friendsCount: friendsCount,
+        followersCount: followersCount,
+        followingCount: followingCount,
+        likesCount: likesCount,
       ),
       posts: userPosts,
-      friendship: isCurrent ? null : _store.friendshipState(user.id),
+      follow: isCurrent ? null : _store.followState(user.id),
     );
   }
 
@@ -604,100 +597,61 @@ class _FakeUploadRepository implements UploadRepository {
       'https://fake.yazzoki.app/u/test.mp4';
 }
 
-class _FakeFriendRepository implements FriendRepository {
-  _FakeFriendRepository(this._store);
+class _FakeFollowRepository implements FollowRepository {
+  _FakeFollowRepository(this._store);
 
   final FakeStore _store;
 
   @override
-  Future<FriendRequest> send(String userId) async {
-    final sender = _store.currentUser;
-    final key = 'fr_${sender.id}_$userId';
-    final existing = _store.friendRequests[key];
-    if (existing != null) {
-      throw const ApiException(
-        statusCode: 409,
-        message: 'Solicitação já enviada.',
-      );
-    }
-    final request = FriendRequest(
-      id: key,
-      status: 'PENDING',
-      createdAt: DateTime.now(),
-      sender: sender,
-      receiverId: userId,
-    );
-    _store.friendRequests[key] = request;
-    return request;
+  Future<void> follow(String userId) async {
+    final me = _store.currentUserId;
+    if (me == null || me == userId) return;
+    _store.follows.add('$me>$userId');
   }
 
   @override
-  Future<List<FriendRequest>> pending() async {
+  Future<void> unfollow(String userId) async {
     final me = _store.currentUserId;
-    return _store.friendRequests.values
-        .where((r) => r.status == 'PENDING' && r.receiverId == me)
+    if (me == null) return;
+    _store.follows.remove('$me>$userId');
+  }
+
+  @override
+  Future<FollowState> state(String userId) async =>
+      _store.followState(userId);
+
+  @override
+  Future<({List<YazzokiUser> users, int total, int page, int pageSize})>
+      followers(String userId, {int page = 1, int pageSize = 20}) async {
+    final ids = _store.follows
+        .where((e) => e.endsWith('>$userId'))
+        .map((e) => e.split('>').first)
         .toList();
+    return _page(ids, page, pageSize);
   }
 
   @override
-  Future<void> accept(String requestId) async {
-    final request = _store.friendRequests[requestId];
-    if (request == null) return;
-    _store.friendRequests[requestId] = FriendRequest(
-      id: request.id,
-      status: 'ACCEPTED',
-      createdAt: request.createdAt,
-      sender: request.sender,
-      receiverId: request.receiverId,
-    );
-    final ids = [request.sender.id, request.receiverId]..sort();
-    _store.friendships.add('${ids[0]}|${ids[1]}');
+  Future<({List<YazzokiUser> users, int total, int page, int pageSize})>
+      following(String userId, {int page = 1, int pageSize = 20}) async {
+    final ids = _store.follows
+        .where((e) => e.startsWith('$userId>'))
+        .map((e) => e.split('>').last)
+        .toList();
+    return _page(ids, page, pageSize);
   }
 
-  @override
-  Future<void> reject(String requestId) async {
-    _store.friendRequests.remove(requestId);
-  }
-
-  @override
-  Future<void> cancel(String userId) async {
-    _store.friendRequests.removeWhere((key, r) =>
-        r.status == 'PENDING' &&
-        r.sender.id == _store.currentUserId &&
-        r.receiverId == userId);
-  }
-
-  @override
-  Future<void> removeFriend(String userId) async {
-    final me = _store.currentUserId;
-    final pair = _store._pairKey(me!, userId);
-    _store.friendships.remove(pair);
-  }
-
-  @override
-  Future<Friendship> state(String userId) async =>
-      _store.friendshipState(userId);
-
-  @override
-  Future<({List<YazzokiUser> friends, int total, int page, int pageSize})> list(
-    String userId, {
-    int page = 1,
-    int pageSize = 20,
-  }) async {
-    final ids = <String>[];
-    for (final pair in _store.friendships) {
-      final parts = pair.split('|');
-      if (parts.contains(userId)) {
-        ids.add(parts.firstWhere((id) => id != userId));
-      }
-    }
+  ({List<YazzokiUser> users, int total, int page, int pageSize}) _page(
+    List<String> ids,
+    int page,
+    int pageSize,
+  ) {
     final all =
         ids.map((id) => _store.users[id]).whereType<YazzokiUser>().toList();
     final start = (page - 1) * pageSize;
     final slice = start >= all.length
         ? <YazzokiUser>[]
         : all.sublist(start, (start + pageSize).clamp(0, all.length));
-    return (friends: slice, total: all.length, page: page, pageSize: pageSize);
+    return (users: slice, total: all.length, page: page, pageSize: pageSize);
   }
 }
 
@@ -771,7 +725,16 @@ class _FakeChatRepository implements ChatRepository {
     final me = _store.currentUserId;
     if (me == null) return const [];
     final result = <Conversation>[];
-    for (final pair in _store.friendships) {
+    // A conversation exists for every pair connected by a follow (either
+    // direction), keyed by the sorted pair id.
+    final pairs = <String>{};
+    for (final e in _store.follows) {
+      final parts = e.split('>');
+      if (parts.length != 2) continue;
+      if (parts[0] != me && parts[1] != me) continue;
+      pairs.add(_pairKey(parts[0], parts[1]));
+    }
+    for (final pair in pairs) {
       final parts = pair.split('|');
       if (!parts.contains(me)) continue;
       // "Excluir conversa (para mim)" hides it from THIS user's list only.
@@ -829,8 +792,10 @@ class _FakeChatRepository implements ChatRepository {
 
   // Deterministic reverse of the pair -> conversationId mapping.
   String? _pairFromConversationId(String conversationId) {
-    for (final pair in _store.friendships) {
-      if (pair == conversationId) return pair;
+    for (final e in _store.follows) {
+      final parts = e.split('>');
+      if (parts.length != 2) continue;
+      if (_pairKey(parts[0], parts[1]) == conversationId) return conversationId;
     }
     return null;
   }
@@ -841,10 +806,11 @@ class _FakeChatRepository implements ChatRepository {
     if (me == null || me == otherUserId) {
       throw const ApiException(statusCode: 403, message: 'Conversa inválida.');
     }
-    if (!_store.friendships.contains(_pairKey(me, otherUserId))) {
+    if (!_store.follows.contains('$me>$otherUserId') &&
+        !_store.follows.contains('$otherUserId>$me')) {
       throw const ApiException(
         statusCode: 403,
-        message: 'Vocês precisam ser amigos para iniciar uma conversa.',
+        message: 'Vocês precisam se seguir para iniciar uma conversa.',
       );
     }
     final other = _store.users[otherUserId];

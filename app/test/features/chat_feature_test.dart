@@ -26,7 +26,12 @@ void main() {
     final repos = FakeRepositories();
     lastSeededRepos = repos;
     final store = repos.store;
-    if (withFriend) store.friendships.add('u0|u2');
+    // `withFriend: false` must mean NO follow edge at all (so no
+    // conversation is derived); true seeds a mutual follow.
+    if (withFriend) {
+      store.follows.add('u0>u2');
+      store.follows.add('u2>u0');
+    }
     store.chatMessagesByPair['u0|u2'] = [];
     if (!withConversation) store.chatMessagesByPair.remove('u0|u2');
     for (var i = 0; i < messages.length; i++) {
@@ -53,7 +58,7 @@ void main() {
       await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
       expect(find.textContaining('Suas conversas'), findsOneWidget);
-      expect(find.textContaining('ainda não possui amigos'), findsOneWidget);
+      expect(find.textContaining('ainda não segue ninguém'), findsOneWidget);
     });
 
     testWidgets('lists a conversation with peer nickname and last preview',
@@ -77,22 +82,21 @@ void main() {
       expect(find.text('joao'), findsWidgets);
     });
 
-    testWidgets('removing a friend clears the friends row', (tester) async {
+    testWidgets('unfollowing clears the followed-users row', (tester) async {
       final state = await seededChat(withFriend: true);
       await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
-      // Friend row is populated (empty-friends hint is absent).
-      expect(find.text('Você ainda não possui amigos.'), findsNothing);
+      expect(find.text('Você ainda não segue ninguém.'), findsNothing);
 
-      // Remove the friendship server-side (source of truth) and let the
-      // onFriendsChanged stream re-sync the row.
-      await state.removeFriend('u2');
+      // Unfollow server-side (source of truth) and let the onFollowsChanged
+      // stream re-sync the row.
+      await state.unfollowUser('u2');
       await tester.pumpAndSettle();
 
       // The friends row is now empty → the hint appears. (The persisted
       // conversation tile with joao may remain — that is correct: chat
       // history survives friendship removal.)
-      expect(find.text('Você ainda não possui amigos.'), findsOneWidget);
+      expect(find.text('Você ainda não segue ninguém.'), findsOneWidget);
     });
   });
 
@@ -780,7 +784,7 @@ void main() {
           state: state);
       await tester.pumpAndSettle();
       // Friendly pair → both the Amigos and Mensagem buttons are shown.
-      expect(find.text('AMIGOS'), findsOneWidget);
+      expect(find.text('SEGUINDO'), findsOneWidget);
       expect(find.text('MENSAGEM'), findsOneWidget);
       await tester.tap(find.text('MENSAGEM'));
       await tester.pumpAndSettle();

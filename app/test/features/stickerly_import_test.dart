@@ -275,7 +275,8 @@ void main() {
       addTearDown(tester.view.reset);
 
       final repos = FakeRepositories();
-      repos.store.friendships.add('u0|u2');
+      repos.store.follows.add('u0>u2');
+    repos.store.follows.add('u2>u0');
       repos.store.chatMessagesByPair['u0|u2'] = [];
       repos.store.stickerPackages.add(StickerPackage(
         id: 'p1',

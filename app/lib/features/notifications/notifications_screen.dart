@@ -17,7 +17,7 @@ import '../../models/yazzoki_notification.dart';
 
 /// Notifications tab — persistent server-side notifications.
 ///
-/// LIKE / COMMENT rows navigate to the post; a PENDING FRIEND_REQUEST
+/// LIKE / COMMENT rows navigate to the post; a FOLLOW
 /// renders the actionable Aceitar / Recusar card inside the same list.
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -29,7 +29,6 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   bool _requested = false;
   String? _error;
-  final Set<String> _acting = {};
 
   @override
   void didChangeDependencies() {
@@ -50,28 +49,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _error = 'Sem conexão com o Yazzoki.');
-    }
-  }
-
-  Future<void> _respond(String requestId, {required bool accept}) async {
-    setState(() => _acting.add(requestId));
-    final state = AppStateScope.of(context);
-    try {
-      if (accept) {
-        await state.acceptFriendRequest(requestId);
-      } else {
-        await state.rejectFriendRequest(requestId);
-      }
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erro de conexão.')),
-      );
-    } finally {
-      if (mounted) setState(() => _acting.remove(requestId));
     }
   }
 
@@ -171,16 +148,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   itemCount: notifications.length,
                   itemBuilder: (context, i) {
                     final n = notifications[i];
-                    if (n.type == 'FRIEND_REQUEST' &&
-                        n.friendRequestStatus == 'PENDING' &&
-                        n.friendRequestId != null) {
-                      return _FriendRequestCard(
-                        notification: n,
-                        busy: _acting.contains(n.friendRequestId),
-                        onAccept: () => _respond(n.friendRequestId!, accept: true),
-                        onReject: () => _respond(n.friendRequestId!, accept: false),
-                      );
-                    }
                     return _NotificationTile(
                       notification: n,
                       onTap: () => _open(n),
@@ -218,12 +185,8 @@ class _NotificationTile extends StatelessWidget {
         return 'curtiu sua publicação.';
       case 'COMMENT':
         return 'comentou na sua publicação.';
-      case 'FRIEND_REQUEST':
-        return 'enviou uma solicitação de amizade.';
-      case 'FRIEND_ACCEPTED':
-        // Rendered by the dedicated spans in [build]: "Agora você e @x
-        // são amigos."
-        return 'são amigos.';
+      case 'FOLLOW':
+        return 'começou a seguir você.';
       default:
         return 'interagiu com você.';
     }
@@ -281,8 +244,6 @@ class _NotificationTile extends StatelessWidget {
                   text: TextSpan(
                     style: AppTextStyles.bodyMuted,
                     children: [
-                      if (n.type == 'FRIEND_ACCEPTED')
-                        const TextSpan(text: 'Agora você e '),
                       WidgetSpan(
                         alignment: PlaceholderAlignment.baseline,
                         baseline: TextBaseline.alphabetic,
@@ -293,11 +254,7 @@ class _NotificationTile extends StatelessWidget {
                           child: Text(n.actorNickname, style: AppTextStyles.h3.copyWith(fontSize: 14)),
                         ),
                       ),
-                      TextSpan(
-                        text: n.type == 'FRIEND_ACCEPTED'
-                            ? ' são amigos.'
-                            : ' ${description(n)}',
-                      ),
+                      TextSpan(text: ' ${description(n)}'),
                     ],
                   ),
                 ),
@@ -308,76 +265,6 @@ class _NotificationTile extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The actionable friend request card: avatar, sender nickname and the two
-/// Aceitar / Recusar buttons — both execute real server actions.
-class _FriendRequestCard extends StatelessWidget {
-  const _FriendRequestCard({
-    required this.notification,
-    required this.busy,
-    required this.onAccept,
-    required this.onReject,
-  });
-
-  final YazzokiNotification notification;
-  final bool busy;
-  final VoidCallback onAccept;
-  final VoidCallback onReject;
-
-  @override
-  Widget build(BuildContext context) {
-    final n = notification;
-    return YazzokiCard(
-      margin: const EdgeInsets.symmetric(vertical: AppDimensions.spaceSm),
-      padding: const EdgeInsets.all(AppDimensions.spaceXl),
-      border: const Border.fromBorderSide(
-        BorderSide(
-          color: AppColors.primaryBlue,
-          width: AppDimensions.borderWidthActive,
-        ),
-      ),
-      child: Column(
-        children: [
-          UserAvatar(
-  name: n.actorNickname,
-  seed: n.actorNickname,
-  imageUrl: n.actorAvatarUrl,
-  size: 56,
-  ring: true,
-),
-          const SizedBox(height: AppDimensions.spaceMd),
-          Text(n.actorNickname, style: AppTextStyles.h2.copyWith(fontSize: 16)),
-          const SizedBox(height: AppDimensions.spaceXs),
-          Text(
-            'enviou uma solicitação de amizade.',
-            style: AppTextStyles.bodyMuted,
-          ),
-          const SizedBox(height: AppDimensions.spaceLg),
-          YazzokiButton(
-            label: 'Aceitar',
-            icon: Icons.check_rounded,
-            expanded: true,
-            isLoading: busy,
-            onPressed: busy ? null : onAccept,
-          ),
-          const SizedBox(height: AppDimensions.spaceMd),
-          YazzokiButton(
-            label: 'Recusar',
-            icon: Icons.close_rounded,
-            variant: YazzokiButtonVariant.outline,
-            expanded: true,
-            onPressed: busy ? null : onReject,
-          ),
-          const SizedBox(height: AppDimensions.spaceMd),
-          Text(
-            yazzoki.relativeTime(n.createdAt),
-            style: AppTextStyles.caption,
           ),
         ],
       ),

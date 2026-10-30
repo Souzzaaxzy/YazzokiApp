@@ -15,7 +15,8 @@ void main() {
   group('Gravação de voz (gestos)', () {
     Future<AppState> seededChat() async {
       final repos = FakeRepositories();
-      repos.store.friendships.add('u0|u2');
+      repos.store.follows.add('u0>u2');
+    repos.store.follows.add('u2>u0');
       repos.store.chatMessagesByPair['u0|u2'] = [];
       final state = AppState(repositories: repos);
       await state.restoreSession();

@@ -32,7 +32,7 @@ class Services {
   LikeRepository get likes => repositories.likes;
   CommentRepository get comments => repositories.comments;
   UserRepository get users => repositories.users;
-  FriendRepository get friends => repositories.friends;
+  FollowRepository get follows => repositories.follows;
   NotificationRepository get notifications => repositories.notifications;
   UploadRepository get uploads => repositories.uploads;
   ChatRepository get chat => repositories.chat;
@@ -49,7 +49,7 @@ class Services {
     final likes = LikeRepository(apiClient);
     final comments = CommentRepository(apiClient);
     final users = UserRepository(apiClient);
-    final friends = FriendRepository(apiClient);
+    final follows = FollowRepository(apiClient);
     final notifications = NotificationRepository(apiClient);
     final uploads = UploadRepository(apiClient);
     final chat = ChatRepository(apiClient);
@@ -65,7 +65,7 @@ class Services {
         likes: likes,
         comments: comments,
         users: users,
-        friends: friends,
+        follows: follows,
         notifications: notifications,
         uploads: uploads,
         chat: chat,

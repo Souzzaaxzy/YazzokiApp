@@ -106,18 +106,14 @@ Future<AppState> seededAppState() async {
   return state;
 }
 
-/// Logged-in [AppState] with social data (notifications, friend requests)
-/// seeded in the fake store, as if the server had persisted them.
+/// Logged-in [AppState] with social data (notifications) seeded in the fake
+/// store, as if the server had persisted them.
 Future<AppState> seededAppStateWithSocial({
   List<dynamic> notifications = const [],
-  List<dynamic> friendRequests = const [],
 }) async {
   final repos = FakeRepositories();
   for (final n in notifications) {
     repos.store.notifications.add(n);
-  }
-  for (final r in friendRequests) {
-    repos.store.friendRequests[r.id] = r;
   }
   final state = AppState(repositories: repos);
   await state.restoreSession();

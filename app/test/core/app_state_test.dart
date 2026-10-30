@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yazzoki/core/services/app_state.dart';
-import 'package:yazzoki/models/friend_request.dart';
+import 'package:yazzoki/models/follow.dart';
 
 import '../helpers/fake_repositories.dart';
 
@@ -116,12 +116,12 @@ void main() {
       expect(state.currentUser!.nickname, 'leonardo');
     });
 
-    test('sendFriendRequest only touches that profile slot', () async {
+    test('followUser only touches that profile slot', () async {
       await state.loadProfile('joao');
-      await state.sendFriendRequest('u2');
+      await state.followUser('u2');
       expect(
-        state.profileFor('joao')!.friendship,
-        Friendship.outgoingPending,
+        state.profileFor('joao')!.follow,
+        FollowState.following,
       );
       expect(state.currentUser!.nickname, 'leonardo');
     });

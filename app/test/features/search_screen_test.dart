@@ -43,7 +43,7 @@ void main() {
 
     // The profile screen loads with the searched user and the Solicitar button.
     expect(find.text('PERFIL'), findsOneWidget);
-    expect(find.text('SOLICITAR'), findsOneWidget);
+    expect(find.text('SEGUIR'), findsOneWidget);
   });
 
   testWidgets('shows empty state when no user matches', (tester) async {

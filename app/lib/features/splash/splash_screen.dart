@@ -5,26 +5,27 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../app/theme/app_colors.dart';
 import '../../app/routes.dart';
+import '../../app/theme/app_colors.dart';
 import '../../core/widgets/app_state_scope.dart';
 
 /// Splash total duration in ms — the animation HARD cap (spec: max 9s).
 const int splashDurationMs = 8500;
 
-/// Yazzoki splash screen — V2 (cinemática).
+/// Yazzoki splash screen — "Yuki" (snow) composition.
 ///
-/// Fully native (CustomPaint + one AnimationController, no video/assets/deps).
-/// The scene is built in true LAYERS around the brush-stroke emblem:
+/// Fully native (CustomPaint + one AnimationController, no video/deps). The
+/// scene is a quiet Japanese winter, built in true LAYERS:
 ///
-///   background (deep gradient + vignette + transient grid + far digital rain)
-///   → mid rain / particles / light beams / HUD brackets (behind the emblem)
-///   → the emblem image itself (with a soft ice-blue halo)
-///   → front particles / sparks / glitch slices / HUD markers in front
-///   → scanline crossing the logo + final cinematic center flash
+///   night sky gradient + moon glow + vignette
+///   → far snow (small, slow) / drifting kana (Japanese characters)
+///   → the emblem: the brush strokes are WRITTEN top-to-bottom
+///   → the red hanko seal is stamped last, with a small pop
+///   → sakura petals + near snow (large, fast) in the foreground
 ///
-/// The emblem fades/scales in while the network expands, and the whole scene
-/// stays GPU-friendly (bounded counts, repaint isolated by the route).
+/// No binary rain, no HUD brackets, no glitch: the motifs are snowflakes,
+/// kana and petals. Everything stays GPU-friendly (bounded counts, one
+/// repaint boundary).
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -92,8 +93,8 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  /// The scene is visually established (letters formed, network expanding);
-  /// navigation can then fire as soon as the restore finishes.
+  /// The mark is complete (strokes written + seal stamped); navigation can
+  /// then fire as soon as the session restore finishes.
   void _onSceneReady() {
     if (_ready) return;
     setState(() => _ready = true);
@@ -112,8 +113,8 @@ class _SplashScreenState extends State<SplashScreen>
   }
 }
 
-/// Scene host: owns the persistent particle/burst/label data and steps it
-/// on every animation tick (deterministic seed → stable tests).
+/// Scene host: owns the persistent snow/kana/petal data and steps it on
+/// every animation tick (deterministic seed → stable tests).
 class _YazzokiSplashScene extends StatefulWidget {
   const _YazzokiSplashScene({required this.animation, required this.onReady});
 
@@ -126,13 +127,10 @@ class _YazzokiSplashScene extends StatefulWidget {
 
 class _YazzokiSplashSceneState extends State<_YazzokiSplashScene> {
   late final math.Random _rng;
-  late final List<_RainColumn> _columns;
-  late final List<_Particle> _particles;
-  late final List<_Fragment> _fragments;
-  late final List<_NetworkNode> _network;
-  late final List<_Beam> _beams;
-  late final List<_HudMarker> _hud;
-  late final List<_Spark> _sparks;
+  late final List<_Snowflake> _farSnow;
+  late final List<_Snowflake> _nearSnow;
+  late final List<_KanaDrop> _kana;
+  late final List<_Petal> _petals;
   bool _readySent = false;
   ui.Image? _logo;
   ui.Image? _seal;
@@ -141,13 +139,10 @@ class _YazzokiSplashSceneState extends State<_YazzokiSplashScene> {
   void initState() {
     super.initState();
     _rng = math.Random(42);
-    _columns = List.generate(34, (i) => _RainColumn(index: i, rng: _rng));
-    _particles = List.generate(40, (_) => _Particle(rng: _rng));
-    _fragments = List.generate(14, (_) => _Fragment(rng: _rng));
-    _network = List.generate(20, (_) => _NetworkNode(rng: _rng));
-    _beams = List.generate(6, (_) => _Beam(rng: _rng));
-    _hud = List.generate(12, (_) => _HudMarker(rng: _rng));
-    _sparks = List.generate(10, (_) => _Spark(rng: _rng));
+    _farSnow = List.generate(46, (_) => _Snowflake.far(_rng));
+    _nearSnow = List.generate(22, (_) => _Snowflake.near(_rng));
+    _kana = List.generate(16, (_) => _KanaDrop(rng: _rng));
+    _petals = List.generate(12, (_) => _Petal(rng: _rng));
     widget.animation.addListener(_onTick);
     _loadLogo();
   }
@@ -212,13 +207,10 @@ class _YazzokiSplashSceneState extends State<_YazzokiSplashScene> {
       child: CustomPaint(
         painter: _YazzokiSplashPainter(
           progress: widget.animation.value,
-          columns: _columns,
-          particles: _particles,
-          fragments: _fragments,
-          network: _network,
-          beams: _beams,
-          hud: _hud,
-          sparks: _sparks,
+          farSnow: _farSnow,
+          nearSnow: _nearSnow,
+          kana: _kana,
+          petals: _petals,
           logo: _logo,
           seal: _seal,
         ),
@@ -230,430 +222,296 @@ class _YazzokiSplashSceneState extends State<_YazzokiSplashScene> {
 
 // ── Sim state objects (persistent, mutated in place) ─────────
 
-/// One falling binary stream.
-class _RainColumn {
-  _RainColumn({required this.index, required math.Random rng}) {
-    speed = 0.5 + rng.nextDouble() * 1.3;
-    brightness = 0.2 + rng.nextDouble() * 0.8;
-    char = rng.nextBool() ? '0' : '1';
-    // Non-uniform density: some columns cluster near one side.
-    baseY = rng.nextDouble();
-  }
+/// A drifting snowflake. `arms` is 6 for the drawn star flakes; the smallest
+/// ones are rendered as soft dots (cheaper, and reads as depth).
+class _Snowflake {
+  _Snowflake._({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.fallSpeed,
+    required this.swayAmp,
+    required this.swayPhase,
+    required this.swaySpeed,
+    required this.opacity,
+    required this.arms,
+  });
 
-  final int index;
-  late final double speed;
-  late final double brightness;
-  late final String char;
-  late final double baseY;
-  double offset = 0;
+  factory _Snowflake.far(math.Random rng) => _Snowflake._(
+        x: rng.nextDouble(),
+        y: rng.nextDouble(),
+        size: 0.8 + rng.nextDouble() * 1.8,
+        fallSpeed: 0.012 + rng.nextDouble() * 0.020,
+        swayAmp: 0.004 + rng.nextDouble() * 0.012,
+        swayPhase: rng.nextDouble() * math.pi * 2,
+        swaySpeed: 0.4 + rng.nextDouble() * 0.9,
+        opacity: 0.18 + rng.nextDouble() * 0.35,
+        arms: 0,
+      );
 
-  void tick(double dt) {
-    offset = (offset + speed * dt * 0.3) % 1.0;
-  }
-}
-
-/// Drifting glowing dot (back or front layer, some fast).
-class _Particle {
-  _Particle({required math.Random rng})
-      : x = rng.nextDouble(),
-        y = rng.nextDouble(),
-        size = 0.6 + rng.nextDouble() * 1.8,
-        driftY = 0.006 + rng.nextDouble() * 0.025,
-        driftX = (rng.nextDouble() - 0.5) * 0.01,
-        opacity = 0.15 + rng.nextDouble() * 0.7,
-        twinkle = rng.nextDouble() * math.pi * 2,
-        colorIndex = rng.nextInt(4),
-        fast = rng.nextDouble() < 0.25;
+  factory _Snowflake.near(math.Random rng) => _Snowflake._(
+        x: rng.nextDouble(),
+        y: rng.nextDouble(),
+        size: 4.5 + rng.nextDouble() * 6.0,
+        fallSpeed: 0.035 + rng.nextDouble() * 0.055,
+        swayAmp: 0.010 + rng.nextDouble() * 0.026,
+        swayPhase: rng.nextDouble() * math.pi * 2,
+        swaySpeed: 0.5 + rng.nextDouble() * 1.2,
+        opacity: 0.5 + rng.nextDouble() * 0.45,
+        arms: 6,
+      );
 
   final double x;
   double y;
   final double size;
-  final double driftY;
-  final double driftX;
+  final double fallSpeed;
+  final double swayAmp;
+  final double swayPhase;
+  final double swaySpeed;
   final double opacity;
-  final double twinkle;
-  final int colorIndex;
-  final bool fast;
+
+  /// 0 → draw a soft dot; 6 → draw a six-armed flake.
+  final int arms;
 
   void tick(double dt) {
-    y = (y - (fast ? 0.05 : 0.013) * dt) % 1.0;
+    y += fallSpeed * dt;
+    if (y > 1.02) y -= 1.04;
   }
+
+  /// Horizontal sway offset (-1..1) at global time [t].
+  double sway(double t) => math.sin(t * swaySpeed * math.pi * 2 + swayPhase);
 }
 
-/// Small digital rectangle fragment that fades in/out.
-class _Fragment {
-  _Fragment({required math.Random rng})
-      : x = rng.nextDouble(),
+/// A column of falling Japanese characters — the "kana rain" that replaces
+/// the old binary rain. Characters drift down slowly with a soft fade.
+class _KanaDrop {
+  _KanaDrop({required math.Random rng})
+      : x = 0.04 + rng.nextDouble() * 0.92,
         y = rng.nextDouble(),
-        w = 8 + rng.nextDouble() * 22,
-        h = 4 + rng.nextDouble() * 10,
-        colorIndex = rng.nextInt(4),
-        phase = rng.nextDouble() * math.pi * 2;
+        size = 12 + rng.nextDouble() * 16,
+        speed = 0.010 + rng.nextDouble() * 0.018,
+        opacity = 0.10 + rng.nextDouble() * 0.18,
+        chars = _pick(rng, 2 + rng.nextInt(3));
 
-  final double x;
-  final double y;
-  final double w;
-  final double h;
-  final int colorIndex;
-  final double phase;
-
-  double visibility(double t) {
-    final v = (math.sin(t * 6 + phase) + 1) * 0.5;
-    return v * v;
+  static String _pick(math.Random rng, int n) {
+    final out = StringBuffer();
+    for (var i = 0; i < n; i++) {
+      out.write(_kanaPool[rng.nextInt(_kanaPool.length)]);
+    }
+    return out.toString();
   }
-}
-
-/// Pulsing network node (lower/center region).
-class _NetworkNode {
-  _NetworkNode({required math.Random rng})
-      : x = rng.nextDouble(),
-        y = 0.5 + rng.nextDouble() * 0.45,
-        size = 1.0 + rng.nextDouble() * 1.6,
-        phase = rng.nextDouble() * math.pi * 2;
 
   final double x;
-  final double y;
+  double y;
   final double size;
-  final double phase;
-}
+  final double speed;
+  final double opacity;
+  final String chars;
 
-/// A light beam crossing the composition (centage-independent).
-class _Beam {
-  _Beam({required math.Random rng})
-      : angle = rng.nextDouble() * math.pi,
-        thickness = 1.5 + rng.nextDouble() * 4,
-        duration = 0.6 + rng.nextDouble() * 1.1,
-        delay = rng.nextDouble() * 2,
-        colorIndex = rng.nextInt(4);
-
-  final double angle;
-  final double thickness;
-  final double duration;
-  final double delay;
-  final int colorIndex;
-
-  /// 0..1 progress of this beam's journey at global time [t]; null when idle.
-  double? progressAt(double t) {
-    final local = t * 8.5 - delay;
-    if (local < 0 || local > duration) return null;
-    return local / duration;
+  void tick(double dt) {
+    y += speed * dt;
+    if (y > 1.05) y -= 1.1;
   }
 }
 
-/// Atmospheric HUD marker (bracket / reticle / segment) — never text.
-class _HudMarker {
-  _HudMarker({required math.Random rng})
+/// A sakura petal drifting diagonally in the foreground.
+class _Petal {
+  _Petal({required math.Random rng})
       : x = rng.nextDouble(),
         y = rng.nextDouble(),
-        kind = rng.nextInt(3),
-        size = 14 + rng.nextDouble() * 26,
+        size = 5 + rng.nextDouble() * 7,
+        fallSpeed = 0.020 + rng.nextDouble() * 0.035,
+        driftX = (rng.nextDouble() - 0.3) * 0.02,
+        spin = (rng.nextDouble() - 0.5) * 3.2,
         phase = rng.nextDouble() * math.pi * 2,
-        colorIndex = rng.nextInt(4);
+        opacity = 0.35 + rng.nextDouble() * 0.4;
 
   final double x;
-  final double y;
-  final int kind;
+  double y;
   final double size;
+  final double fallSpeed;
+  final double driftX;
+  final double spin;
   final double phase;
-  final int colorIndex;
+  final double opacity;
+
+  void tick(double dt) {
+    y += fallSpeed * dt;
+    if (y > 1.05) y -= 1.1;
+  }
 }
 
-/// A quick front spark (energy dash).
-class _Spark {
-  _Spark({required math.Random rng})
-      : x = rng.nextDouble(),
-        y = rng.nextDouble(),
-        length = 8 + rng.nextDouble() * 18,
-        angle = rng.nextDouble() * math.pi * 2,
-        phase = rng.nextDouble() * math.pi * 2,
-        colorIndex = rng.nextInt(4);
-
-  final double x;
-  final double y;
-  final double length;
-  final double angle;
-  final double phase;
-  final int colorIndex;
-}
-
-/// Ordered digital palette used by accents (0..3): cyan, green, violet, magenta.
-Color _accentColor(int index, double alpha) {
-  return switch (index % 4) {
-    0 => AppColors.electricBlue.withValues(alpha: alpha),
-    1 => AppColors.success.withValues(alpha: alpha),
-    2 => const Color(0xFF9D4EFF).withValues(alpha: alpha),
-    3 => const Color(0xFFFF3EC8).withValues(alpha: alpha),
-    _ => AppColors.electricBlue.withValues(alpha: alpha),
-  };
-}
+/// Japanese characters used by the kana rain (hiragana, katakana + a few
+/// kanji evoking winter/Japan).
+const List<String> _kanaPool = [
+  'ゆ', 'き', 'ふ', 'ゆ', 'は', 'な', 'さ', 'く', 'ら', 'つ', 'き', 'か',
+  'ぜ', 'と', 'り', 'い', 'み', 'ず', 'う', 'み', 'そ', 'ら', 'こ', 'と',
+  'ヤ', 'マ', 'ト', 'カ', 'ワ', 'ユ', 'キ',
+  '雪', '風', '花', '月', '夜', '桜', '山', '川', '空', '星', '冬', '白',
+];
 
 /// Paints the full layered scene. Order defines depth:
-/// background → far rain → back particles → beams → network → HUD (behind)
-/// → inner-letter mask layer → letters + per-letter glow → HUD (front) →
-/// near rain → front particles/sparks/glitch → scanline → center flash.
+/// sky → moon → far snow → kana → emblem (strokes then seal) → petals →
+/// near snow → vignette.
 class _YazzokiSplashPainter extends CustomPainter {
   _YazzokiSplashPainter({
     required this.progress,
-    required this.columns,
-    required this.particles,
-    required this.fragments,
-    required this.network,
-    required this.beams,
-    required this.hud,
-    required this.sparks,
+    required this.farSnow,
+    required this.nearSnow,
+    required this.kana,
+    required this.petals,
     this.logo,
     this.seal,
   });
 
   final double progress;
-  final List<_RainColumn> columns;
-  final List<_Particle> particles;
-  final List<_Fragment> fragments;
-  final List<_NetworkNode> network;
-  final List<_Beam> beams;
-  final List<_HudMarker> hud;
-  final List<_Spark> sparks;
+  final List<_Snowflake> farSnow;
+  final List<_Snowflake> nearSnow;
+  final List<_KanaDrop> kana;
+  final List<_Petal> petals;
   final ui.Image? logo;
   final ui.Image? seal;
 
-  static const _glyphBase = TextStyle(
-    fontFamily: 'JetBrainsMono',
-    fontSize: 13,
-    color: Color(0xFF008CFF),
-    fontWeight: FontWeight.w600,
-  );
   static const _kStep = 1 / 60;
-
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final c in columns) {
-      c.tick(_kStep);
+    for (final s in farSnow) {
+      s.tick(_kStep);
     }
-    for (final p in particles) {
+    for (final s in nearSnow) {
+      s.tick(_kStep);
+    }
+    for (final k in kana) {
+      k.tick(_kStep);
+    }
+    for (final p in petals) {
       p.tick(_kStep);
     }
 
     final t = progress;
-    _paintBackground(canvas, size, t);
-    _paintRain(canvas, size, t, far: true);
-    _paintBackParticles(canvas, size, t);
-    _paintBeams(canvas, size, t);
-    _paintNetwork(canvas, size, t);
-
-    _paintHud(canvas, size, t, front: false);
+    _paintSky(canvas, size, t);
+    _paintMoon(canvas, size, t);
+    _paintSnow(canvas, size, t, farSnow);
+    _paintKana(canvas, size, t);
     _paintLogo(canvas, size, t);
-    _paintFragments(canvas, size, t);
-    _paintHud(canvas, size, t, front: true);
-    _paintRain(canvas, size, t, far: false);
-    _paintFront(canvas, size, t);
-    _paintScanline(canvas, size, t);
-    _paintFlash(canvas, size, t);
+    _paintPetals(canvas, size, t);
+    _paintSnow(canvas, size, t, nearSnow);
+    _paintVignette(canvas, size);
   }
 
-  // ── background ────────────────────────────────────────────
-  void _paintBackground(Canvas canvas, Size size, double t) {
+  // ── night sky ─────────────────────────────────────────────
+  void _paintSky(Canvas canvas, Size size, double t) {
     final rect = Offset.zero & size;
     final bg = Paint()
       ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF050505), Color(0xFF000000), Color(0xFF0B0906)],
+        colors: [Color(0xFF0A0D12), Color(0xFF000000), Color(0xFF07080A)],
       ).createShader(rect);
     canvas.drawRect(rect, bg);
+  }
 
+  // ── soft moon glow behind the mark ────────────────────────
+  void _paintMoon(Canvas canvas, Size size, double t) {
+    final appear = _fade(t, 0.02, 0.4);
+    if (appear <= 0.01) return;
+    final center = Offset(size.width * 0.5, size.height * 0.40);
+    final radius = size.shortestSide * 0.42;
     final glow = Paint()
       ..shader = RadialGradient(
         colors: [
-          AppColors.electricBlue
-              .withValues(alpha: 0.16 * (0.2 + 0.8 * _fade(t, 0.05, 0.5))),
+          const Color(0xFFCFE0F2).withValues(alpha: 0.16 * appear),
+          AppColors.electricBlue.withValues(alpha: 0.06 * appear),
           Colors.transparent,
         ],
-      ).createShader(rect);
-    canvas.drawRect(rect, glow);
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, glow);
+  }
 
-    // Transient grid flash (early awakening pulse).
-    final grid = _fade(t, 0.05, 0.2) * (1 - _fade(t, 0.3, 0.5));
-    if (grid > 0.01) {
-      final gp = Paint()
-        ..color = AppColors.electricBlue.withValues(alpha: 0.13 * grid)
-        ..strokeWidth = 0.5;
-      final step = size.shortestSide / 14;
-      for (double x = 0; x <= size.width; x += step) {
-        canvas.drawLine(Offset(x, 0), Offset(x, size.height), gp);
-      }
-      for (double y = 0; y <= size.height; y += step) {
-        canvas.drawLine(Offset(0, y), Offset(size.width, y), gp);
+  // ── snow ──────────────────────────────────────────────────
+  void _paintSnow(
+    Canvas canvas,
+    Size size,
+    double t,
+    List<_Snowflake> flakes,
+  ) {
+    final world = _fade(t, 0.05, 0.5);
+    if (world <= 0.01) return;
+    for (final f in flakes) {
+      final x = f.x * size.width + f.sway(t) * size.width * f.swayAmp * 12;
+      final y = f.y * size.height;
+      final alpha = f.opacity * world;
+      if (alpha <= 0.02) continue;
+
+      if (f.arms == 0) {
+        // Soft dot (far layer).
+        canvas.drawCircle(
+          Offset(x, y),
+          f.size,
+          Paint()
+            ..color = const Color(0xFFF2F6FA).withValues(alpha: alpha)
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, f.size * 0.6),
+        );
+      } else {
+        _drawFlake(canvas, Offset(x, y), f.size, alpha);
       }
     }
   }
 
-  // ── digital rain (far = deeper/smaller, near = closer/larger) ──
-  void _paintRain(Canvas canvas, Size size, double t, {required bool far}) {
-    final gauge = size.width / columns.length;
-    final centerY = size.height * 0.5;
-    for (var c = 0; c < columns.length; c++) {
-      final col = columns[c];
-      final isFar = col.baseY < 0.4;
-      if (far != isFar) continue;
+  /// A six-armed snowflake with small side branches.
+  void _drawFlake(Canvas canvas, Offset c, double r, double alpha) {
+    final paint = Paint()
+      ..color = const Color(0xFFF4F8FC).withValues(alpha: alpha)
+      ..strokeWidth = r * 0.16
+      ..strokeCap = StrokeCap.round;
+    final branch = Paint()
+      ..color = const Color(0xFFEAF2FA).withValues(alpha: alpha * 0.85)
+      ..strokeWidth = r * 0.12
+      ..strokeCap = StrokeCap.round;
+    for (var i = 0; i < 6; i++) {
+      final a = i * math.pi / 3;
+      final tip = Offset(c.dx + math.cos(a) * r, c.dy + math.sin(a) * r);
+      canvas.drawLine(c, tip, paint);
+      final bx = c.dx + math.cos(a) * r * 0.6;
+      final by = c.dy + math.sin(a) * r * 0.6;
+      for (final d in [a - 0.6, a + 0.6]) {
+        canvas.drawLine(
+          Offset(bx, by),
+          Offset(bx + math.cos(d) * r * 0.34, by + math.sin(d) * r * 0.34),
+          branch,
+        );
+      }
+    }
+  }
 
-      final x = col.index * gauge + gauge / 2;
-      final y = col.offset * size.height;
-      final distToCenter = (y - centerY).abs();
-      if (distToCenter < size.height * 0.15) continue;
-
-      final depth = 1.0 - (y / size.height - 0.5).abs() * 1.2;
-      final alpha = col.brightness * depth * (far ? 0.45 : 0.85);
-      if (alpha <= 0.04) continue;
+  // ── falling kana ──────────────────────────────────────────
+  void _paintKana(Canvas canvas, Size size, double t) {
+    final world = _fade(t, 0.08, 0.6);
+    if (world <= 0.01) return;
+    for (final k in kana) {
+      final alpha = k.opacity * world;
+      if (alpha <= 0.02) continue;
       final tp = TextPainter(
         text: TextSpan(
-          text: col.char,
-          style: _glyphBase.copyWith(
-            fontSize: far ? 9 : 13,
-            color: _accentColor(c % 4, alpha),
+          text: k.chars,
+          style: TextStyle(
+            fontFamily: 'ZenOldMincho',
+            fontSize: k.size,
+            height: 1.25,
+            color: const Color(0xFFDCE8F4).withValues(alpha: alpha),
           ),
         ),
         textDirection: TextDirection.ltr,
       )..layout();
-      tp.paint(canvas, Offset(x - tp.width / 2, y));
-    }
-  }
-
-  // ── back particles ────────────────────────────────────────
-  void _paintBackParticles(Canvas canvas, Size size, double t) {
-    final world = _fade(t, 0.0, 0.55);
-    if (world <= 0.01) return;
-    for (final p in particles) {
-      if (p.fast) continue;
-      final twinkle = (math.sin(p.twinkle + t * 7) + 1) * 0.5;
-      final alpha = p.opacity * (0.3 + 0.7 * twinkle) * world;
-      if (alpha <= 0.02) continue;
-      final paint = Paint()
-        ..color = _accentColor(p.colorIndex, alpha)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2);
-      canvas.drawCircle(
-        Offset(p.x * size.width, p.y * size.height),
-        p.size,
-        paint,
+      tp.paint(
+        canvas,
+        Offset(k.x * size.width - tp.width / 2, k.y * size.height - tp.height),
       );
     }
   }
 
-  // ── light beams crossing the composition ──────────────────
-  void _paintBeams(Canvas canvas, Size size, double t) {
-    final world = _fade(t, 0.1, 0.55);
-    if (world <= 0.01) return;
-    for (final b in beams) {
-      final p = b.progressAt(t);
-      if (p == null) continue;
-      final alpha = math.sin(p * math.pi) * 0.5 * world;
-      if (alpha <= 0.02) continue;
-      final paint = Paint()
-        ..color = _accentColor(b.colorIndex, alpha)
-        ..strokeWidth = b.thickness * (1 - p * 0.5)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.4);
-      final dir = Offset(math.cos(b.angle), math.sin(b.angle));
-      final norm = Offset(-dir.dy, dir.dx);
-      final start = Offset(size.width * 0.2, size.height * 0.5) +
-          norm * 80 +
-          dir * (p - 0.5) * size.shortestSide * 2.2;
-      final end = start - dir * size.shortestSide * 0.7;
-      canvas.drawLine(start, end, paint);
-    }
-  }
-
-  // ── network ───────────────────────────────────────────────
-  void _paintNetwork(Canvas canvas, Size size, double t) {
-    final net = _fade(t, 0.35, 0.95);
-    if (net <= 0.01) return;
-    final pts = <Offset>[
-      for (final n in network)
-        Offset(n.x * size.width, n.y * size.height * 0.68),
-    ];
-    final line = Paint()
-      ..color = _accentColor(0, 0.15 * net)
-      ..strokeWidth = 0.6;
-    for (var i = 0; i < pts.length; i++) {
-      for (var j = i + 1; j < pts.length; j++) {
-        final a = pts[i];
-        final b = pts[j];
-        if ((a - b).distance < size.shortestSide * 0.26) {
-          canvas.drawLine(a, b, line);
-        }
-      }
-    }
-    for (var i = 0; i < pts.length; i++) {
-      final n = network[i];
-      final pulse = (math.sin(t * 5 + n.phase) + 1) * 0.5;
-      final node = Paint()
-        ..color = _accentColor(pulse > 0.6 ? 1 : 0, 0.7 * net)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.3);
-      canvas.drawCircle(pts[i], n.size * (0.8 + 0.5 * pulse), node);
-    }
-  }
-
-  // ── HUD markers (atmospheric, no text) ────────────────────
-  void _paintHud(Canvas canvas, Size size, double t, {required bool front}) {
-    final world = _fade(t, 0.15, 0.85);
-    if (world <= 0.01) return;
-    for (var i = 0; i < hud.length; i++) {
-      final m = hud[i];
-      final isBehind = m.kind == 0 || m.kind == 1;
-      if (front == isBehind) continue;
-      final alpha = (0.2 + 0.5 * (math.sin(t * 4 + m.phase) + 1) * 0.5) * world;
-      if (alpha <= 0.03) continue;
-      final paint = Paint()
-        ..color = _accentColor(m.colorIndex, alpha)
-        ..strokeWidth = 1.0;
-      final cx = m.x * size.width;
-      final cy = m.y * size.height;
-      final s = m.size;
-      switch (m.kind) {
-        case 0: // corner bracket
-          _drawBracket(canvas, Offset(cx, cy), s, paint);
-        case 1: // reticle
-          canvas.drawCircle(
-            Offset(cx, cy),
-            s * 0.4,
-            Paint()
-              ..style = PaintingStyle.stroke
-              ..color = paint.color
-              ..strokeWidth = 1,
-          );
-          canvas.drawLine(Offset(cx - s, cy), Offset(cx + s, cy), paint);
-        case 2: // segment ticks
-          canvas.drawLine(Offset(cx, cy - s), Offset(cx, cy + s), paint);
-          canvas.drawLine(Offset(cx - s, cy), Offset(cx + s, cy), paint);
-      }
-    }
-  }
-
-  void _drawBracket(Canvas canvas, Offset p, double s, Paint paint) {
-    final path = Path()
-      ..moveTo(p.dx - s, p.dy - s)
-      ..lineTo(p.dx - s, p.dy - s * 0.4)
-      ..moveTo(p.dx - s, p.dy - s)
-      ..lineTo(p.dx - s * 0.4, p.dy - s)
-      ..moveTo(p.dx + s, p.dy - s)
-      ..lineTo(p.dx + s * 0.4, p.dy - s)
-      ..moveTo(p.dx + s, p.dy - s)
-      ..lineTo(p.dx + s, p.dy - s * 0.4)
-      ..moveTo(p.dx - s, p.dy + s)
-      ..lineTo(p.dx - s, p.dy + s * 0.4)
-      ..moveTo(p.dx - s, p.dy + s)
-      ..lineTo(p.dx - s * 0.4, p.dy + s)
-      ..moveTo(p.dx + s, p.dy + s)
-      ..lineTo(p.dx + s * 0.4, p.dy + s)
-      ..moveTo(p.dx + s, p.dy + s)
-      ..lineTo(p.dx + s, p.dy + s * 0.4);
-    canvas.drawPath(path, paint);
-  }
-
-  // ── logo (real emblem image, painted on the canvas) ──────
-  //
-  // The emblem is a raster brush stroke, so it is painted as an image rather
-  // than rebuilt from glyphs. When the image is unavailable (decode pending
-  // or failed) a mincho wordmark is drawn instead, keeping the scene intact.
+  // ── logo (strokes written top→bottom, then the seal) ──────
   void _paintLogo(Canvas canvas, Size size, double t) {
     final appear = _easeOutBack(_fade(t, 0.12, 0.5));
     if (appear <= 0.004) return;
@@ -671,9 +529,9 @@ class _YazzokiSplashPainter extends CustomPainter {
         height: targetH,
       );
 
-      // Soft ice-blue halo behind the emblem.
+      // Soft cold halo behind the emblem.
       final halo = Paint()
-        ..color = AppColors.electricBlue.withValues(alpha: 0.16 * appear)
+        ..color = const Color(0xFFCFE0F2).withValues(alpha: 0.14 * appear)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 42);
       canvas.drawRRect(
         RRect.fromRectAndRadius(dst.inflate(14), const Radius.circular(24)),
@@ -716,7 +574,7 @@ class _YazzokiSplashPainter extends CustomPainter {
           Offset(dst.left, edgeY),
           Offset(dst.right, edgeY),
           Paint()
-            ..color = AppColors.electricBlue.withValues(alpha: 0.7 * appear)
+            ..color = const Color(0xFFDCE8F4).withValues(alpha: 0.7 * appear)
             ..strokeWidth = 2
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
         );
@@ -725,8 +583,7 @@ class _YazzokiSplashPainter extends CustomPainter {
 
       // The red hanko seal is stamped LAST with a small pop. It ships as a
       // full-canvas layer aligned with the strokes, so it is drawn into the
-      // SAME dst rect; the pop scales about the seal's own centre (bottom-left
-      // of the mark) so it lands exactly on the stamp.
+      // SAME dst rect; the pop scales about the seal's own centre.
       if (sealImage != null) {
         final stamp = _easeOutBack(_fade(t, 0.5, 0.66));
         if (stamp > 0.004) {
@@ -771,9 +628,9 @@ class _YazzokiSplashPainter extends CustomPainter {
           fontWeight: FontWeight.w700,
           letterSpacing: 6,
           color: Colors.white.withValues(alpha: appear),
-          shadows: [
-            Shadow(color: AppColors.electricBlue, blurRadius: 26),
-            Shadow(color: AppColors.primaryBlue, blurRadius: 12),
+          shadows: const [
+            Shadow(color: Color(0xFFCFE0F2), blurRadius: 26),
+            Shadow(color: Color(0xFF8FBCE4), blurRadius: 12),
           ],
         ),
       ),
@@ -785,114 +642,56 @@ class _YazzokiSplashPainter extends CustomPainter {
     );
   }
 
-  // ── digital fragments (square/rect data chunks) ───────────
-  void _paintFragments(Canvas canvas, Size size, double t) {
-    final world = _fade(t, 0.3, 0.9);
+  // ── sakura petals (foreground) ────────────────────────────
+  void _paintPetals(Canvas canvas, Size size, double t) {
+    final world = _fade(t, 0.25, 0.7);
     if (world <= 0.01) return;
-    for (var i = 0; i < fragments.length; i++) {
-      final f = fragments[i];
-      final v = f.visibility(t);
-      final alpha = v * world * 0.6;
-      if (alpha <= 0.03) continue;
-      final paint = Paint()
-        ..color = _accentColor(f.colorIndex, alpha)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.8);
-      canvas.drawRect(
-        Rect.fromLTWH(
-          f.x * size.width,
-          f.y * size.height,
-          f.w,
-          f.h,
+    for (final p in petals) {
+      final alpha = p.opacity * world;
+      if (alpha <= 0.02) continue;
+      final x = p.x * size.width + p.driftX * size.width * t * 10;
+      final y = p.y * size.height;
+      final angle = p.phase + p.spin * t * 3;
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(angle);
+      final petalPaint = Paint()
+        ..color = const Color(0xFFF3D9E0).withValues(alpha: alpha);
+      final rect = Rect.fromCenter(
+        center: Offset.zero,
+        width: p.size * 0.7,
+        height: p.size * 1.5,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndCorners(
+          rect,
+          topLeft: Radius.circular(p.size),
+          topRight: Radius.circular(p.size),
+          bottomLeft: Radius.circular(p.size * 0.3),
+          bottomRight: Radius.circular(p.size * 0.3),
         ),
-        paint,
+        petalPaint,
       );
+      canvas.restore();
     }
   }
 
-  // ── front layer (fast particles + sparks + glitch slices) ─
-  void _paintFront(Canvas canvas, Size size, double t) {
-    final world = _fade(t, 0.4, 0.9);
-    if (world <= 0.01) return;
-
-    for (final p in particles) {
-      if (!p.fast) continue;
-      final twinkle = (math.sin(p.twinkle + t * 12) + 1) * 0.5;
-      final alpha = p.opacity * (0.5 + 0.5 * twinkle) * world;
-      if (alpha <= 0.03) continue;
-      final paint = Paint()
-        ..color = _accentColor(p.colorIndex, alpha)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.6);
-      canvas.drawCircle(
-        Offset(p.x * size.width, p.y * size.height),
-        p.size * 1.8,
-        paint,
-      );
-    }
-
-    for (var i = 0; i < sparks.length; i++) {
-      final s = sparks[i];
-      final v = (math.sin(t * 9 + s.phase) + 1) * 0.5;
-      final alpha = 0.7 * v * v * world;
-      if (alpha <= 0.04) continue;
-      final paint = Paint()
-        ..color = _accentColor(s.colorIndex, alpha)
-        ..strokeWidth = 1.4
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.1);
-      final p = Offset(s.x * size.width, s.y * size.height);
-      final d = Offset(math.cos(s.angle), math.sin(s.angle)) * s.length;
-      canvas.drawLine(p - d, p + d, paint);
-    }
-
-    final glitchAmp = _glitchAmp(t);
-    if (glitchAmp > 0.03) {
-      for (var i = 0; i < 3; i++) {
-        final y = size.height * 0.34 +
-            ((t * 7 + i * 0.37) % 1.0) * size.height * 0.32;
-        final w = size.shortestSide * glitchAmp * (0.22 + 0.18 * i);
-        final paint = Paint()..color = _accentColor(i + 1, 0.32 * glitchAmp);
-        canvas.drawRect(
-          Rect.fromLTWH(size.width / 2 - w - i * 6, y, w * 2, 1.4),
-          paint,
-        );
-      }
-    }
-  }
-
-  // ── scanline crossing the logo ────────────────────────────
-  void _paintScanline(Canvas canvas, Size size, double t) {
-    final primary = _pulseWindow(t, 0.45, 0.7);
-    final always =
-        0.1 + 0.14 * (math.sin(t * 9) + 1) * 0.5 * _fade(t, 0.5, 0.9);
-    if (primary <= 0.01 && always <= 0.02) return;
-    final y = size.height * (0.3 + 0.4 * ((t * 3.1) % 1.0));
-    final p1 = Paint()
-      ..color =
-          AppColors.electricBlue.withValues(alpha: 0.45 * (primary + always))
-      ..strokeWidth = 1.6
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
-    canvas.drawLine(Offset(0, y), Offset(size.width, y), p1);
-    final p2 = Paint()
-      ..color = Colors.white.withValues(alpha: 0.25 * (primary + always))
-      ..strokeWidth = 0.7;
-    canvas.drawLine(Offset(0, y + 3), Offset(size.width, y + 3), p2);
-  }
-
-  // ── final cinematic center flash ───────────────────────────
-  void _paintFlash(Canvas canvas, Size size, double t) {
-    final warm = _fade(t, 0.72, 0.86) * _fade(t, 0.95, 1.0);
-    if (warm <= 0.01) return;
+  // ── vignette ──────────────────────────────────────────────
+  void _paintVignette(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
     final paint = Paint()
       ..shader = RadialGradient(
+        radius: 0.9,
         colors: [
-          Colors.white.withValues(alpha: 0.22 * warm),
-          AppColors.electricBlue.withValues(alpha: 0.1 * warm),
           Colors.transparent,
+          Colors.black.withValues(alpha: 0.55),
         ],
-      ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, paint);
+        stops: const [0.6, 1.0],
+      ).createShader(rect);
+    canvas.drawRect(rect, paint);
   }
 
-  // ── helpers ───────────────────────────────────────────
+  // ── helpers ───────────────────────────────────────────────
   double _fade(double t, double start, double end) {
     if (t <= start) return 0;
     if (t >= end) return 1;
@@ -906,29 +705,11 @@ class _YazzokiSplashPainter extends CustomPainter {
     return 1 + c3 * u * u * u + c1 * u * u;
   }
 
-  /// Sharp glitch amplitude: bursts during storm segments, ~0 otherwise.
-  double _glitchAmp(double t) {
-    final storm = _fade(t, 0.45, 0.6) * _fade(t, 0.72, 0.7) +
-        _fade(t, 0.4, 0.5) * _fade(t, 0.68, 0.62);
-    final burst = _pulseWindow(t, 0.5, 0.56) +
-        _pulseWindow(t, 0.62, 0.66) +
-        _pulseWindow(t, 0.82, 0.85);
-    return (storm * 0.4 + burst).clamp(0.0, 1.0);
-  }
-
-  /// 1 inside the [start,end] window, with sharp edges.
-  double _pulseWindow(double t, double start, double end) {
-    final on = _fade(t, start, start + 0.02);
-    final off = 1 - _fade(t, end - 0.02, end);
-    return on * off;
-  }
-
   @override
   bool shouldRepaint(covariant _YazzokiSplashPainter oldDelegate) =>
       oldDelegate.progress != progress ||
-      oldDelegate.columns != columns ||
-      oldDelegate.particles != particles ||
-      oldDelegate.network != network ||
+      oldDelegate.farSnow != farSnow ||
+      oldDelegate.nearSnow != nearSnow ||
       oldDelegate.logo != logo ||
       oldDelegate.seal != seal;
 }

@@ -23,7 +23,7 @@ class YazzokiNotification {
 
   final String id;
 
-  /// LIKE | COMMENT | FRIEND_REQUEST | FRIEND_ACCEPTED — extensible on the
+  /// LIKE | COMMENT | FOLLOW — extensible on the
   /// server, so we keep it as a plain string.
   final String type;
   final bool read;

@@ -17,13 +17,13 @@ import '../../core/widgets/hud_label.dart';
 import '../../core/widgets/yazzoki_button.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../data/api_config.dart';
-import '../../models/friend_request.dart';
+import '../../models/follow.dart';
 import '../../models/yazzoki_user.dart';
 import '../../models/post.dart';
 import '../chat/chat_navigation.dart';
 import '../feed/story_viewer.dart';
-import 'friends_sheet.dart';
-import 'friendship_button.dart';
+import 'follow_button.dart';
+import 'follow_list_sheet.dart';
 import 'profile_music_bar.dart';
 import 'settings_sheet.dart';
 
@@ -31,8 +31,8 @@ import 'settings_sheet.dart';
 ///
 /// [nickname] null (or equal to the session user's) means "own profile":
 /// renders the Edit button and the floating "+" create-post button, and
-/// NEVER the friendship button. Another user's profile shows the big
-/// Seguir / Solicitado / Amigos friendship button (server-managed state).
+/// NEVER the follow button. Another user's profile shows the big
+/// Seguir / Seguindo / Seguir de volta button (server-managed state).
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, this.nickname, this.active = true});
 
@@ -185,7 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profile = state.profileFor(widget.nickname);
     final user = profile?.user ?? (isOwn ? sessionUser : null);
     final posts = profile?.posts ?? const <Post>[];
-    final friendship = profile?.friendship;
+    final follow = profile?.follow;
     final loading = state.isLoadingProfile && profile == null;
 
     return Scaffold(
@@ -243,11 +243,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: _ProfileHeader(
                   user: user,
                   isOwn: isOwn,
-                  friendship: friendship,
+                  follow: follow,
                   hasUnseenStory: state.hasUnseenStory(user.id),
                   onOpenStory: () => _openUserStory(state, user),
                   onEdit: _openEditProfile,
-                  onFriendsTap: () => FriendsSheet.open(context, user),
+                  onFollowersTap: () => FollowListSheet.open(
+                      context, user, FollowListKind.followers),
+                  onFollowingTap: () => FollowListSheet.open(
+                      context, user, FollowListKind.following),
                   onMessage: () => openChatWithUser(context, user),
                   musicKey: _musicKey,
                 ),
@@ -359,15 +362,16 @@ class _StoryRingAvatar extends StatelessWidget {
 ///     LEFT: its upper half sits over the banner, the lower half below it;
 ///   • the nickname to the RIGHT of the avatar (aligned with its lower half);
 ///   • the bio under the nickname;
-///   • the real counters (Amigos / Posts) under all of it;
-///   • then the edit CTA (own profile) or the friendship button.
+///   • the real counters (Seguidores / Seguindo / Curtidas / Posts);
+///   • then the edit CTA (own profile) or the follow button.
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({
     required this.user,
     required this.isOwn,
-    required this.friendship,
+    required this.follow,
     required this.onEdit,
-    required this.onFriendsTap,
+    required this.onFollowersTap,
+    required this.onFollowingTap,
     required this.onMessage,
     required this.hasUnseenStory,
     required this.onOpenStory,
@@ -380,9 +384,10 @@ class _ProfileHeader extends StatelessWidget {
 
   final YazzokiUser user;
   final bool isOwn;
-  final Friendship? friendship;
+  final FollowState? follow;
   final VoidCallback onEdit;
-  final VoidCallback onFriendsTap;
+  final VoidCallback onFollowersTap;
+  final VoidCallback onFollowingTap;
   final VoidCallback onMessage;
 
   /// True when this user has an ACTIVE story the visitor has not seen yet —
@@ -535,14 +540,18 @@ class _ProfileHeader extends StatelessWidget {
               style: AppTextStyles.bodyMuted,
             ),
           ),
-        // Then the real counters (server): Amigos opens the friends sheet.
+        // Then the real counters (server): followers/following open sheets.
         const SizedBox(height: AppDimensions.spaceXl),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceXl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _ProfileStats(user: user, onFriendsTap: onFriendsTap),
+              _ProfileStats(
+                user: user,
+                onFollowersTap: onFollowersTap,
+                onFollowingTap: onFollowingTap,
+              ),
               const SizedBox(height: AppDimensions.spaceXl),
               if (isOwn)
                 YazzokiButton(
@@ -552,16 +561,16 @@ class _ProfileHeader extends StatelessWidget {
                   expanded: true,
                   onPressed: onEdit,
                 )
-              else if (friendship == Friendship.friends)
-                // Friends → two equal buttons side by side: Amigos (tappable —
-                // opens the "deixar de ser amigo?" confirmation) + Mensagem.
+              else if (follow?.isFollowing == true)
+                // Following → two equal buttons side by side: Seguindo
+                // (tap = unfollow) + Mensagem.
                 Row(
                   children: [
                     Expanded(
-                      child: FriendshipButton(
+                      child: FollowButton(
                         userId: user.id,
                         nickname: user.nickname,
-                        friendship: Friendship.friends,
+                        follow: follow,
                       ),
                     ),
                     const SizedBox(width: AppDimensions.spaceMd),
@@ -575,10 +584,10 @@ class _ProfileHeader extends StatelessWidget {
                   ],
                 )
               else
-                FriendshipButton(
+                FollowButton(
                   userId: user.id,
                   nickname: user.nickname,
-                  friendship: friendship,
+                  follow: follow,
                 ),
             ],
           ),
@@ -648,7 +657,7 @@ class _ProfileBanner extends StatelessWidget {
 ///
 /// This is invoked ONLY from the profile screen's header when viewing
 /// someone else's profile — it is not reachable from the feed, comments,
-/// search, friends or any other surface.
+/// search, followers or any other surface.
 void _showProfilePhotoZoom(
   BuildContext context, {
   required YazzokiUser user,
@@ -702,29 +711,43 @@ void _showProfilePhotoZoom(
   );
 }
 
-/// Real counters row — Amigos (tappable → friends bottom sheet) and Posts.
-/// The numbers come from the server profile payload, so a viewed profile
-/// always shows THAT user's counts, never the session user's.
+/// Real counters row — Seguidores / Seguindo (tappable → follow-list sheets),
+/// Curtidas and Posts. The numbers come from the server profile payload, so a
+/// viewed profile always shows THAT user's counts, never the session user's.
 class _ProfileStats extends StatelessWidget {
-  const _ProfileStats({required this.user, required this.onFriendsTap});
+  const _ProfileStats({
+    required this.user,
+    required this.onFollowersTap,
+    required this.onFollowingTap,
+  });
 
   final YazzokiUser user;
-  final VoidCallback onFriendsTap;
+  final VoidCallback onFollowersTap;
+  final VoidCallback onFollowingTap;
 
   @override
   Widget build(BuildContext context) {
-    // Left-aligned (matches the banner/avatar/bio column) instead of the old
-    // centered layout, which only made sense with a centered avatar.
+    // Four counters must fit every phone width: each takes an equal share
+    // (Expanded) so a long label/count shrinks instead of overflowing.
     return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        _StatColumn(
-          count: user.friendsCount,
-          label: 'Amigos',
-          onTap: onFriendsTap,
+        Expanded(
+          child: _StatColumn(
+            count: user.followersCount,
+            label: 'Seguidores',
+            onTap: onFollowersTap,
+          ),
         ),
-        const SizedBox(width: AppDimensions.spaceXxl),
-        _StatColumn(count: user.postsCount, label: 'Posts'),
+        Expanded(
+          child: _StatColumn(
+            count: user.followingCount,
+            label: 'Seguindo',
+            onTap: onFollowingTap,
+          ),
+        ),
+        // Curtidas: total likes across all of the user's posts (read-only).
+        Expanded(child: _StatColumn(count: user.likesCount, label: 'Curtidas')),
+        Expanded(child: _StatColumn(count: user.postsCount, label: 'Posts')),
       ],
     );
   }
@@ -750,7 +773,9 @@ class _StatColumn extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
               '$count',
               style: AppTextStyles.h3.copyWith(
                 fontSize: 20,
@@ -759,9 +784,13 @@ class _StatColumn extends StatelessWidget {
                   Shadow(color: AppColors.electricBlue, blurRadius: 12),
                 ],
               ),
+              ),
             ),
             const SizedBox(height: 2),
-            Text(label, style: AppTextStyles.hud.copyWith(fontSize: 11)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label, style: AppTextStyles.hud.copyWith(fontSize: 11)),
+            ),
           ],
         ),
       ),

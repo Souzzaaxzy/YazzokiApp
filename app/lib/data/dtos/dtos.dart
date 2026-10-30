@@ -1,6 +1,5 @@
 import '../../models/comment.dart';
 import '../../models/conversation.dart';
-import '../../models/friend_request.dart';
 import '../../models/yazzoki_notification.dart';
 import '../../models/yazzoki_user.dart';
 import '../../models/post.dart';
@@ -201,7 +200,9 @@ class PublicUserDto {
   final int? publicId;
   final String? publicIdLabel;
   final String bio;
-  final int friendsCount;
+  final int followersCount;
+  final int followingCount;
+  final int likesCount;
   final int postsCount;
   final ProfileMusic? music;
 
@@ -213,7 +214,9 @@ class PublicUserDto {
     this.publicId,
     this.publicIdLabel,
     required this.bio,
-    this.friendsCount = 0,
+    this.followersCount = 0,
+    this.followingCount = 0,
+    this.likesCount = 0,
     this.postsCount = 0,
     this.music,
   });
@@ -226,7 +229,9 @@ class PublicUserDto {
         bannerUrl: bannerUrl,
         publicId: publicId,
         publicIdLabel: publicIdLabel,
-        friendsCount: friendsCount,
+        followersCount: followersCount,
+        followingCount: followingCount,
+        likesCount: likesCount,
         postsCount: postsCount,
         music: music,
       );
@@ -239,7 +244,9 @@ class PublicUserDto {
         publicId: (json['publicId'] as num?)?.toInt(),
         publicIdLabel: json['publicIdLabel'] as String?,
         bio: (json['bio'] as String?) ?? '',
-        friendsCount: (json['friendsCount'] as num?)?.toInt() ?? 0,
+        followersCount: (json['followersCount'] as num?)?.toInt() ?? 0,
+        followingCount: (json['followingCount'] as num?)?.toInt() ?? 0,
+        likesCount: (json['likesCount'] as num?)?.toInt() ?? 0,
         postsCount: (json['postsCount'] as num?)?.toInt() ?? 0,
         // The pinned song is optional profile data: a payload without it
         // (feed/search authors) simply has none.
@@ -247,39 +254,7 @@ class PublicUserDto {
       );
 }
 
-/// A pending friend request (sender embedded).
-class FriendRequestDto {
-  final String id;
-  final String status;
-  final DateTime createdAt;
-  final PublicUserDto sender;
-
-  const FriendRequestDto({
-    required this.id,
-    required this.status,
-    required this.createdAt,
-    required this.sender,
-  });
-
-  FriendRequest toModel() => FriendRequest(
-        id: id,
-        status: status,
-        createdAt: createdAt,
-        sender: sender.toModel(),
-      );
-
-  factory FriendRequestDto.fromJson(Map<String, dynamic> json) {
-    final senderJson = json['sender'] as Map<String, dynamic>;
-    return FriendRequestDto(
-      id: json['id'] as String,
-      status: (json['status'] as String?) ?? 'PENDING',
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      sender: PublicUserDto.fromJson(senderJson),
-    );
-  }
-}
-
-/// A notification (actor embedded; references post/comment/request).
+/// A notification (actor embedded; references post/comment).
 class NotificationDto {
   final String id;
   final String type;
@@ -288,8 +263,6 @@ class NotificationDto {
   final PublicUserDto actor;
   final String? postId;
   final String? commentId;
-  final String? friendRequestId;
-  final String? friendRequestStatus;
 
   const NotificationDto({
     required this.id,
@@ -299,8 +272,6 @@ class NotificationDto {
     required this.actor,
     this.postId,
     this.commentId,
-    this.friendRequestId,
-    this.friendRequestStatus,
   });
 
   // The actor's own nickname cosmetics ride inside `actor` (PublicUserDto).
@@ -315,8 +286,6 @@ class NotificationDto {
         actorAvatarUrl: actor.avatarUrl,
         postId: postId,
         commentId: commentId,
-        friendRequestId: friendRequestId,
-        friendRequestStatus: friendRequestStatus,
       );
 
   factory NotificationDto.fromJson(Map<String, dynamic> json) {
@@ -329,8 +298,6 @@ class NotificationDto {
       actor: PublicUserDto.fromJson(actorJson),
       postId: json['postId'] as String?,
       commentId: json['commentId'] as String?,
-      friendRequestId: json['friendRequestId'] as String?,
-      friendRequestStatus: json['friendRequestStatus'] as String?,
     );
   }
 }

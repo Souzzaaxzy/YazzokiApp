@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yazzoki/features/notifications/notifications_screen.dart';
-import 'package:yazzoki/models/friend_request.dart';
 import 'package:yazzoki/models/yazzoki_notification.dart';
-import 'package:yazzoki/models/yazzoki_user.dart';
 
 import '../helpers/test_app.dart';
 
@@ -12,8 +10,6 @@ YazzokiNotification _notification({
   required String type,
   String? postId,
   String? commentId,
-  String? friendRequestId,
-  String? friendRequestStatus,
   bool read = false,
 }) {
   return YazzokiNotification(
@@ -25,18 +21,6 @@ YazzokiNotification _notification({
     actorNickname: 'joao',
     postId: postId,
     commentId: commentId,
-    friendRequestId: friendRequestId,
-    friendRequestStatus: friendRequestStatus,
-  );
-}
-
-FriendRequest _request(String id) {
-  return FriendRequest(
-    id: id,
-    status: 'PENDING',
-    createdAt: DateTime(2024, 1, 10),
-    sender: YazzokiUser(id: 'u2', nickname: 'joao'),
-    receiverId: 'u0',
   );
 }
 
@@ -50,27 +34,25 @@ void main() {
   });
 
   testWidgets(
-      'friend accepted shows the actor nickname (without "@") and opens the '
-      'friend profile on tap', (tester) async {
+      'follow shows the actor nickname (without "@") and opens the '
+      'profile on tap', (tester) async {
     final state = await seededAppStateWithSocial(notifications: [
-      _notification(id: 'n9', type: 'FRIEND_ACCEPTED', read: false),
+      _notification(id: 'n9', type: 'FOLLOW', read: false),
     ]);
     await pumpYazzokiApp(tester, const NotificationsScreen(), state: state);
     await tester.pump(const Duration(milliseconds: 400));
 
-    // The actor's nickname is rendered as plain text (the nickname cosmetics
-    // were removed from the product).
-    expect(find.textContaining('Agora você e', findRichText: true), findsOneWidget);
-    expect(find.textContaining('são amigos.', findRichText: true), findsOneWidget);
+    expect(find.textContaining('começou a seguir você.', findRichText: true),
+        findsOneWidget);
     expect(find.textContaining('joao', findRichText: true), findsWidgets);
 
-    final message = find.textContaining('Agora você e', findRichText: true);
+    final message = find.textContaining('começou a seguir você.', findRichText: true);
     await tester.tap(message);
     await tester.pump(const Duration(milliseconds: 800));
     await tester.pump(const Duration(milliseconds: 800));
 
-    // Opens the friend's profile (respecting currentUser ≠ viewedUser).
-    expect(find.text('SOLICITAR'), findsOneWidget);
+    // Opens the follower's profile (respecting currentUser ≠ viewedUser).
+    expect(find.text('SEGUIR'), findsOneWidget);
     expect(find.textContaining('joao', findRichText: true), findsWidgets);
   });
 
@@ -87,55 +69,19 @@ void main() {
     expect(state.unreadNotifications, 1);
   });
 
-  testWidgets('friend request card shows Aceitar / Recusar; Aceitar creates friendship', (tester) async {
+  testWidgets('follow notification renders as a plain tile', (tester) async {
     final state = await seededAppStateWithSocial(
       notifications: [
-        _notification(
-          id: 'n2',
-          type: 'FRIEND_REQUEST',
-          friendRequestId: 'fr_u2_u0',
-          friendRequestStatus: 'PENDING',
-        ),
+        _notification(id: 'n2', type: 'FOLLOW'),
       ],
-      friendRequests: [_request('fr_u2_u0')],
     );
     await pumpYazzokiApp(tester, const NotificationsScreen(), state: state);
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('enviou uma solicitação de amizade.'), findsOneWidget);
-    expect(find.text('ACEITAR'), findsOneWidget);
-    expect(find.text('RECUSAR'), findsOneWidget);
-
-    await tester.tap(find.text('ACEITAR'));
-    await tester.pump(const Duration(milliseconds: 400));
-
-    // The actionable card disappears once accepted and the counter updates.
+    // A follow notification is informational — no Aceitar/Recusar buttons.
     expect(find.text('ACEITAR'), findsNothing);
     expect(find.text('RECUSAR'), findsNothing);
-    expect(find.text('ALL CLEAR'), findsOneWidget);
-    expect(state.unreadNotifications, 0);
-  });
-
-  testWidgets('Recusar removes the request card', (tester) async {
-    final state = await seededAppStateWithSocial(
-      notifications: [
-        _notification(
-          id: 'n3',
-          type: 'FRIEND_REQUEST',
-          friendRequestId: 'fr_u2_u0b',
-          friendRequestStatus: 'PENDING',
-        ),
-      ],
-      friendRequests: [_request('fr_u2_u0b')],
-    );
-    await pumpYazzokiApp(tester, const NotificationsScreen(), state: state);
-    await tester.pump(const Duration(milliseconds: 400));
-
-    await tester.tap(find.text('RECUSAR'));
-    await tester.pump(const Duration(milliseconds: 400));
-
-    expect(find.text('ACEITAR'), findsNothing);
-    expect(find.text('ALL CLEAR'), findsOneWidget);
+    expect(state.unreadNotifications, 1);
   });
 
   testWidgets('mark-all-read clears the unread counter', (tester) async {

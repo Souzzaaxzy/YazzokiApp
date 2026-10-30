@@ -56,8 +56,7 @@ class _YazzokiAppState extends State<YazzokiApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     // Tapping a native notification deep-links into the matching screen:
-    // LIKE/COMMENT → the post; FRIEND_REQUEST → Atividades;
-    // FRIEND_ACCEPTED → the friend's profile.
+    // LIKE/COMMENT → the post; FOLLOW → the follower's profile.
     if (Services.isInitialized) {
       WidgetsBinding.instance.addObserver(this);
       Services.instance.push.onNavigate = _onPushNavigate;
@@ -371,10 +370,8 @@ class _YazzokiAppState extends State<YazzokiApp> with WidgetsBindingObserver {
         if (postId != null && postId.isNotEmpty) {
           navigator.pushNamed(AppRoutes.postDetail, arguments: postId);
         }
-      case 'FRIEND_REQUEST':
-        // Atividades tab (index 3 — Akame is no longer a bottom-bar entry).
-        navigator.pushNamed(AppRoutes.home, arguments: 3);
-      case 'FRIEND_ACCEPTED':
+      case 'FOLLOW':
+        // A new follower → open their profile.
         final nickname = data['actorNickname'] as String?;
         if (nickname != null && nickname.isNotEmpty) {
           navigator.pushNamed(AppRoutes.profile, arguments: nickname);
