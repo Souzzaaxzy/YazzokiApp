@@ -88,6 +88,8 @@ class FeedPostDto {
   final int commentCount;
   final int repostCount;
   final bool reposted;
+  final List<ReposterUser> reposters;
+  final ReposterUser? repostedBy;
 
   const FeedPostDto({
     required this.id,
@@ -104,6 +106,8 @@ class FeedPostDto {
     required this.commentCount,
     this.repostCount = 0,
     this.reposted = false,
+    this.reposters = const [],
+    this.repostedBy,
   });
 
   Post toModel() => Post(
@@ -122,6 +126,8 @@ class FeedPostDto {
         commentCount: commentCount,
         repostCount: repostCount,
         reposted: reposted,
+        reposters: reposters,
+        repostedBy: repostedBy,
       );
 
   factory FeedPostDto.fromJson(Map<String, dynamic> json) {
@@ -141,6 +147,12 @@ class FeedPostDto {
       commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
       repostCount: (json['repostCount'] as num?)?.toInt() ?? 0,
       reposted: (json['reposted'] as bool?) ?? false,
+      reposters: (json['reposters'] as List?)
+              ?.map(ReposterUser.fromJson)
+              .whereType<ReposterUser>()
+              .toList() ??
+          const [],
+      repostedBy: ReposterUser.fromJson(json['repostedBy']),
     );
   }
 }
@@ -212,6 +224,7 @@ class PublicUserDto {
   final int followingCount;
   final int likesCount;
   final int postsCount;
+  final int repostsCount;
   final ProfileMusic? music;
 
   const PublicUserDto({
@@ -226,6 +239,7 @@ class PublicUserDto {
     this.followingCount = 0,
     this.likesCount = 0,
     this.postsCount = 0,
+    this.repostsCount = 0,
     this.music,
   });
 
@@ -241,6 +255,7 @@ class PublicUserDto {
         followingCount: followingCount,
         likesCount: likesCount,
         postsCount: postsCount,
+        repostsCount: repostsCount,
         music: music,
       );
 
@@ -256,6 +271,7 @@ class PublicUserDto {
         followingCount: (json['followingCount'] as num?)?.toInt() ?? 0,
         likesCount: (json['likesCount'] as num?)?.toInt() ?? 0,
         postsCount: (json['postsCount'] as num?)?.toInt() ?? 0,
+        repostsCount: (json['repostsCount'] as num?)?.toInt() ?? 0,
         // The pinned song is optional profile data: a payload without it
         // (feed/search authors) simply has none.
         music: ProfileMusic.fromJson(json['music']),

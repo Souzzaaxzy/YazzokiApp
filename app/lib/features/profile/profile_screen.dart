@@ -1096,6 +1096,72 @@ class _ProfilePostTile extends StatelessWidget {
                 )
               else
                 _placeholder(),
+              // "Repostado de @x" — only on the Reposts tab (the server sets
+              // repostedBy). The NAME is clickable and styled as a mention,
+              // so it is obvious that tapping goes to the reposter's post.
+              if (post.repostedBy != null)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.spaceSm,
+                      vertical: AppDimensions.spaceXs,
+                    ),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.black87, Colors.transparent],
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        RepostIcon(
+                          color: AppColors.holographicBlue,
+                          size: 12,
+                          strokeWidth: 1.5,
+                        ),
+                        const SizedBox(width: AppDimensions.spaceXs),
+                        Expanded(
+                          child: GestureDetector(
+                            // Wins the tap over the tile's open-detail InkWell.
+                            onTap: () => openProfileById(
+                              context,
+                              id: post.repostedBy!.id,
+                              nickname: post.repostedBy!.nickname,
+                            ),
+                            behavior: HitTestBehavior.opaque,
+                            child: Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: 'Repostado de ',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.holographicBlue,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '@${post.repostedBy!.nickname}',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.electricBlue,
+                                      fontWeight: FontWeight.w700,
+                                      decoration: TextDecoration.underline,
+                                      decorationColor: AppColors.electricBlue,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               Positioned(
                 bottom: 0,
                 left: 0,

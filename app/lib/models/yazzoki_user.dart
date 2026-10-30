@@ -15,6 +15,7 @@ class YazzokiUser {
     this.followersCount = 0,
     this.followingCount = 0,
     this.likesCount = 0,
+    this.repostsCount = 0,
     this.postsCount = 0,
     this.music,
   });
@@ -58,6 +59,7 @@ class YazzokiUser {
   final int followersCount;
   final int followingCount;
   final int likesCount;
+  final int repostsCount;
   final int postsCount;
 
 
@@ -85,6 +87,7 @@ class YazzokiUser {
     int? followersCount,
     int? followingCount,
     int? likesCount,
+    int? repostsCount,
     int? postsCount,
     String? Function()? bannerUrl,
     int? Function()? publicId,
@@ -100,6 +103,7 @@ class YazzokiUser {
         followersCount: followersCount ?? this.followersCount,
         followingCount: followingCount ?? this.followingCount,
         likesCount: likesCount ?? this.likesCount,
+        repostsCount: repostsCount ?? this.repostsCount,
         postsCount: postsCount ?? this.postsCount,
         // Same nullable-resolver pattern so the banner can be cleared
         // (`bannerUrl: () => null`) as well as replaced.

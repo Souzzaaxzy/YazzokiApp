@@ -19,6 +19,8 @@ class Post {
     this.comments = const [],
     this.repostCount = 0,
     this.reposted = false,
+    this.reposters = const [],
+    this.repostedBy,
   });
 
   /// Unique server-side id. ALL operations (like, comment, detail, delete)
@@ -71,6 +73,14 @@ class Post {
   /// Whether the SESSION user reposted this post (drives the active button).
   bool reposted;
 
+  /// WHO reposted this post (newest first, capped by the server). Powers the
+  /// "X repostou" badge above the actions.
+  List<ReposterUser> reposters;
+
+  /// Set ONLY on the profile "Reposts" tab: who reposted it, for the
+  /// clickable "Repostado de @x" line.
+  ReposterUser? repostedBy;
+
   Post copyWith({
     String? text,
     String? imageUrl,
@@ -82,6 +92,8 @@ class Post {
     List<Comment>? comments,
     int? repostCount,
     bool? reposted,
+    List<ReposterUser>? reposters,
+    ReposterUser? Function()? repostedBy,
   }) =>
       Post(
         id: id,
@@ -100,5 +112,32 @@ class Post {
         comments: comments ?? this.comments,
         repostCount: repostCount ?? this.repostCount,
         reposted: reposted ?? this.reposted,
+        reposters: reposters ?? this.reposters,
+        repostedBy: repostedBy != null ? repostedBy() : this.repostedBy,
       );
+}
+
+/// A user who reposted a post (badge + "Repostado de" attribution).
+class ReposterUser {
+  const ReposterUser({
+    required this.id,
+    required this.nickname,
+    this.avatarUrl,
+  });
+
+  final String id;
+  final String nickname;
+  final String? avatarUrl;
+
+  static ReposterUser? fromJson(dynamic json) {
+    if (json is! Map<String, dynamic>) return null;
+    final id = json['id'] as String?;
+    final nickname = json['nickname'] as String?;
+    if (id == null || nickname == null) return null;
+    return ReposterUser(
+      id: id,
+      nickname: nickname,
+      avatarUrl: json['avatarUrl'] as String?,
+    );
+  }
 }

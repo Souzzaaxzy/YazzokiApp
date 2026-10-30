@@ -942,9 +942,16 @@ class AppState extends ChangeNotifier {
       post.reposted = result.reposted;
       post.repostCount = result.repostCount;
       _syncPost(post, skip: post);
-      // A fresh repost must appear in the profile tab without a manual
-      // reload; drop the cached list so it refetches.
-      _repostsByUser.remove(_currentUser?.id);
+      // A fresh repost must appear in the profile tab WITHOUT a manual
+      // reload. Dropping the cache alone was not enough (the tab read the
+      // stale empty list until the next refresh) — so we ALSO refresh it
+      // right away for the session user.
+      final me = _currentUser?.id;
+      if (me != null) {
+        _repostsByUser.remove(me);
+        _repostsTotal.remove(me);
+        unawaited(loadReposts(me));
+      }
       notifyListeners();
       return true;
     } catch (_) {

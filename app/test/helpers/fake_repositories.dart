@@ -369,12 +369,32 @@ class _FakePostRepository implements PostRepository {
     String? cursor,
     int limit = 15,
   }) async {
-    return (posts: List.of(_store.posts), nextCursor: null);
+    // Mirror the server: every post carries who reposted it + the viewer's
+    // own repost flag, so the badge and the active button are consistent.
+    final me = _store.currentUserId;
+    final posts = _store.posts.map((p) {
+      final reposters = _store.reposts
+          .where((e) => e.endsWith('>${p.id}'))
+          .map((e) => _store.users[e.split('>').first])
+          .whereType<YazzokiUser>()
+          .map((u) => ReposterUser(id: u.id, nickname: u.nickname))
+          .toList();
+      return p.copyWith(
+        repostCount: reposters.length,
+        reposters: reposters,
+        reposted: me != null && _store.reposts.contains('$me>${p.id}'),
+      );
+    }).toList();
+    return (posts: posts, nextCursor: null);
   }
 
   @override
   Future<Post> getById(String id) async {
-    return _store.posts.firstWhere((p) => p.id == id);
+    final p = _store.posts.firstWhere((x) => x.id == id);
+    final me = _store.currentUserId;
+    return p.copyWith(
+      reposted: me != null && _store.reposts.contains('$me>${id}'),
+    );
   }
 
   @override
@@ -694,10 +714,18 @@ class _FakeRepostRepository implements RepostRepository {
         .where((e) => e.startsWith('$userId>'))
         .map((e) => e.split('>').last)
         .toList();
+    final owner = _store.users[userId];
     final all = ids
         .map((id) => _store.posts.where((p) => p.id == id).firstOrNull)
         .whereType<Post>()
-        .map((p) => p.copyWith(reposted: true))
+        .map((p) => p.copyWith(
+              reposted: true,
+              repostedBy: () => ReposterUser(
+                id: userId,
+                nickname: owner?.nickname ?? userId,
+                avatarUrl: owner?.avatarUrl,
+              ),
+            ))
         .toList();
     return (posts: all, total: all.length, page: page, pageSize: pageSize);
   }

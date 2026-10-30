@@ -182,6 +182,13 @@ class _PostCardState extends State<PostCard>
                   imageUrl: ApiConfig.resolveUrl(post.imageUrl!)),
             ],
             const SizedBox(height: AppDimensions.spaceLg),
+            // Repost badge (TikTok-style): a small chip on the LEFT with the
+            // repost mark + "usuario repostou" (or "+N usuarios repostaram").
+            // Sits ABOVE the action buttons.
+            if (post.repostCount > 0) ...[
+              _RepostBadge(post: post),
+              const SizedBox(height: AppDimensions.spaceMd),
+            ],
             Row(
               children: [
                 ScaleTransition(
@@ -279,6 +286,70 @@ class _ActionButton extends StatelessWidget {
               Text(
                 label,
                 style: AppTextStyles.caption.copyWith(color: color),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The TikTok-style repost chip shown ABOVE the post's action buttons: the
+/// DRAWN repost mark + who reposted ("joao repostou" or "+3 usuarios
+/// repostaram"). Tapping it opens the FIRST reposter's profile.
+class _RepostBadge extends StatelessWidget {
+  const _RepostBadge({required this.post});
+
+  final Post post;
+
+  @override
+  Widget build(BuildContext context) {
+    final first = post.reposters.isNotEmpty ? post.reposters.first : null;
+    final others = post.repostCount - 1;
+    final label = others > 0
+        ? (first != null
+            ? '${first.nickname} e +$others repostaram'
+            : '+$others repostaram')
+        : (first != null ? '${first.nickname} repostou' : 'Repostado');
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: GestureDetector(
+        onTap: first == null
+            ? null
+            : () => openProfileById(
+                  context,
+                  id: first.id,
+                  nickname: first.nickname,
+                ),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.spaceSm,
+            vertical: 3,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.bluishBlack,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+            border: Border.all(
+              color: AppColors.deepBlue.withValues(alpha: 0.7),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RepostIcon(color: AppColors.holographicBlue, size: 13, strokeWidth: 1.5),
+              const SizedBox(width: AppDimensions.spaceXs),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.holographicBlue,
+                  ),
+                ),
               ),
             ],
           ),

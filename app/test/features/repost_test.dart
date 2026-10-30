@@ -4,6 +4,7 @@ import 'package:yazzoki/core/services/app_state.dart';
 import 'package:yazzoki/core/widgets/grid_icon.dart';
 import 'package:yazzoki/core/widgets/repost_icon.dart';
 import 'package:yazzoki/features/feed/feed_screen.dart';
+import 'package:yazzoki/features/feed/post_card.dart';
 import 'package:yazzoki/features/profile/profile_screen.dart';
 
 import '../helpers/fake_repositories.dart';
@@ -38,19 +39,59 @@ void main() {
     await pumpYazzokiApp(tester, const FeedScreen(), state: state);
     await tester.pump(const Duration(milliseconds: 400));
 
+    // The ACTION button's mark (size 19); the badge above uses size 13.
+    final actionIcon = find.byWidgetPredicate(
+      (w) => w is RepostIcon && w.size >= 19,
+    );
     final post = state.posts.first;
     expect(post.reposted, isFalse);
 
-    await tester.tap(find.byType(RepostIcon).first);
+    // Tap the ACTION button by its semantic label (the badge above also
+    // contains a RepostIcon, so find.byType would be ambiguous).
+    await tester.tap(actionIcon.first);
     await tester.pump(const Duration(milliseconds: 400));
     expect(state.posts.firstWhere((p) => p.id == post.id).reposted, isTrue);
     expect(repos.store.reposts.contains('u0>${post.id}'), isTrue);
 
     // Tapping again removes it (the toggle loops).
-    await tester.tap(find.byType(RepostIcon).first);
+    await tester.tap(actionIcon.first);
     await tester.pump(const Duration(milliseconds: 400));
     expect(state.posts.firstWhere((p) => p.id == post.id).reposted, isFalse);
     expect(repos.store.reposts.contains('u0>${post.id}'), isFalse);
+  });
+
+  testWidgets('repost badge appears ABOVE the actions when reposted',
+      (tester) async {
+    final repos = FakeRepositories();
+    final target = repos.store.posts.first;
+    // Somebody (u2) reposted the first post → the badge must show.
+    repos.store.reposts.add('u2>${target.id}');
+    final state = AppState(repositories: repos);
+    await state.restoreSession();
+    await state.loadFeed();
+    addTearDown(state.dispose);
+
+    await pumpYazzokiApp(tester, const FeedScreen(), state: state);
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // The badge text names the reposter.
+    expect(find.textContaining('repostou'), findsWidgets);
+
+    // …and, inside the SAME post card, it sits ABOVE the action row
+    // (smaller y = higher on screen).
+    final card = find.byType(PostCard).first;
+    final badge = tester.getCenter(
+      find.descendant(of: card, matching: find.textContaining('repostou')),
+    );
+    final action = tester.getCenter(
+      find.descendant(
+        of: card,
+        matching: find.byWidgetPredicate(
+          (w) => w is RepostIcon && w.size >= 19,
+        ),
+      ),
+    );
+    expect(badge.dy, lessThan(action.dy));
   });
 
   testWidgets('profile shows the Posts/Reposts tabs and the reposts grid',
