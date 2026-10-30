@@ -20,7 +20,7 @@ import '../features/splash/splash_screen.dart';
 import '../features/chat/chat_navigation.dart';
 import '../features/stickers/sticker_import_screen.dart';
 
-/// Named routes for the MATRIX app.
+/// Named routes for the Yazzoki app.
 class AppRoutes {
   AppRoutes._();
 

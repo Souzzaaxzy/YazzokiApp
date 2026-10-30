@@ -1,22 +1,22 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/utils/profile_navigation.dart';
-import 'package:matrix_app/core/widgets/matrix_card.dart';
-import 'package:matrix_app/core/widgets/user_avatar.dart';
-import 'package:matrix_app/features/home/home_screen.dart';
-import 'package:matrix_app/features/profile/edit_profile_screen.dart';
-import 'package:matrix_app/features/profile/friends_sheet.dart';
-import 'package:matrix_app/features/profile/profile_screen.dart';
-import 'package:matrix_app/models/post.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/utils/profile_navigation.dart';
+import 'package:yazzoki/core/widgets/yazzoki_card.dart';
+import 'package:yazzoki/core/widgets/user_avatar.dart';
+import 'package:yazzoki/features/home/home_screen.dart';
+import 'package:yazzoki/features/profile/edit_profile_screen.dart';
+import 'package:yazzoki/features/profile/friends_sheet.dart';
+import 'package:yazzoki/features/profile/profile_screen.dart';
+import 'package:yazzoki/models/post.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
 
 void main() {
       testWidgets('renders own profile: avatar, nickname, edit button, FAB', (tester) async {
-    await pumpMatrixApp(tester, const ProfileScreen());
+    await pumpYazzokiApp(tester, const ProfileScreen());
 
     expect(find.text('PERFIL'), findsOneWidget);
     expect(find.textContaining('leonardo', findRichText: true), findsOneWidget);
@@ -30,7 +30,7 @@ void main() {
   });
 
   testWidgets('other user profile: shows Solicitado, no edit, no FAB', (tester) async {
-    await pumpMatrixApp(tester, const ProfileScreen(nickname: 'joao'));
+    await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'));
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.textContaining('joao', findRichText: true), findsOneWidget);
@@ -46,7 +46,7 @@ void main() {
 
   testWidgets('tapping Solicitado sends the request and shows Solicitado',
       (tester) async {
-    await pumpMatrixApp(tester, const ProfileScreen(nickname: 'joao'));
+    await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'));
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('SOLICITAR'), findsOneWidget);
@@ -59,7 +59,7 @@ void main() {
 
   testWidgets('tapping Solicitado again cancels back to Solicitado',
       (tester) async {
-    await pumpMatrixApp(tester, const ProfileScreen(nickname: 'joao'));
+    await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'));
     await tester.pump(const Duration(milliseconds: 400));
 
     // Send a request first.
@@ -77,7 +77,7 @@ void main() {
   });
 
   testWidgets('shows current user posts in the grid', (tester) async {
-    await pumpMatrixApp(tester, const ProfileScreen());
+    await pumpYazzokiApp(tester, const ProfileScreen());
 
     // The mock feed ships at least one post authored by leonardo (p1, p4).
     // The grid shows the neutral like COUNTER, not a liked-state heart.
@@ -91,7 +91,7 @@ void main() {
       final repos = FakeRepositories();
       repos.store.friendships.add('u0|u2');
       final state = AppState(repositories: repos);
-      await pumpMatrixApp(tester, const ProfileScreen(), state: state);
+      await pumpYazzokiApp(tester, const ProfileScreen(), state: state);
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Amigos'), findsOneWidget);
@@ -102,7 +102,7 @@ void main() {
 
     testWidgets('viewed profile shows THAT user counters, not the session',
         (tester) async {
-      await pumpMatrixApp(tester, const ProfileScreen(nickname: 'joao'));
+      await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'));
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('Amigos'), findsOneWidget);
@@ -118,7 +118,7 @@ void main() {
       final repos = FakeRepositories();
       repos.store.friendships.add('u0|u2');
       final state = AppState(repositories: repos);
-      await pumpMatrixApp(tester, const ProfileScreen(), state: state);
+      await pumpYazzokiApp(tester, const ProfileScreen(), state: state);
       await tester.pump(const Duration(milliseconds: 400));
 
       await tester.tap(find.text('Amigos'));
@@ -152,7 +152,7 @@ void main() {
     testWidgets(
         'search → viewed profile → back → own profile shows the session '
         'user, never the viewed user', (tester) async {
-      await pumpMatrixApp(tester, const HomeScreen());
+      await pumpYazzokiApp(tester, const HomeScreen());
       await tester.pump(const Duration(milliseconds: 400));
 
       // Buscar tab, query for another user.
@@ -164,7 +164,7 @@ void main() {
       // Open the viewed profile (loaded in its own keyed slot).
       await tester.tap(find.ancestor(
         of: find.textContaining('joao', findRichText: true),
-        matching: find.byType(MatrixCard),
+        matching: find.byType(YazzokiCard),
       ));
       await tester.pump(const Duration(milliseconds: 800));
       await tester.pump(const Duration(milliseconds: 800));
@@ -189,7 +189,7 @@ void main() {
 
   group('EditProfileScreen', () {
     testWidgets('loads current user data into fields', (tester) async {
-      await pumpMatrixApp(tester, const EditProfileScreen());
+      await pumpYazzokiApp(tester, const EditProfileScreen());
 
       expect(find.text('EDITAR PERFIL'), findsOneWidget);
       // Nickname field is pre-filled with the session nickname.
@@ -197,7 +197,7 @@ void main() {
     });
 
     testWidgets('validates required nickname', (tester) async {
-      await pumpMatrixApp(tester, const EditProfileScreen());
+      await pumpYazzokiApp(tester, const EditProfileScreen());
 
       // Clear the nickname field.
       await tester.enterText(find.byType(TextField).at(0), '');
@@ -213,7 +213,7 @@ void main() {
 
     testWidgets('saves updated profile remotely', (tester) async {
       final state = await seededAppState();
-      await pumpMatrixApp(tester, const EditProfileScreen(), state: state);
+      await pumpYazzokiApp(tester, const EditProfileScreen(), state: state);
 
       await tester.enterText(find.byType(TextField).at(0), 'Neo');
       await tester.enterText(find.byType(TextField).at(1), 'The one');
@@ -227,7 +227,7 @@ void main() {
 
     testWidgets('shows the banner section and the current cover state',
         (tester) async {
-      await pumpMatrixApp(tester, const EditProfileScreen());
+      await pumpYazzokiApp(tester, const EditProfileScreen());
 
       // The new banner control is present…
       expect(find.text('ALTERAR BANNER'), findsOneWidget);
@@ -238,9 +238,9 @@ void main() {
 
     testWidgets('offers REMOVER only when a banner is set', (tester) async {
       final state = await seededAppState();
-      await pumpMatrixApp(tester, const EditProfileScreen(), state: state);
+      await pumpYazzokiApp(tester, const EditProfileScreen(), state: state);
 
-      // Set the banner AFTER pumping: pumpMatrixApp restores the session,
+      // Set the banner AFTER pumping: pumpYazzokiApp restores the session,
       // which would overwrite a banner set beforehand.
       await state.updateProfile(bannerUrl: '/static/banner-x.png');
       await tester.pumpAndSettle();
@@ -268,7 +268,7 @@ void main() {
       ));
       repos.store.likedPostIds.add('p9');
       final state = AppState(repositories: repos);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const ProfileScreen(nickname: 'joao'),
         state: state,
@@ -286,7 +286,7 @@ void main() {
 
     testWidgets('long-press on ANOTHER user avatar opens the zoom dialog',
         (tester) async {
-      await pumpMatrixApp(tester, const ProfileScreen(nickname: 'joao'));
+      await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'));
       await tester.pump(const Duration(milliseconds: 400));
 
       // Press and hold ~2s to trigger the zoom, then release.
@@ -303,7 +303,7 @@ void main() {
 
     testWidgets('long-press on OWN avatar does nothing (no zoom)',
         (tester) async {
-      await pumpMatrixApp(tester, const ProfileScreen());
+      await pumpYazzokiApp(tester, const ProfileScreen());
       await tester.pump(const Duration(milliseconds: 400));
 
       final gesture = await tester.startGesture(
@@ -320,7 +320,7 @@ void main() {
 
     testWidgets('tapping OUTSIDE the enlarged photo closes the zoom dialog',
         (tester) async {
-      await pumpMatrixApp(tester, const ProfileScreen(nickname: 'joao'));
+      await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'));
       await tester.pump(const Duration(milliseconds: 400));
 
       final gesture = await tester.startGesture(
@@ -354,13 +354,13 @@ void main() {
     testWidgets('shows AMIGOS and confirmation modal on tap',
         (tester) async {
       final seeded = await friendsState();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
           tester, const ProfileScreen(nickname: 'joao'), state: seeded.state);
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('AMIGOS'), findsOneWidget);
 
-      // Tapping AMIGOS opens the MATRIX-styled confirmation.
+      // Tapping AMIGOS opens the Yazzoki-styled confirmation.
       await tester.tap(find.text('AMIGOS'));
       await tester.pumpAndSettle();
 
@@ -374,7 +374,7 @@ void main() {
 
     testWidgets('NÃO keeps the friendship (no server change)', (tester) async {
       final seeded = await friendsState();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
           tester, const ProfileScreen(nickname: 'joao'), state: seeded.state);
       await tester.pump(const Duration(milliseconds: 400));
 
@@ -391,7 +391,7 @@ void main() {
     testWidgets('SIM removes the friendship → back to SOLICITAR',
         (tester) async {
       final seeded = await friendsState();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
           tester, const ProfileScreen(nickname: 'joao'), state: seeded.state);
       await tester.pump(const Duration(milliseconds: 400));
 
@@ -409,7 +409,7 @@ void main() {
   group('video tiles in the profile grid', () {
     Future<AppState> seededVideoPost({
       String? thumbnailUrl,
-      String? videoUrl = 'https://fake.matrix.app/v/legacy.mp4',
+      String? videoUrl = 'https://fake.yazzoki.app/v/legacy.mp4',
     }) async {
       final repos = FakeRepositories();
       repos.store.posts = [
@@ -436,7 +436,7 @@ void main() {
         'old video without cover: shows the video placeholder (never a blank frame)',
         (tester) async {
       final state = await seededVideoPost();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
           tester, const ProfileScreen(), state: state);
       await tester.pump(const Duration(milliseconds: 400));
 
@@ -450,10 +450,10 @@ void main() {
     testWidgets('new video with cover: uses the persisted thumbnail',
         (tester) async {
       final state = await seededVideoPost(
-        videoUrl: 'https://fake.matrix.app/v/new.mp4',
+        videoUrl: 'https://fake.yazzoki.app/v/new.mp4',
         thumbnailUrl: '/static/capa_v1.jpg',
       );
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
           tester, const ProfileScreen(), state: state);
       await tester.pump(const Duration(milliseconds: 400));
 

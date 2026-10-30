@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
-import 'matrix_button.dart';
+import 'yazzoki_button.dart';
 
 /// Reusable visual error block. Red is reserved for destructive alerts.
-class MatrixError extends StatelessWidget {
-  const MatrixError({
+class YazzokiError extends StatelessWidget {
+  const YazzokiError({
     super.key,
     required this.message,
     this.title = 'SYSTEM ERROR',
@@ -38,9 +38,9 @@ class MatrixError extends StatelessWidget {
             ),
             if (onRetry != null) ...[
               const SizedBox(height: AppDimensions.spaceXl),
-              MatrixButton(
+              YazzokiButton(
                 label: 'Tentar novamente',
-                variant: MatrixButtonVariant.outline,
+                variant: YazzokiButtonVariant.outline,
                 icon: Icons.refresh_rounded,
                 onPressed: onRetry,
               ),

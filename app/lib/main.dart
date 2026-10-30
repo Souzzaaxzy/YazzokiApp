@@ -8,5 +8,5 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Services.init();
   await ThemeController.instance.load();
-  runApp(const MatrixApp());
+  runApp(const YazzokiApp());
 }

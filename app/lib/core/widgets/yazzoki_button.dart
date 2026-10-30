@@ -5,16 +5,16 @@ import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
 import 'glow_container.dart';
 
-/// Primary MATRIX button with neon glow.
+/// Primary Yazzoki button with neon glow.
 ///
 /// Use [variant] to switch between filled, outline and ghost styles.
-class MatrixButton extends StatefulWidget {
-  const MatrixButton({
+class YazzokiButton extends StatefulWidget {
+  const YazzokiButton({
     super.key,
     required this.label,
     this.onPressed,
     this.icon,
-    this.variant = MatrixButtonVariant.filled,
+    this.variant = YazzokiButtonVariant.filled,
     this.isLoading = false,
     this.expanded = false,
   });
@@ -22,15 +22,15 @@ class MatrixButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
-  final MatrixButtonVariant variant;
+  final YazzokiButtonVariant variant;
   final bool isLoading;
   final bool expanded;
 
   @override
-  State<MatrixButton> createState() => _MatrixButtonState();
+  State<YazzokiButton> createState() => _YazzokiButtonState();
 }
 
-class _MatrixButtonState extends State<MatrixButton> {
+class _YazzokiButtonState extends State<YazzokiButton> {
   bool _hovering = false;
   bool _pressing = false;
 
@@ -38,8 +38,8 @@ class _MatrixButtonState extends State<MatrixButton> {
 
   @override
   Widget build(BuildContext context) {
-    final isOutline = widget.variant == MatrixButtonVariant.outline;
-    final isGhost = widget.variant == MatrixButtonVariant.ghost;
+    final isOutline = widget.variant == YazzokiButtonVariant.outline;
+    final isGhost = widget.variant == YazzokiButtonVariant.ghost;
 
     final borderColor = isGhost
         ? Colors.transparent
@@ -109,4 +109,4 @@ class _MatrixButtonState extends State<MatrixButton> {
   }
 }
 
-enum MatrixButtonVariant { filled, outline, ghost }
+enum YazzokiButtonVariant { filled, outline, ghost }

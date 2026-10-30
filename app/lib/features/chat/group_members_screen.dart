@@ -10,7 +10,7 @@ import '../../core/utils/chat_format.dart';
 import '../../core/utils/profile_navigation.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
+import '../../core/widgets/yazzoki_button.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../data/api_config.dart';
 import '../../data/dtos/dtos.dart';
@@ -20,7 +20,7 @@ import 'chat_navigation.dart';
 
 /// Dedicated participants screen for a group. Shows the member list with
 /// the real photo/nickname; tapping a member opens their profile (the same
-/// behavior as every other MATRIX surface). A simple back arrow returns to
+/// behavior as every other Yazzoki surface). A simple back arrow returns to
 /// the group profile (Etapa 6).
 class GroupMembersScreen extends StatefulWidget {
   const GroupMembersScreen({super.key, required this.args});
@@ -395,7 +395,7 @@ class _GroupMembersScreenState extends State<GroupMembersScreen> {
               Text(_error!,
                   style: AppTextStyles.bodyMuted, textAlign: TextAlign.center),
               const SizedBox(height: AppDimensions.spaceMd),
-              MatrixButton(
+              YazzokiButton(
                 label: 'TENTAR NOVAMENTE',
                 expanded: false,
                 onPressed: () {
@@ -422,7 +422,7 @@ class _GroupMembersScreenState extends State<GroupMembersScreen> {
         final activeEnd = _members.length;
         if (i == 0) {
           return _isOwner
-              ? MatrixButton(
+              ? YazzokiButton(
                   label: 'ADICIONAR MEMBRO',
                   expanded: true,
                   icon: Icons.person_add_alt_1_rounded,

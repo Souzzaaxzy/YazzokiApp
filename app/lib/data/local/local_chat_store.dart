@@ -30,7 +30,7 @@ class LocalChatStore {
   /// the file lives in the app's private data directory.
   static Future<LocalChatStore> open({String? path}) async {
     if (_instance != null) return _instance!;
-    final dbPath = path ?? p.join(await getDatabasesPath(), 'matrix_chat.db');
+    final dbPath = path ?? p.join(await getDatabasesPath(), 'yazzoki_chat.db');
     final db = await openDatabase(
       dbPath,
       version: 1,

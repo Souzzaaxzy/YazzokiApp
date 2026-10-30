@@ -12,8 +12,8 @@ import '../../core/utils/gallery_picker.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
-import '../../core/widgets/matrix_text_field.dart';
+import '../../core/widgets/yazzoki_button.dart';
+import '../../core/widgets/yazzoki_text_field.dart';
 import '../../data/api_config.dart';
 import '../../data/services.dart';
 
@@ -185,7 +185,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: AppDimensions.spaceLg),
-                MatrixTextField(
+                YazzokiTextField(
                   label: 'Publicação',
                   hint: 'O que você está pensando?',
                   controller: _controller,
@@ -273,10 +273,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     ),
                   ),
                 ] else
-                  MatrixButton(
+                  YazzokiButton(
                     label: 'Galeria',
                     icon: Icons.photo_library_outlined,
-                    variant: MatrixButtonVariant.outline,
+                    variant: YazzokiButtonVariant.outline,
                     expanded: true,
                     onPressed: _pickMedia,
                   ),
@@ -293,7 +293,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   ],
                 ),
                 const SizedBox(height: AppDimensions.spaceXxl),
-                MatrixButton(
+                YazzokiButton(
                   label: 'Publicar',
                   icon: Icons.send_rounded,
                   expanded: true,

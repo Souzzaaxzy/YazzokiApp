@@ -7,13 +7,13 @@ import '../../core/utils/profile_navigation.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_card.dart';
-import '../../core/widgets/matrix_text_field.dart';
+import '../../core/widgets/yazzoki_card.dart';
+import '../../core/widgets/yazzoki_text_field.dart';
 import '../../core/widgets/user_avatar.dart';
-import '../../models/matrix_user.dart';
+import '../../models/yazzoki_user.dart';
 import '../../models/search_history_entry.dart';
 
-/// MATRIX search — backend search by nickname.
+/// Yazzoki search — backend search by nickname.
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -23,7 +23,7 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final _controller = TextEditingController();
-  List<MatrixUser> _results = const [];
+  List<YazzokiUser> _results = const [];
   bool _loading = false;
   bool _searched = false;
 
@@ -61,7 +61,7 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  void _openUser(MatrixUser user) {
+  void _openUser(YazzokiUser user) {
     openUserProfile(context, user);
   }
 
@@ -74,8 +74,8 @@ class _SearchScreenState extends State<SearchScreen> {
     state.removeSearchHistory(entry.userId);
   }
 
-  Widget _userRow(MatrixUser user) {
-    return MatrixCard(
+  Widget _userRow(YazzokiUser user) {
+    return YazzokiCard(
       margin: const EdgeInsets.symmetric(vertical: AppDimensions.spaceSm),
       onTap: () => _openUser(user),
       child: Row(
@@ -111,7 +111,7 @@ class _SearchScreenState extends State<SearchScreen> {
           child: HudLabel(text: 'PESQUISAS RECENTES', dot: false),
         ),
         ...history.map((entry) {
-          return MatrixCard(
+          return YazzokiCard(
             margin: const EdgeInsets.symmetric(vertical: AppDimensions.spaceSm),
             onTap: () => _openHistoryEntry(entry),
             child: Row(
@@ -161,7 +161,7 @@ class _SearchScreenState extends State<SearchScreen> {
             title: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('MATRIX SEARCH', style: AppTextStyles.title.copyWith(fontSize: 18)),
+                Text('Yazzoki', style: AppTextStyles.title.copyWith(fontSize: 18)),
               ],
             ),
           ),
@@ -173,7 +173,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 AppDimensions.spaceLg,
                 AppDimensions.spaceLg,
               ),
-              child: MatrixTextField(
+              child: YazzokiTextField(
                 hint: 'Pesquisar por nickname ou #id...',
                 controller: _controller,
                 prefix: Icon(Icons.search_rounded,

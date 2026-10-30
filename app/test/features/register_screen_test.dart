@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/widgets/matrix_button.dart';
-import 'package:matrix_app/features/auth/register/register_screen.dart';
+import 'package:yazzoki/core/widgets/yazzoki_button.dart';
+import 'package:yazzoki/features/auth/register/register_screen.dart';
 
 import '../helpers/test_app.dart';
 
 void main() {
-  // Locates the MatrixButton labelled CRIAR CONTA. The button is a
+  // Locates the YazzokiButton labelled CRIAR CONTA. The button is a
   // GestureDetector wrapping the label text.
   Finder createButton() => find.ancestor(
         of: find.text('CRIAR CONTA'),
-        matching: find.byType(MatrixButton),
+        matching: find.byType(YazzokiButton),
       );
 
   testWidgets('renders all fields and the create account button', (tester) async {
-    await pumpMatrixApp(tester, const RegisterScreen());
+    await pumpYazzokiApp(tester, const RegisterScreen());
 
     expect(find.text('CRIAR CONTA'), findsWidgets);
     // ONE identity field — nickname only. No "NOME"/"USERNAME" anymore.
@@ -29,7 +29,7 @@ void main() {
   });
 
   testWidgets('validates empty submission', (tester) async {
-    await pumpMatrixApp(tester, const RegisterScreen());
+    await pumpYazzokiApp(tester, const RegisterScreen());
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(createButton());
@@ -40,7 +40,7 @@ void main() {
   });
 
   testWidgets('rejects password shorter than 8 chars', (tester) async {
-    await pumpMatrixApp(tester, const RegisterScreen());
+    await pumpYazzokiApp(tester, const RegisterScreen());
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField).at(0), 'leo');
@@ -54,12 +54,12 @@ void main() {
   });
 
   testWidgets('rejects mismatched passwords', (tester) async {
-    await pumpMatrixApp(tester, const RegisterScreen());
+    await pumpYazzokiApp(tester, const RegisterScreen());
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField).at(0), 'leo');
-    await tester.enterText(find.byType(TextField).at(1), 'Matrix123');
-    await tester.enterText(find.byType(TextField).at(2), 'Matrix321');
+    await tester.enterText(find.byType(TextField).at(1), 'Yazzoki123');
+    await tester.enterText(find.byType(TextField).at(2), 'Yazzoki321');
     await tester.ensureVisible(createButton());
     await tester.tap(createButton());
     await tester.pump();
@@ -68,12 +68,12 @@ void main() {
   });
 
   testWidgets('shows the recovery code after a valid registration', (tester) async {
-    await pumpMatrixApp(tester, const RegisterScreen());
+    await pumpYazzokiApp(tester, const RegisterScreen());
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField).at(0), 'leo');
-    await tester.enterText(find.byType(TextField).at(1), 'Matrix123');
-    await tester.enterText(find.byType(TextField).at(2), 'Matrix123');
+    await tester.enterText(find.byType(TextField).at(1), 'Yazzoki123');
+    await tester.enterText(find.byType(TextField).at(2), 'Yazzoki123');
     await tester.ensureVisible(createButton());
     await tester.tap(createButton());
     // The register flow uses simulated async; advance the fake clock so the

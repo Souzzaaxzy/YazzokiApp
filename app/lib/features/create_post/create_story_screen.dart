@@ -11,7 +11,7 @@ import '../../app/theme/app_text_styles.dart';
 import '../../core/utils/gallery_picker.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
+import '../../core/widgets/yazzoki_button.dart';
 import '../../data/api_config.dart';
 import '../../data/services.dart';
 
@@ -353,15 +353,15 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
                 ),
               const SizedBox(height: AppDimensions.spaceMd),
               if (!_textMode)
-                MatrixButton(
+                YazzokiButton(
                   label: hasMedia ? 'Trocar mídia' : 'Selecionar mídia',
                   icon: Icons.photo_library_rounded,
-                  variant: MatrixButtonVariant.outline,
+                  variant: YazzokiButtonVariant.outline,
                   expanded: true,
                   onPressed: _publishing ? null : _pickMedia,
                 ),
               if (!_textMode) const SizedBox(height: AppDimensions.spaceSm),
-              MatrixButton(
+              YazzokiButton(
                 label: 'PUBLICAR STORY',
                 icon: Icons.send_rounded,
                 expanded: true,

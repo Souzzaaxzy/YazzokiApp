@@ -1,12 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/widgets/puzzle_icon.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/conversation_screen.dart';
-import 'package:matrix_app/features/chat/sticker_picker.dart';
-import 'package:matrix_app/models/sticker.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/widgets/puzzle_icon.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/conversation_screen.dart';
+import 'package:yazzoki/features/chat/sticker_picker.dart';
+import 'package:yazzoki/models/sticker.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -22,7 +22,7 @@ Future<AppState> seededChatWithSticker() async {
     name: 'Pack',
     slug: 'pack',
     description: '',
-    author: 'MATRIX',
+    author: 'Yazzoki',
     iconUrl: 'http://x/pack.png',
     installed: true,
     stickerCount: 1,
@@ -42,7 +42,7 @@ Future<AppState> seededChatWithSticker() async {
 }
 
 Future<void> pumpChat(WidgetTester tester, AppState state) async {
-  await pumpMatrixApp(
+  await pumpYazzokiApp(
     tester,
     const ConversationScreen(
       args: ConversationRouteArgs(
@@ -131,7 +131,7 @@ void main() {
       addTearDown(tester.view.reset);
 
       final state = await seededChatWithSticker();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Scaffold(body: StickerPicker(state: state, onPick: (_) {})),
         state: state,

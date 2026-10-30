@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/routes.dart';
 import '../../models/conversation.dart';
-import '../../models/matrix_user.dart';
+import '../../models/yazzoki_user.dart';
 
 /// Route arguments for a private conversation screen.
 ///
@@ -30,7 +30,7 @@ class ConversationRouteArgs {
 
   /// Opens with another user (from a search result, a friend, a profile
   /// "Mensagem") — the conversation may not exist yet.
-  factory ConversationRouteArgs.fromUser(MatrixUser user) =>
+  factory ConversationRouteArgs.fromUser(YazzokiUser user) =>
       ConversationRouteArgs(
         conversationId: '',
         otherUserId: user.id,
@@ -62,7 +62,7 @@ void openConversation(BuildContext context, ConversationRouteArgs args) {
 }
 
 /// Public helper used by the profile "Mensagem" button and friend tiles.
-void openChatWithUser(BuildContext context, MatrixUser user) {
+void openChatWithUser(BuildContext context, YazzokiUser user) {
   openConversation(context, ConversationRouteArgs.fromUser(user));
 }
 

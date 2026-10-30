@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/chat_screen.dart';
-import 'package:matrix_app/features/chat/conversation_screen.dart';
-import 'package:matrix_app/features/profile/profile_screen.dart';
-import 'package:matrix_app/models/conversation.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/chat_screen.dart';
+import 'package:yazzoki/features/chat/conversation_screen.dart';
+import 'package:yazzoki/features/profile/profile_screen.dart';
+import 'package:yazzoki/models/conversation.dart';
 
 import '../helpers/fake_record_channel.dart';
 import '../helpers/fake_repositories.dart';
@@ -50,7 +50,7 @@ void main() {
     testWidgets('shows empty conversations hint without conversations',
         (tester) async {
       final state = await seededChat(withFriend: false);
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
       expect(find.textContaining('Suas conversas'), findsOneWidget);
       expect(find.textContaining('ainda não possui amigos'), findsOneWidget);
@@ -59,7 +59,7 @@ void main() {
     testWidgets('lists a conversation with peer nickname and last preview',
         (tester) async {
       final state = await seededChat(messages: ['Olá!', 'Oi!']);
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       // Peer nickname (joao) appears in the conversation tile.
       expect(find.text('joao'), findsWidgets);
       // Last message is joao's "Oi!" — not marked as "Você:".
@@ -72,14 +72,14 @@ void main() {
         (tester) async {
       // Friends list is seeded; ensure it renders (no crash, friend visible).
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pump();
       expect(find.text('joao'), findsWidgets);
     });
 
     testWidgets('removing a friend clears the friends row', (tester) async {
       final state = await seededChat(withFriend: true);
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
       // Friend row is populated (empty-friends hint is absent).
       expect(find.text('Você ainda não possui amigos.'), findsNothing);
@@ -100,7 +100,7 @@ void main() {
     testWidgets('renders existing messages as independent bubbles',
         (tester) async {
       final state = await seededChat(messages: ['Olá!', 'Oi!']);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -122,7 +122,7 @@ void main() {
     testWidgets('sending appends the message and clears the input',
         (tester) async {
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -149,7 +149,7 @@ void main() {
         'send button hidden while field is empty empty and transitions with text',
         (tester) async {
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -190,7 +190,7 @@ void main() {
     testWidgets('after sendthe field clearsand the send button vanishes',
         (tester) async {
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -221,7 +221,7 @@ void main() {
     testWidgets('mic and send buttons keep adequate touch targets (Part 4)',
         (tester) async {
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -274,7 +274,7 @@ void main() {
         (i) => i.isEven ? 'minha $i' : 'dela $i',
       );
       final state = await seededChat(messages: messages);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -308,7 +308,7 @@ void main() {
     testWidgets('realtime typing shows "digitando..." below the nickname',
         (tester) async {
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -340,7 +340,7 @@ void main() {
     testWidgets('typing auto-hides after the timeout even without a stop frame',
         (tester) async {
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -366,7 +366,7 @@ void main() {
     testWidgets('realtime recording shows "gravando áudio" below the nickname',
         (tester) async {
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -401,7 +401,7 @@ void main() {
         final fake = FakeRecordChannels.install();
         addTearDown(fake.cleanup);
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -431,7 +431,7 @@ void main() {
         'recording indicator auto-hides after 8s even without a stop frame',
         (tester) async {
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -456,7 +456,7 @@ void main() {
     testWidgets('peer avatar shows on the 1st and 6th of a 5-group of normals',
         (tester) async {
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -500,7 +500,7 @@ void main() {
         'reply and voice always show the avatar and start a fresh group',
         (tester) async {
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -597,7 +597,7 @@ void main() {
         (tester) async {
       final state =
           await seededChat(messages: ['Minha própria', 'Oi!']); // m0 = mine
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -625,7 +625,7 @@ void main() {
     testWidgets('watches realtime incoming messagesand appends to the right',
         (tester) async {
       final state = await seededChat(messages: ['Oi!']); // m0 = mine
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -667,7 +667,7 @@ void main() {
         (tester) async {
       final state =
           await seededChat(messages: ['Olá!', 'Oi!']); // m0 mine, m1 theirs
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -700,7 +700,7 @@ void main() {
         'sending a reply persists the reply-to preview inside the bubble',
         (tester) async {
       final state = await seededChat(messages: ['Olá!', 'Oi!']); // m1 = theirs
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -741,7 +741,7 @@ void main() {
         'shows "enviado" inside my newest bubble and flips to '
         '"visto agora" when read', (tester) async {
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -776,7 +776,7 @@ void main() {
     testWidgets('Mensagem button opens the conversation directly',
         (tester) async {
       final state = await seededChat(messages: const []);
-      await pumpMatrixApp(tester, const ProfileScreen(nickname: 'joao'),
+      await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'),
           state: state);
       await tester.pumpAndSettle();
       // Friendly pair → both the Amigos and Mensagem buttons are shown.
@@ -793,7 +793,7 @@ void main() {
         'long-press on a message opens the menu with Responder/Excluir/'
         'Excluir para todos', (tester) async {
       final state = await seededChat(messages: ['Oi']);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -816,7 +816,7 @@ void main() {
     testWidgets('Excluir (para mim) requires confirm then hides for ME only',
         (tester) async {
       final state = await seededChat(messages: ['Oi']);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -847,7 +847,7 @@ void main() {
         'Excluir para todos removes the message for both sides + realtime',
         (tester) async {
       final state = await seededChat(messages: ['Oi']);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -886,7 +886,7 @@ void main() {
     testWidgets('deleting for me keeps the peer message on screen',
         (tester) async {
       final state = await seededChat(messages: ['Oi', 'Resp']);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -914,7 +914,7 @@ void main() {
     testWidgets('long-press a conversation asks + hides it for ME only',
         (tester) async {
       final state = await seededChat(messages: ['Oi']);
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
       // The conversation tile exists.
       expect(find.text('joao'), findsWidgets);
@@ -936,7 +936,7 @@ void main() {
       final state = await seededChat(messages: ['Oi']);
       // The peer hides the conversation for THEMSELVES only.
       lastSeededRepos!.store.conversationHides.add('u0|u2|u2');
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
       // My (u0) list still shows the conversation.
       expect(find.textContaining('Oi'), findsOneWidget);
@@ -947,7 +947,7 @@ void main() {
     testWidgets('sending patches the list preview immediately (no refetch)',
         (tester) async {
       final state = await seededChat(messages: ['Oi!']);
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
       expect(find.textContaining('Oi!'), findsOneWidget);
 
@@ -967,7 +967,7 @@ void main() {
         'realtime incoming patches the preview instantly over the old one',
         (tester) async {
       final state = await seededChat(messages: ['Oi!']);
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
 
       // A realtime frame arrives → without any refresh the tile must show
@@ -1019,7 +1019,7 @@ void main() {
     testWidgets('rapid successive sends keep the newest preview on top',
         (tester) async {
       final state = await seededChat(messages: ['primeira']);
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
       expect(find.textContaining('primeira'), findsOneWidget);
 
@@ -1039,7 +1039,7 @@ void main() {
     testWidgets('rapid successive realtime frames patch the preview instantly',
         (tester) async {
       final state = await seededChat(messages: ['primeira']);
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
 
       // Multiple incoming frames in quick succession — the list preview
@@ -1062,7 +1062,7 @@ void main() {
     testWidgets('leaving and returning to the chat keeps the last preview',
         (tester) async {
       final state = await seededChat(messages: ['Oi!']);
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
 
       // Send while inside the conversation…
@@ -1075,7 +1075,7 @@ void main() {
       // still be there (no refetch required, no stale server round-trip)。
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
       expect(find.textContaining('Você: tudo bem?'), findsOneWidget);
     });

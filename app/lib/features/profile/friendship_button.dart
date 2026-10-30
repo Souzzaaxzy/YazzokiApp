@@ -124,7 +124,7 @@ class _FriendshipButtonState extends State<FriendshipButton> {
 }
 
 /// A self-contained neon button with press-scale and dark/light support.
-/// Uses the same language as MATRIX's [GlowContainer] + icon + label.
+/// Uses the same language as Yazzoki's [GlowContainer] + icon + label.
 class _StateButton extends StatefulWidget {
   const _StateButton({
     super.key,
@@ -213,7 +213,7 @@ class _StateButtonState extends State<_StateButton> {
 
 enum _StateButtonVariant { filled, outline }
 
-/// Opens the MATRIX-styled confirmation for removing a friendship.
+/// Opens the Yazzoki-styled confirmation for removing a friendship.
 ///
 /// Returns `true` when the user tapped SIM, `false`/null otherwise (NÃO or
 /// dismissing the modal) — in which case NOTHING is sent to the server.

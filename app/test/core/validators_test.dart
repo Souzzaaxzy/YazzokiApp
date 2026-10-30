@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/utils/validators.dart';
+import 'package:yazzoki/core/utils/validators.dart';
 
 void main() {
   group('Validators.name', () {
@@ -45,7 +45,7 @@ void main() {
       expect(Validators.nickname('𝕷𝖊𝖔𝖓𝖆𝖗𝖉𝖔'), isNull);
       expect(Validators.nickname('LΞONΛRDO'), isNull);
       expect(Validators.nickname('Leonardo.exe'), isNull);
-      expect(Validators.nickname('MATRIX ⚡'), isNull);
+      expect(Validators.nickname('Yazzoki ⚡'), isNull);
       expect(Validators.nickname('José Álvares'), isNull);
     });
 
@@ -74,7 +74,7 @@ void main() {
     test('rejects without numbers',
         () => expect(Validators.password('abcdefgh'), isNotNull));
     test('accepts 8+ chars with letters and numbers',
-        () => expect(Validators.password('Matrix123'), isNull));
+        () => expect(Validators.password('Yazzoki123'), isNull));
   });
 
   group('Validators.confirmPassword', () {

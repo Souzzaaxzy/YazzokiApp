@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/features/feed/feed_screen.dart';
-import 'package:matrix_app/features/feed/post_card.dart';
-import 'package:matrix_app/models/post.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/features/feed/feed_screen.dart';
+import 'package:yazzoki/features/feed/post_card.dart';
+import 'package:yazzoki/models/post.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -22,7 +22,7 @@ void main() {
         text: 'meu vídeo',
         createdAt: DateTime(2024, 1, 1),
         imageUrl: null,
-        videoUrl: 'https://fake.matrix.app/u/test.mp4',
+        videoUrl: 'https://fake.yazzoki.app/u/test.mp4',
         likes: 0,
         liked: false,
         comments: const [],
@@ -31,7 +31,7 @@ void main() {
     final state = AppState(repositories: repos);
     await state.restoreSession();
     await state.loadFeed();
-    await pumpMatrixApp(tester, const FeedScreen(), state: state);
+    await pumpYazzokiApp(tester, const FeedScreen(), state: state);
     await tester.pumpAndSettle();
 
     // The video post is rendered with a play affordance (video indicator).

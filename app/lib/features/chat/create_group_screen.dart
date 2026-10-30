@@ -7,14 +7,14 @@ import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../core/utils/chat_format.dart';
 import '../../core/utils/gallery_picker.dart';
-import '../../core/widgets/matrix_card.dart';
+import '../../core/widgets/yazzoki_card.dart';
 import '../../data/api_config.dart';
 import '../../data/services.dart';
 import '../../core/widgets/app_state_scope.dart';
-import '../../core/widgets/matrix_button.dart';
-import '../../core/widgets/matrix_text_field.dart';
+import '../../core/widgets/yazzoki_button.dart';
+import '../../core/widgets/yazzoki_text_field.dart';
 import '../../core/widgets/user_avatar.dart';
-import '../../models/matrix_user.dart';
+import '../../models/yazzoki_user.dart';
 import 'chat_navigation.dart';
 
 /// Group creation — photo (optional), mandated name, optional
@@ -35,7 +35,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   String? _avatarUrl;
   bool _pickingPhoto = false;
   bool _creating = false;
-  List<MatrixUser> _friends = const [];
+  List<YazzokiUser> _friends = const [];
   final Set<String> _selectedIds = <String>{};
   bool _loadedFriends = false;
 
@@ -103,7 +103,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     });
   }
 
-  void _toggleFriend(MatrixUser user) {
+  void _toggleFriend(YazzokiUser user) {
     setState(() {
       if (!_selectedIds.add(user.id)) {
         _selectedIds.remove(user.id);
@@ -145,7 +145,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     }
   }
 
-  List<MatrixUser> get _selectedFriends =>
+  List<YazzokiUser> get _selectedFriends =>
       _friends.where((f) => _selectedIds.contains(f.id)).toList();
 
   @override
@@ -168,9 +168,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             children: [
               _photoPicker(),
               const SizedBox(height: AppDimensions.spaceLg),
-              MatrixTextField(
+              YazzokiTextField(
                 label: 'Nome do grupo',
-                hint: 'Ex.: Grupo MATRIX',
+                hint: 'Ex.: Grupo Yazzoki',
                 controller: _nameController,
                 textCapitalization: TextCapitalization.sentences,
                 validator: (v) => (v == null || v.trim().isEmpty)
@@ -178,7 +178,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     : null,
               ),
               const SizedBox(height: AppDimensions.spaceMd),
-              MatrixTextField(
+              YazzokiTextField(
                 label: 'Descrição',
                 hint: 'Descrição do grupo (opcional',
                 controller: _descController,
@@ -238,7 +238,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               else
                 _friendsList(selected),
               const SizedBox(height: AppDimensions.spaceLg),
-              MatrixButton(
+              YazzokiButton(
                 label: 'Criar Grupo',
                 icon: Icons.group_add_rounded,
                 expanded: true,
@@ -317,13 +317,13 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     );
   }
 
-  Widget _friendsList(List<MatrixUser> selected) {
+  Widget _friendsList(List<YazzokiUser> selected) {
     return Column(
       children: [
         for (final u in _friends)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
-            child: MatrixCard(
+            child: YazzokiCard(
               onTap: () => _toggleFriend(u),
               child: Row(
                 children: [

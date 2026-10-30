@@ -7,7 +7,7 @@ import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../core/services/app_state.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
+import '../../core/widgets/yazzoki_button.dart';
 import '../../data/api_config.dart';
 import '../../data/repositories/sticker_repository.dart';
 
@@ -29,7 +29,7 @@ class StickerlyImportResult {
 /// (`https://sticker.ly/s/QSXLKY`).
 ///
 /// Fluxo: código → [BUSCAR] → prévia (nome/autor/capa/figurinhas) →
-/// [ADICIONAR AO MATRIX]. Nada é importado sem confirmação. Consulta e
+/// [ADICIONAR AO YAZZOKI]. Nada é importado sem confirmação. Consulta e
 /// download acontecem no SERVIDOR — o APK nunca fala com o Sticker.ly nem
 /// carrega credenciais.
 ///
@@ -268,9 +268,9 @@ class _StickerlyImportSheetState extends State<StickerlyImportSheet> {
       Row(
         children: [
           Expanded(
-            child: MatrixButton(
+            child: YazzokiButton(
               label: 'CANCELAR',
-              variant: MatrixButtonVariant.outline,
+              variant: YazzokiButtonVariant.outline,
               onPressed: _loadingPreview
                   ? null
                   : () => Navigator.of(context).maybePop(),
@@ -278,7 +278,7 @@ class _StickerlyImportSheetState extends State<StickerlyImportSheet> {
           ),
           const SizedBox(width: AppDimensions.spaceMd),
           Expanded(
-            child: MatrixButton(
+            child: YazzokiButton(
               label: 'BUSCAR',
               icon: Icons.search_rounded,
               isLoading: _loadingPreview,
@@ -398,17 +398,17 @@ class _StickerlyImportSheetState extends State<StickerlyImportSheet> {
         ),
       ),
       const SizedBox(height: AppDimensions.spaceLg),
-      MatrixButton(
-        label: 'ADICIONAR AO MATRIX',
+      YazzokiButton(
+        label: 'ADICIONAR AO YAZZOKI',
         icon: Icons.add_rounded,
         expanded: true,
         isLoading: _importing,
         onPressed: _importing ? null : _import,
       ),
       const SizedBox(height: AppDimensions.spaceSm),
-      MatrixButton(
+      YazzokiButton(
         label: 'CANCELAR',
-        variant: MatrixButtonVariant.outline,
+        variant: YazzokiButtonVariant.outline,
         expanded: true,
         onPressed: _importing ? null : () => Navigator.of(context).maybePop(),
       ),

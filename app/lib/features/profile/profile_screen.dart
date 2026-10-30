@@ -14,11 +14,11 @@ import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/glow_container.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
+import '../../core/widgets/yazzoki_button.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../data/api_config.dart';
 import '../../models/friend_request.dart';
-import '../../models/matrix_user.dart';
+import '../../models/yazzoki_user.dart';
 import '../../models/post.dart';
 import '../chat/chat_navigation.dart';
 import '../feed/story_viewer.dart';
@@ -136,7 +136,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(
-        () => _error = 'Não foi possível conectar ao MATRIX. '
+        () => _error = 'Não foi possível conectar ao Yazzoki. '
             'Verifique sua conexão.',
       );
     }
@@ -156,7 +156,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /// Clique na foto de perfil: abre o Story ATIVO dessa pessoa (mesmo já
   /// visto). Se ela não tiver Story ativo, NÃO abre um visualizador vazio —
   /// garante os Stories carregados antes de decidir.
-  Future<void> _openUserStory(AppState state, MatrixUser user) async {
+  Future<void> _openUserStory(AppState state, YazzokiUser user) async {
     if (!state.isStoryCatalogLoaded) {
       await state.loadStories();
       if (!mounted) return;
@@ -231,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   title: 'CONNECTION ERROR',
                   hud: 'OFFLINE',
                   subtitle: _error!,
-                  action: MatrixButton(
+                  action: YazzokiButton(
                     label: 'Tentar novamente',
                     icon: Icons.refresh_rounded,
                     onPressed: _load,
@@ -378,7 +378,7 @@ class _ProfileHeader extends StatelessWidget {
   /// de vista (o IndexedStack mantém a tela viva, então o dispose não roda).
   final GlobalKey<ProfileMusicBarState>? musicKey;
 
-  final MatrixUser user;
+  final YazzokiUser user;
   final bool isOwn;
   final Friendship? friendship;
   final VoidCallback onEdit;
@@ -545,10 +545,10 @@ class _ProfileHeader extends StatelessWidget {
               _ProfileStats(user: user, onFriendsTap: onFriendsTap),
               const SizedBox(height: AppDimensions.spaceXl),
               if (isOwn)
-                MatrixButton(
+                YazzokiButton(
                   label: 'Editar perfil',
                   icon: Icons.edit_rounded,
-                  variant: MatrixButtonVariant.outline,
+                  variant: YazzokiButtonVariant.outline,
                   expanded: true,
                   onPressed: onEdit,
                 )
@@ -566,7 +566,7 @@ class _ProfileHeader extends StatelessWidget {
                     ),
                     const SizedBox(width: AppDimensions.spaceMd),
                     Expanded(
-                      child: MatrixButton(
+                      child: YazzokiButton(
                         label: 'Mensagem',
                         icon: Icons.chat_bubble_rounded,
                         onPressed: onMessage,
@@ -597,7 +597,7 @@ class _ProfileHeader extends StatelessWidget {
 class _ProfileBanner extends StatelessWidget {
   const _ProfileBanner({required this.user, required this.height});
 
-  final MatrixUser user;
+  final YazzokiUser user;
   final double height;
 
   @override
@@ -651,7 +651,7 @@ class _ProfileBanner extends StatelessWidget {
 /// search, friends or any other surface.
 void _showProfilePhotoZoom(
   BuildContext context, {
-  required MatrixUser user,
+  required YazzokiUser user,
   required bool enabled,
 }) {
   if (!enabled) return;
@@ -708,7 +708,7 @@ void _showProfilePhotoZoom(
 class _ProfileStats extends StatelessWidget {
   const _ProfileStats({required this.user, required this.onFriendsTap});
 
-  final MatrixUser user;
+  final YazzokiUser user;
   final VoidCallback onFriendsTap;
 
   @override

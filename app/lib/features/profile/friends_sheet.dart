@@ -10,20 +10,20 @@ import '../../core/widgets/hud_label.dart';
 import '../../core/widgets/theme_watcher.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../data/api_config.dart';
-import '../../models/matrix_user.dart';
+import '../../models/yazzoki_user.dart';
 
-/// MATRIX friends bottom sheet — slides up from the bottom of the profile.
+/// Yazzoki friends bottom sheet — slides up from the bottom of the profile.
 /// Listed data always comes from the server (accepted friendships only),
 /// so the list and the profile counter can never diverge.
 class FriendsSheet extends StatefulWidget {
   const FriendsSheet({super.key, required this.user});
 
-  final MatrixUser user;
+  final YazzokiUser user;
 
   /// Opens the sheet with the platform bottom-sheet animation
   /// (bottom-to-top slide). The sheet itself is transparent; the styled
   /// container is the body decoration.
-  static Future<void> open(BuildContext context, MatrixUser user) {
+  static Future<void> open(BuildContext context, YazzokiUser user) {
     return showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -41,7 +41,7 @@ class FriendsSheet extends StatefulWidget {
 class _FriendsSheetState extends State<FriendsSheet> {
   static const _pageSize = 20;
 
-  final List<MatrixUser> _friends = [];
+  final List<YazzokiUser> _friends = [];
   final ScrollController _scroll = ScrollController();
   late AppState _state;
   int _total = 0;
@@ -106,7 +106,7 @@ class _FriendsSheetState extends State<FriendsSheet> {
     }
   }
 
-  void _openFriend(MatrixUser friend) {
+  void _openFriend(YazzokiUser friend) {
     // Close the sheet first, then open the friend's profile. The new
     // profile screen loads ITS OWN keyed slot — currentUser is untouched.
     Navigator.of(context).pop();

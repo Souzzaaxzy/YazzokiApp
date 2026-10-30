@@ -4,9 +4,9 @@ import 'package:flutter/services.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
 
-/// Global MATRIX theme applied to the whole app. Both variants use the
+/// Global Yazzoki theme applied to the whole app. Both variants use the
 /// SAME color tokens — the mood (dark/light) is delegated to the active
-/// [MatrixPalette], so custom widgets automatically match the system theme.
+/// [YazzokiPalette], so custom widgets automatically match the system theme.
 class AppTheme {
   AppTheme._();
 
@@ -56,7 +56,7 @@ class AppTheme {
     );
   }
 
-  /// Designed light variant: white surfaces, dark text, blue MATRIX accent
+  /// Designed light variant: white surfaces, dark text, blue Yazzoki accent
   /// and soft shadows — not a color inversion of the dark theme.
   static ThemeData get light {
     final base = ThemeData.light(useMaterial3: true);

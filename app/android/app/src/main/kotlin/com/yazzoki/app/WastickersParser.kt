@@ -1,4 +1,4 @@
-package com.matrix.matrix_app
+package com.yazzoki.app
 
 import java.io.ByteArrayOutputStream
 import java.io.File

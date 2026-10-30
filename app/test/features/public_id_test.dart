@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/utils/validators.dart';
-import 'package:matrix_app/core/widgets/user_avatar.dart';
-import 'package:matrix_app/features/auth/login/login_screen.dart';
-import 'package:matrix_app/features/profile/profile_screen.dart';
-import 'package:matrix_app/models/matrix_user.dart';
+import 'package:yazzoki/core/utils/validators.dart';
+import 'package:yazzoki/core/widgets/user_avatar.dart';
+import 'package:yazzoki/features/auth/login/login_screen.dart';
+import 'package:yazzoki/features/profile/profile_screen.dart';
+import 'package:yazzoki/models/yazzoki_user.dart';
 
 import '../helpers/test_app.dart';
 
 /// The public `#id` (`#00000001`): shown small under the nickname on the
 /// profile, accepted as a login identifier, and usable to find people.
 void main() {
-  group('MatrixUser — #id', () {
+  group('YazzokiUser — #id', () {
     test('formats the label from the numeric id when the server omits it', () {
-      const u = MatrixUser(id: 'u', nickname: 'neo', publicId: 7);
+      const u = YazzokiUser(id: 'u', nickname: 'neo', publicId: 7);
       expect(u.publicIdText, '#00000007');
     });
 
     test('prefers the server-provided label', () {
-      const u = MatrixUser(
+      const u = YazzokiUser(
         id: 'u',
         nickname: 'neo',
         publicId: 7,
@@ -28,12 +28,12 @@ void main() {
     });
 
     test('is null when the payload carried no id', () {
-      const u = MatrixUser(id: 'u', nickname: 'neo');
+      const u = YazzokiUser(id: 'u', nickname: 'neo');
       expect(u.publicIdText, isNull);
     });
 
     test('copyWith keeps the id and can replace it', () {
-      const u = MatrixUser(id: 'u', nickname: 'neo', publicId: 7);
+      const u = YazzokiUser(id: 'u', nickname: 'neo', publicId: 7);
       expect(u.copyWith(bio: 'x').publicId, 7);
       expect(u.copyWith(publicId: () => 9).publicId, 9);
     });
@@ -66,7 +66,7 @@ void main() {
 
   group('Perfil — #id abaixo do nickname', () {
     testWidgets('mostra o #id pequeno abaixo do nickname', (tester) async {
-      await pumpMatrixApp(tester, const ProfileScreen());
+      await pumpYazzokiApp(tester, const ProfileScreen());
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('#00000001'), findsOneWidget);
@@ -87,7 +87,7 @@ void main() {
     testWidgets('mostra o #id do usuário VISITADO, não o da sessão',
         (tester) async {
       // 'joao' (u2) tem #00000002; a sessão é 'leonardo' (#00000001).
-      await pumpMatrixApp(tester, const ProfileScreen(nickname: 'joao'));
+      await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'));
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.text('#00000002'), findsOneWidget);
@@ -97,10 +97,10 @@ void main() {
     testWidgets('não quebra o layout quando o payload não traz #id',
         (tester) async {
       // Um usuário sem publicId (payload leve) apenas omite a linha.
-      const user = MatrixUser(id: 'x', nickname: 'semid');
+      const user = YazzokiUser(id: 'x', nickname: 'semid');
       expect(user.publicIdText, isNull);
       // A tela de perfil continua renderizando o avatar.
-      await pumpMatrixApp(tester, const ProfileScreen());
+      await pumpYazzokiApp(tester, const ProfileScreen());
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(UserAvatar), findsWidgets);
     });
@@ -108,7 +108,7 @@ void main() {
 
   group('Login — campo aceita nickname ou #id', () {
     testWidgets('rotula e aceita o #id', (tester) async {
-      await pumpMatrixApp(tester, const LoginScreen());
+      await pumpYazzokiApp(tester, const LoginScreen());
 
       expect(find.text('NICKNAME OU #ID'), findsOneWidget);
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/app/theme/app_colors.dart';
-import 'package:matrix_app/app/theme/app_palette.dart';
-import 'package:matrix_app/core/services/theme_controller.dart';
-import 'package:matrix_app/data/theme_store.dart';
+import 'package:yazzoki/app/theme/app_colors.dart';
+import 'package:yazzoki/app/theme/app_palette.dart';
+import 'package:yazzoki/core/services/theme_controller.dart';
+import 'package:yazzoki/data/theme_store.dart';
 
 /// In-memory ThemeStore: stands in for secure storage so persistence is
 /// exercised through the real ThemeController code path.
@@ -11,15 +11,15 @@ class _MemoryThemeStore implements ThemeStore {
   String? value;
 
   @override
-  Future<MatrixThemeMode> read() async {
-    for (final mode in MatrixThemeMode.values) {
+  Future<YazzokiThemeMode> read() async {
+    for (final mode in YazzokiThemeMode.values) {
       if (mode.name == value) return mode;
     }
-    return MatrixThemeMode.dark;
+    return YazzokiThemeMode.dark;
   }
 
   @override
-  Future<void> write(MatrixThemeMode mode) async {
+  Future<void> write(YazzokiThemeMode mode) async {
     value = mode.name;
   }
 }
@@ -31,7 +31,7 @@ void main() {
     testWidgets('defaults to dark before any preference is loaded',
         (tester) async {
       final controller = ThemeController.debug(_MemoryThemeStore());
-      expect(controller.mode, MatrixThemeMode.dark);
+      expect(controller.mode, YazzokiThemeMode.dark);
       expect(controller.materialMode, ThemeMode.dark);
     });
 
@@ -40,17 +40,17 @@ void main() {
       final store = _MemoryThemeStore();
       final a = ThemeController.debug(store);
       await a.load();
-      await a.setMode(MatrixThemeMode.light);
-      expect(a.mode, MatrixThemeMode.light);
+      await a.setMode(YazzokiThemeMode.light);
+      expect(a.mode, YazzokiThemeMode.light);
       expect(a.materialMode, ThemeMode.light);
       expect(store.value, 'light');
 
       // Simulate an app restart: a new controller on the SAME store.
       final b = ThemeController.debug(store);
       await b.load();
-      expect(b.mode, MatrixThemeMode.light);
+      expect(b.mode, YazzokiThemeMode.light);
 
-      await a.setMode(MatrixThemeMode.system);
+      await a.setMode(YazzokiThemeMode.system);
       expect(store.value, 'system');
     });
 
@@ -59,46 +59,46 @@ void main() {
       await controller.load();
       var notified = 0;
       controller.addListener(() => notified++);
-      await controller.setMode(MatrixThemeMode.light);
+      await controller.setMode(YazzokiThemeMode.light);
       expect(notified, greaterThan(0));
     });
   });
 
   group('Palette resolution', () {
     test('dark preference always resolves to the dark palette', () {
-      expect(effectivePalette(MatrixThemeMode.dark, Brightness.dark),
-          MatrixPalette.dark);
-      expect(effectivePalette(MatrixThemeMode.dark, Brightness.light),
-          MatrixPalette.dark);
+      expect(effectivePalette(YazzokiThemeMode.dark, Brightness.dark),
+          YazzokiPalette.dark);
+      expect(effectivePalette(YazzokiThemeMode.dark, Brightness.light),
+          YazzokiPalette.dark);
     });
 
     test('light preference always resolves to the light palette', () {
-      expect(effectivePalette(MatrixThemeMode.light, Brightness.dark),
-          MatrixPalette.light);
-      expect(effectivePalette(MatrixThemeMode.light, Brightness.light),
-          MatrixPalette.light);
+      expect(effectivePalette(YazzokiThemeMode.light, Brightness.dark),
+          YazzokiPalette.light);
+      expect(effectivePalette(YazzokiThemeMode.light, Brightness.light),
+          YazzokiPalette.light);
     });
 
     test('system follows the platform brightness', () {
-      expect(effectivePalette(MatrixThemeMode.system, Brightness.dark),
-          MatrixPalette.dark);
-      expect(effectivePalette(MatrixThemeMode.system, Brightness.light),
-          MatrixPalette.light);
+      expect(effectivePalette(YazzokiThemeMode.system, Brightness.dark),
+          YazzokiPalette.dark);
+      expect(effectivePalette(YazzokiThemeMode.system, Brightness.light),
+          YazzokiPalette.light);
     });
 
     testWidgets('AppColors tokens change with the active palette',
         (tester) async {
-      AppColors.setActive(MatrixPalette.dark);
+      AppColors.setActive(YazzokiPalette.dark);
       final darkBg = AppColors.scaffoldBackground;
       final darkText = AppColors.techWhite;
 
-      AppColors.setActive(MatrixPalette.light);
+      AppColors.setActive(YazzokiPalette.light);
       expect(AppColors.scaffoldBackground, isNot(darkBg));
       expect(AppColors.techWhite, isNot(darkText));
       // Brand accent survives both themes.
       expect(AppColors.primaryBlue, AppColors.primaryBlue);
 
-      AppColors.setActive(MatrixPalette.dark); // restore default for others
+      AppColors.setActive(YazzokiPalette.dark); // restore default for others
     });
   });
 }

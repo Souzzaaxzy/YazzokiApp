@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/conversation_screen.dart';
-import 'package:matrix_app/features/chat/voice_player_bubble.dart';
-import 'package:matrix_app/models/conversation.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/conversation_screen.dart';
+import 'package:yazzoki/features/chat/voice_player_bubble.dart';
+import 'package:yazzoki/models/conversation.dart';
 
 import '../helpers/fake_just_audio.dart';
 import '../helpers/fake_repositories.dart';
@@ -42,7 +42,7 @@ Future<AppState> seededVoiceChat(List<ChatMessage> messages) async {
 }
 
 Future<void> pumpVoiceConversation(WidgetTester tester, AppState state) async {
-  await pumpMatrixApp(
+  await pumpYazzokiApp(
     tester,
     ConversationScreen(
       args: const ConversationRouteArgs(

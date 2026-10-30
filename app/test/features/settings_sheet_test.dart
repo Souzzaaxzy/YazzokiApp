@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/app/routes.dart';
-import 'package:matrix_app/app/theme/app_theme.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/services/theme_controller.dart';
-import 'package:matrix_app/core/widgets/app_state_scope.dart';
-import 'package:matrix_app/features/auth/login/login_screen.dart';
-import 'package:matrix_app/features/profile/profile_screen.dart';
+import 'package:yazzoki/app/routes.dart';
+import 'package:yazzoki/app/theme/app_theme.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/services/theme_controller.dart';
+import 'package:yazzoki/core/widgets/app_state_scope.dart';
+import 'package:yazzoki/features/auth/login/login_screen.dart';
+import 'package:yazzoki/features/profile/profile_screen.dart';
 
 import '../helpers/fake_repositories.dart';
 
@@ -83,7 +83,7 @@ void main() {
     final state = AppState(repositories: FakeRepositories());
     addTearDown(state.dispose);
     final controller = ThemeController.instance;
-    addTearDown(() => controller.setMode(MatrixThemeMode.dark));
+    addTearDown(() => controller.setMode(YazzokiThemeMode.dark));
     await pumpProfile(tester, state);
     await tester.tap(settingsButton());
     await tester.pump(const Duration(milliseconds: 300));
@@ -91,11 +91,11 @@ void main() {
 
     await tester.tap(find.text('Claro'));
     await tester.pump(const Duration(milliseconds: 100));
-    expect(controller.mode, MatrixThemeMode.light);
+    expect(controller.mode, YazzokiThemeMode.light);
 
     await tester.tap(find.text('Sistema'));
     await tester.pump();
-    expect(controller.mode, MatrixThemeMode.system);
+    expect(controller.mode, YazzokiThemeMode.system);
   });
 
   testWidgets('logout asks for confirmation and then lands on login',

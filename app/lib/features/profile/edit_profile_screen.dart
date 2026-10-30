@@ -11,8 +11,8 @@ import '../../core/utils/gallery_picker.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
-import '../../core/widgets/matrix_text_field.dart';
+import '../../core/widgets/yazzoki_button.dart';
+import '../../core/widgets/yazzoki_text_field.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../data/api_config.dart';
 import '../../models/profile_music.dart';
@@ -132,7 +132,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         backgroundColor: AppColors.nightBlue,
         title: Text('Remover banner?', style: AppTextStyles.title),
         content: Text(
-          'O perfil volta a usar a capa padrão do MATRIX.',
+          'O perfil volta a usar a capa padrão do Yazzoki.',
           style: AppTextStyles.body,
         ),
         actions: [
@@ -451,7 +451,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: AppDimensions.spaceXxl),
-                MatrixTextField(
+                YazzokiTextField(
                   label: 'Nickname',
                   controller: _nicknameController,
                   prefix: Icon(Icons.person_outline_rounded,
@@ -460,7 +460,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   validator: (v) => Validators.required(v, label: 'Nickname obrigatório'),
                 ),
                 const SizedBox(height: AppDimensions.spaceLg),
-                MatrixTextField(
+                YazzokiTextField(
                   label: 'Bio',
                   controller: _bioController,
                   maxLines: 4,
@@ -505,7 +505,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ],
                 ),
                 const SizedBox(height: AppDimensions.spaceXxl),
-                MatrixButton(
+                YazzokiButton(
                   label: _saving ? 'Salvando...' : 'Salvar',
                   icon: Icons.check_rounded,
                   expanded: true,
@@ -661,7 +661,7 @@ class _BannerPreview extends StatelessWidget {
   }
 }
 
-/// Default cover look (no banner set): the MATRIX gradient + a HUD hint.
+/// Default cover look (no banner set): the Yazzoki gradient + a HUD hint.
 class _BannerPlaceholder extends StatelessWidget {
   const _BannerPlaceholder();
 

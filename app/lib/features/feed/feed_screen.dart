@@ -6,12 +6,12 @@ import '../../app/theme/app_text_styles.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
+import '../../core/widgets/yazzoki_button.dart';
 import 'comments_sheet.dart';
 import 'post_card.dart';
 import 'stories_header.dart';
 
-/// MATRIX feed — chronological list of posts loaded from the backend.
+/// Yazzoki feed — chronological list of posts loaded from the backend.
 class FeedScreen extends StatefulWidget {
   const FeedScreen({super.key});
 
@@ -109,7 +109,7 @@ class _FeedScreenState extends State<FeedScreen> {
               title: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('MATRIX',
+                  Text('Yazzoki',
                       style: AppTextStyles.title.copyWith(fontSize: 22)),
                   const SizedBox(width: AppDimensions.spaceLg),
                   const HudLabel(
@@ -142,7 +142,7 @@ class _FeedScreenState extends State<FeedScreen> {
                   title: 'NO POSTS YET',
                   hud: 'SYSTEM WAITING...',
                   subtitle: 'Ainda não existem publicações.',
-                  action: MatrixButton(
+                  action: YazzokiButton(
                     label: 'Recarregar',
                     icon: Icons.refresh_rounded,
                     onPressed: _refresh,

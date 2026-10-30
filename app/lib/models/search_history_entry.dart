@@ -1,4 +1,4 @@
-import 'matrix_user.dart';
+import 'yazzoki_user.dart';
 
 /// One entry of the per-user search history ("Pesquisas recentes").
 ///
@@ -17,7 +17,7 @@ class SearchHistoryEntry {
   final String? avatarSeed;
   final String? avatarUrl;
 
-  factory SearchHistoryEntry.fromUser(MatrixUser user) => SearchHistoryEntry(
+  factory SearchHistoryEntry.fromUser(YazzokiUser user) => SearchHistoryEntry(
         userId: user.id,
         nickname: user.nickname,
         avatarSeed: user.avatarSeed,
@@ -39,8 +39,8 @@ class SearchHistoryEntry {
         'avatarUrl': avatarUrl,
       };
 
-  /// Builds a lightweight [MatrixUser] capable of opening the profile.v
-  MatrixUser toUser() => MatrixUser(
+  /// Builds a lightweight [YazzokiUser] capable of opening the profile.v
+  YazzokiUser toUser() => YazzokiUser(
         id: userId,
         nickname: nickname,
         avatarSeed: avatarSeed,

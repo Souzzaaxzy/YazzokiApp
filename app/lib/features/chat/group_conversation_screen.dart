@@ -11,8 +11,8 @@ import '../../core/utils/mention_draft.dart';
 import '../../core/utils/profile_navigation.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
-import '../../core/widgets/matrix_text_field.dart';
+import '../../core/widgets/yazzoki_button.dart';
+import '../../core/widgets/yazzoki_text_field.dart';
 import '../../core/widgets/puzzle_icon.dart';
 import '../../core/widgets/mention_composer_controller.dart';
 import '../../core/widgets/user_avatar.dart';
@@ -1450,7 +1450,7 @@ class _GroupConversationScreenState extends State<GroupConversationScreen>
               Text(_error!,
                   style: AppTextStyles.bodyMuted, textAlign: TextAlign.center),
               const SizedBox(height: AppDimensions.spaceMd),
-              MatrixButton(
+              YazzokiButton(
                 label: 'TENTAR NOVAMENTE',
                 expanded: false,
                 onPressed: () => _load(),
@@ -1611,7 +1611,7 @@ class _GroupConversationScreenState extends State<GroupConversationScreen>
       child: Row(
         children: [
           Expanded(
-            child: MatrixTextField(
+            child: YazzokiTextField(
               hint: 'Mensagem no grupo',
               controller: _input,
               focusNode: _inputFocus,
@@ -2377,7 +2377,7 @@ class _MentionPick {
 /// WhatsApp-style INLINE mention suggestion bar. Rendered directly above the
 /// composer inside the chat Column (NOT a modal): it sits under the keyboard,
 /// filters as the user types, and disappears when the mention intention ends.
-/// Lists the group's members (nickname WITHOUT the @ prefix, per MATRIX) and
+/// Lists the group's members (nickname WITHOUT the @ prefix, per Yazzoki) and
 /// `@todos` for the owner.
 class _MentionSuggestionsBar extends StatelessWidget {
   const _MentionSuggestionsBar({

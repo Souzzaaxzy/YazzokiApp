@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/routes.dart';
-import '../../models/matrix_user.dart';
+import '../../models/yazzoki_user.dart';
 
 /// Real user ids of the profiles currently visible in the navigation stack
 /// (the own-profile tab plus any pushed ProfileScreen routes). This is the
@@ -36,14 +36,14 @@ bool isProfileOpen(String userId) => _openProfileIds.contains(userId);
 /// user). If that user's profile is already open (same real id anywhere in
 /// the stack), this is a no-op — nothing navigates, no duplicate route, no
 /// loop.
-void openUserProfile(BuildContext context, MatrixUser user) {
+void openUserProfile(BuildContext context, YazzokiUser user) {
   if (user.id.isEmpty) return;
   if (isProfileOpen(user.id)) return;
   Navigator.of(context).pushNamed(AppRoutes.profile, arguments: user.nickname);
 }
 
 /// Opens a profile from a lightweight author payload (feed post, comment)
-/// that carries the real user id + nickname but not a full [MatrixUser].
+/// that carries the real user id + nickname but not a full [YazzokiUser].
 /// Same no-op guard as [openUserProfile].
 void openProfileById(
   BuildContext context, {

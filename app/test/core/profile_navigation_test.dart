@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/utils/profile_navigation.dart';
-import 'package:matrix_app/features/profile/profile_screen.dart';
-import 'package:matrix_app/models/matrix_user.dart';
+import 'package:yazzoki/core/utils/profile_navigation.dart';
+import 'package:yazzoki/features/profile/profile_screen.dart';
+import 'package:yazzoki/models/yazzoki_user.dart';
 
 import '../helpers/test_app.dart';
 
@@ -22,13 +22,13 @@ class ProfileProbe extends StatelessWidget {
 }
 
 void main() {
-  final userB = MatrixUser(id: 'u2', nickname: 'joao', bio: '');
+  final userB = YazzokiUser(id: 'u2', nickname: 'joao', bio: '');
 
   setUp(() => resetProfileTracking());
 
   testWidgets('openUserProfile pushes the profile route by nickname',
       (tester) async {
-    await pumpMatrixApp(tester, const Scaffold(body: SizedBox()));
+    await pumpYazzokiApp(tester, const Scaffold(body: SizedBox()));
 
     openUserProfile(tester.element(find.byType(Scaffold)), userB);
     await tester.pumpAndSettle();
@@ -40,7 +40,7 @@ void main() {
   testWidgets('openProfileById is a no-op when that profile is already open',
       (tester) async {
     // Open joao's (u2) profile first — registers its real id in the stack.
-    await pumpMatrixApp(tester, const ProfileProbe(nickname: 'joao'));
+    await pumpYazzokiApp(tester, const ProfileProbe(nickname: 'joao'));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.textContaining('joao', findRichText: true), findsOneWidget);
 
@@ -60,7 +60,7 @@ void main() {
 
   testWidgets('profile closes its slot when popped so it can be reopened',
       (tester) async {
-    await pumpMatrixApp(tester, const Scaffold(body: SizedBox()));
+    await pumpYazzokiApp(tester, const Scaffold(body: SizedBox()));
 
     // Open joao's profile, then pop it.
     openProfileById(

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/chat_screen.dart';
-import 'package:matrix_app/features/chat/group_conversation_screen.dart';
-import 'package:matrix_app/models/conversation.dart';
-import 'package:matrix_app/models/matrix_user.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/chat_screen.dart';
+import 'package:yazzoki/features/chat/group_conversation_screen.dart';
+import 'package:yazzoki/models/conversation.dart';
+import 'package:yazzoki/models/yazzoki_user.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -42,7 +42,7 @@ Future<AppState> seededGroup({
     id: id,
     group: const GroupHeader(
       id: id,
-      name: 'Equipe MATRIX',
+      name: 'Equipe Yazzoki',
       avatarUrl: null,
       description: 'conjunto de testes',
       createdById: 'u0',
@@ -80,7 +80,7 @@ Future<AppState> seededGroup({
 Widget groupScreen() => const GroupConversationScreen(
       args: GroupConversationRouteArgs(
         groupId: 'g1',
-        groupName: 'Equipe MATRIX',
+        groupName: 'Equipe Yazzoki',
         groupAvatarUrl: null,
       ),
     );
@@ -91,7 +91,7 @@ void main() {
         'no final: nova mensagem chega e é adicionada; usuário continua',
         (tester) async {
       final state = await seededGroup(messages: ['a', 'b', 'c']);
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       state.handleIncomingChatMessage(ChatMessage(
@@ -112,7 +112,7 @@ void main() {
         (tester) async {
       final state =
           await seededGroup(messages: List.generate(40, (i) => 'm$i'));
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       // Scroll UP to read history (away from the bottom).
@@ -155,7 +155,7 @@ void main() {
     testWidgets('digitar "@" abre o sheet; selecionar insere @Nick ',
         (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField).last, '@');
@@ -173,7 +173,7 @@ void main() {
 
     testWidgets('@todos aparece no picker para o DONO', (tester) async {
       final ownerState = await seededGroup();
-      await pumpMatrixApp(tester, groupScreen(), state: ownerState);
+      await pumpYazzokiApp(tester, groupScreen(), state: ownerState);
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).last, '@');
       await tester.pumpAndSettle();
@@ -183,7 +183,7 @@ void main() {
     testWidgets('@todos NÃO aparece no picker para um membro comum',
         (tester) async {
       final memberState = await seededGroup(sessionUserId: 'u2');
-      await pumpMatrixApp(tester, groupScreen(), state: memberState);
+      await pumpYazzokiApp(tester, groupScreen(), state: memberState);
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).last, '@');
       await tester.pumpAndSettle();
@@ -194,7 +194,7 @@ void main() {
         'menção é INLINE acima do composer (sem modal/nova rota) e filtra',
         (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       // Typing "@" shows the inline bar — NOT a new modal route.
@@ -232,7 +232,7 @@ void main() {
         id: id,
         group: const GroupHeader(
           id: id,
-          name: 'Equipe MATRIX',
+          name: 'Equipe Yazzoki',
           avatarUrl: null,
           description: '',
           createdById: 'u0',
@@ -262,7 +262,7 @@ void main() {
       await state.restoreSession();
       await state.loadFeed();
       await state.loadConversations();
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       // The content is split by the mention renderer.
@@ -272,7 +272,7 @@ void main() {
     testWidgets('digitar @nickname MANUALMENTE e enviar NÃO cria mention',
         (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       // Type the nickname manually without opening/picking the suggestions.
@@ -297,7 +297,7 @@ void main() {
     testWidgets('selecionar usuário no menu cria mention REAL ao enviar',
         (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField).last, '@');
@@ -330,7 +330,7 @@ void main() {
     testWidgets('apagar uma letra da mention selecionada a invalida',
         (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField).last, '@');
@@ -362,7 +362,7 @@ void main() {
     testWidgets('alterar e VOLTAR ao nickname original NÃO restaura a mention',
         (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField).last, '@');
@@ -390,7 +390,7 @@ void main() {
     testWidgets('@todos SEM seleção é texto comum (não gera mentionAll)',
         (tester) async {
       final state = await seededGroup(); // u0 is the owner
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       // The owner just TYPES @todos — never picks it from the menu.
@@ -408,7 +408,7 @@ void main() {
     testWidgets('@todos apenas SELEÇÃO no menu cria mention de todos',
         (tester) async {
       final state = await seededGroup(); // owner
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField).last, '@');
@@ -430,7 +430,7 @@ void main() {
     testWidgets('membro comum NÃO vê @todos no menu',
         (tester) async {
       final state = await seededGroup(sessionUserId: 'u2');
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).last, '@');
       await tester.pumpAndSettle();
@@ -441,7 +441,7 @@ void main() {
     testWidgets('múltiplas mentions independentes: editar uma não quebra a outra',
         (tester) async {
       final state = await seededGroup(withCarla: true);
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       // Pick joao.
@@ -483,7 +483,7 @@ void main() {
 
     testWidgets('colar @nickname no composer NÃO cria mention', (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       // Pasting text containing @joao (no selection flow).
@@ -500,7 +500,7 @@ void main() {
     testWidgets('menção selecionada aparece em NEGRITO no composer',
         (tester) async {
       final state = await seededGroup(withCarla: true);
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       // Select joao.
@@ -573,7 +573,7 @@ void main() {
       id: id,
       group: const GroupHeader(
         id: id,
-        name: 'Equipe MATRIX',
+        name: 'Equipe Yazzoki',
         avatarUrl: null,
         description: '',
         createdById: 'u0',
@@ -595,11 +595,11 @@ void main() {
     await state.restoreSession();
     await state.loadFeed();
     await state.loadConversations();
-    await pumpMatrixApp(tester, const ChatScreen(), state: state);
+    await pumpYazzokiApp(tester, const ChatScreen(), state: state);
     await tester.pumpAndSettle();
 
     // Scroll the group tile into view and verify the "@" indicator.
-    await tester.scrollUntilVisible(find.text('Equipe MATRIX'), 200,
+    await tester.scrollUntilVisible(find.text('Equipe Yazzoki'), 200,
         scrollable: find.byType(Scrollable).first);
     await tester.pumpAndSettle();
     expect(find.text('@'), findsOneWidget);
@@ -610,7 +610,7 @@ void main() {
         'long-press em mensagem PRÓPRIA mostra "Visto/Enviado" e o painel abre',
         (tester) async {
       final state = await seededGroup(messages: ['minha msg', 'msg do joao']);
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       // 'minha msg' is u0's own message (index even).
@@ -629,7 +629,7 @@ void main() {
     testWidgets('long-press em mensagem de OUTRO não mostra "Visto/Enviado"',
         (tester) async {
       final state = await seededGroup(messages: ['minha msg', 'deles']);
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       await tester.longPress(find.text('deles'));
@@ -647,14 +647,14 @@ void main() {
       for (var i = 0; i < 55; i++) {
         final id = 'f$i';
         store.users[id] =
-            MatrixUser(id: id, nickname: 'amigo_$i', avatarSeed: 'amigo_$i');
+            YazzokiUser(id: id, nickname: 'amigo_$i', avatarSeed: 'amigo_$i');
         store.friendships.add('f$i|u0');
       }
       final state = AppState(repositories: repos);
       await state.restoreSession();
       await state.loadFeed();
       await state.loadConversations();
-      await pumpMatrixApp(tester, const ChatScreen(), state: state);
+      await pumpYazzokiApp(tester, const ChatScreen(), state: state);
       await tester.pumpAndSettle();
 
       // The horizontal friends row must render ALL friends — the LAST one is

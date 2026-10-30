@@ -8,8 +8,8 @@ import '../../../core/animations/fade_slide_transition.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_state_scope.dart';
 import '../../../core/widgets/hud_label.dart';
-import '../../../core/widgets/matrix_button.dart';
-import '../../../core/widgets/matrix_text_field.dart';
+import '../../../core/widgets/yazzoki_button.dart';
+import '../../../core/widgets/yazzoki_text_field.dart';
 import '../../../data/api_config.dart';
 
 /// Account recovery screen. The user supplies their nickname,
@@ -116,7 +116,7 @@ class _RecoverScreenState extends State<RecoverScreen> {
             ),
           FadeSlideTransition(
             delay: const Duration(milliseconds: 120),
-            child: MatrixTextField(
+            child: YazzokiTextField(
               label: 'Nickname ou #id',
               hint: 'user ou #00000001',
               controller: _identifierController,
@@ -130,7 +130,7 @@ class _RecoverScreenState extends State<RecoverScreen> {
           const SizedBox(height: AppDimensions.spaceLg),
           FadeSlideTransition(
             delay: const Duration(milliseconds: 180),
-            child: MatrixTextField(
+            child: YazzokiTextField(
               label: 'Código de recuperação',
               hint: '12 caracteres',
               controller: _codeController,
@@ -143,7 +143,7 @@ class _RecoverScreenState extends State<RecoverScreen> {
           const SizedBox(height: AppDimensions.spaceLg),
           FadeSlideTransition(
             delay: const Duration(milliseconds: 240),
-            child: MatrixTextField(
+            child: YazzokiTextField(
               label: 'Nova senha',
               hint: 'Mínimo de 8, com letras e números',
               controller: _passwordController,
@@ -167,7 +167,7 @@ class _RecoverScreenState extends State<RecoverScreen> {
           const SizedBox(height: AppDimensions.spaceLg),
           FadeSlideTransition(
             delay: const Duration(milliseconds: 300),
-            child: MatrixTextField(
+            child: YazzokiTextField(
               label: 'Confirmar nova senha',
               hint: 'Repita a senha',
               controller: _confirmController,
@@ -194,7 +194,7 @@ class _RecoverScreenState extends State<RecoverScreen> {
           const SizedBox(height: AppDimensions.spaceXxl),
           FadeSlideTransition(
             delay: const Duration(milliseconds: 360),
-            child: MatrixButton(
+            child: YazzokiButton(
               label: 'Recuperar conta',
               expanded: true,
               isLoading: _loading,
@@ -223,7 +223,7 @@ class _RecoverScreenState extends State<RecoverScreen> {
           style: AppTextStyles.bodyMuted,
         ),
         const SizedBox(height: AppDimensions.spaceXxl),
-        MatrixButton(
+        YazzokiButton(
           label: 'Ir para o login',
           expanded: true,
           onPressed: () => Navigator.of(context)

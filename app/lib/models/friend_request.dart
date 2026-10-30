@@ -1,4 +1,4 @@
-import 'matrix_user.dart';
+import 'yazzoki_user.dart';
 
 /// A pending friend request received by the current user, with the sender
 /// embedded. The actionable card (Aceitar / Recusar) is rendered from this.
@@ -14,7 +14,7 @@ class FriendRequest {
   final String id;
   final String status; // PENDING | ACCEPTED | REJECTED
   final DateTime createdAt;
-  final MatrixUser sender;
+  final YazzokiUser sender;
 
   /// Receiver id (kept from the wire when available; optional for the app).
   final String receiverId;

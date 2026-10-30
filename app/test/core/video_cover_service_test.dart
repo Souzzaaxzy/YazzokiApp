@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/video_cover_service.dart';
+import 'package:yazzoki/core/services/video_cover_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -1,33 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/app/routes.dart';
-import 'package:matrix_app/app/theme/app_theme.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/widgets/app_state_scope.dart';
-import 'package:matrix_app/features/auth/login/login_screen.dart';
-import 'package:matrix_app/features/auth/register/register_screen.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/chat_screen.dart';
-import 'package:matrix_app/features/chat/conversation_screen.dart';
-import 'package:matrix_app/features/chat/create_group_screen.dart';
-import 'package:matrix_app/features/chat/group_conversation_screen.dart';
-import 'package:matrix_app/features/chat/group_members_screen.dart';
-import 'package:matrix_app/features/chat/group_profile_screen.dart';
-import 'package:matrix_app/features/create_post/create_post_screen.dart';
-import 'package:matrix_app/features/create_post/create_story_screen.dart';
-import 'package:matrix_app/features/home/home_screen.dart';
-import 'package:matrix_app/features/post/post_detail_screen.dart';
-import 'package:matrix_app/features/profile/edit_profile_screen.dart';
-import 'package:matrix_app/features/profile/profile_screen.dart';
-import 'package:matrix_app/features/splash/splash_screen.dart';
-import 'package:matrix_app/features/stickers/sticker_import_screen.dart';
+import 'package:yazzoki/app/routes.dart';
+import 'package:yazzoki/app/theme/app_theme.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/widgets/app_state_scope.dart';
+import 'package:yazzoki/features/auth/login/login_screen.dart';
+import 'package:yazzoki/features/auth/register/register_screen.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/chat_screen.dart';
+import 'package:yazzoki/features/chat/conversation_screen.dart';
+import 'package:yazzoki/features/chat/create_group_screen.dart';
+import 'package:yazzoki/features/chat/group_conversation_screen.dart';
+import 'package:yazzoki/features/chat/group_members_screen.dart';
+import 'package:yazzoki/features/chat/group_profile_screen.dart';
+import 'package:yazzoki/features/create_post/create_post_screen.dart';
+import 'package:yazzoki/features/create_post/create_story_screen.dart';
+import 'package:yazzoki/features/home/home_screen.dart';
+import 'package:yazzoki/features/post/post_detail_screen.dart';
+import 'package:yazzoki/features/profile/edit_profile_screen.dart';
+import 'package:yazzoki/features/profile/profile_screen.dart';
+import 'package:yazzoki/features/splash/splash_screen.dart';
+import 'package:yazzoki/features/stickers/sticker_import_screen.dart';
 
 import 'fake_repositories.dart';
 
-/// Pumps a given [child] inside a MaterialApp with the MATRIX theme and an
+/// Pumps a given [child] inside a MaterialApp with the Yazzoki theme and an
 /// [AppStateScope] backed by in-memory fake repositories, so widget tests
 /// share the same dependency wiring as the real app without a network.
-Future<void> pumpMatrixApp(
+Future<void> pumpYazzokiApp(
   WidgetTester tester,
   Widget child, {
   AppState? state,

@@ -1,8 +1,8 @@
 import '../../models/comment.dart';
 import '../../models/conversation.dart';
 import '../../models/friend_request.dart';
-import '../../models/matrix_notification.dart';
-import '../../models/matrix_user.dart';
+import '../../models/yazzoki_notification.dart';
+import '../../models/yazzoki_user.dart';
 import '../../models/post.dart';
 import '../../models/profile_music.dart';
 import '../../models/sticker.dart';
@@ -53,7 +53,7 @@ class AuthUserDto {
     required this.bio,
   });
 
-  MatrixUser toModel() => MatrixUser(
+  YazzokiUser toModel() => YazzokiUser(
         id: id,
         nickname: nickname,
         bio: bio,
@@ -218,7 +218,7 @@ class PublicUserDto {
     this.music,
   });
 
-  MatrixUser toModel() => MatrixUser(
+  YazzokiUser toModel() => YazzokiUser(
         id: id,
         nickname: nickname,
         bio: bio,
@@ -305,7 +305,7 @@ class NotificationDto {
 
   // The actor's own nickname cosmetics ride inside `actor` (PublicUserDto).
 
-  MatrixNotification toModel() => MatrixNotification(
+  YazzokiNotification toModel() => YazzokiNotification(
         id: id,
         type: type,
         read: read,

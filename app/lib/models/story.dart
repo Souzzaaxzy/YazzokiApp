@@ -1,4 +1,4 @@
-/// A Story in the MATRIX feed header — ephemeral media that expires 24h
+/// A Story in the Yazzoki feed header — ephemeral media that expires 24h
 /// after publication.
 ///
 /// Reuses the SAME identity a post author carries (nickname + avatar +

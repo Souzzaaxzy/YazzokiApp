@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/utils/date_utils.dart';
+import 'package:yazzoki/core/utils/date_utils.dart';
 
 void main() {
   final now = DateTime(2026, 1, 15, 12, 0, 0);

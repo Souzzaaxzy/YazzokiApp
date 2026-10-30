@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:matrix_app/data/search_history_store.dart';
-import 'package:matrix_app/models/search_history_entry.dart';
+import 'package:yazzoki/data/search_history_store.dart';
+import 'package:yazzoki/models/search_history_entry.dart';
 
 /// In-memory [SearchHistoryStore] for widget/unit tests — fails never touches
 /// the platform secure-storage channel. Mirrors the real store's per-user

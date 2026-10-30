@@ -1,11 +1,11 @@
-# MATRIX App — Repository Notes
+# Yazzoki App — Repository Notes
 
 ## Project
-MATRIX 💤 — cyberpunk futuristic social platform. Split across two repos:
-- **This repo (`MatrixApp`)** — Flutter app (presentation layer; calls backend API).
+Yazzoki — social platform with a Japanese old-age aesthetic. Split across two repos:
+- **This repo (`YazzokiApp`)** — Flutter app (presentation layer; calls backend API).
   Only `app/` (Flutter) + `.github/`. The server was moved out.
 - **`Souzzaaxzy/ServidorMtx`** — Node/TypeScript backend (Fastify + Prisma +
-  **SQLite** `data/matrix.db`). Hospedado na Bronxys/Pterodactyl via
+  **SQLite** `data/yazzoki.db`). Hospedado na Bronxys/Pterodactyl via
   `npm start` (self-provisions). Container-ready: `docker compose up -d --build`.
   See https://github.com/Souzzaaxzy/ServidorMtx
 
@@ -39,7 +39,7 @@ Or just `docker compose up -d --build`.
   layer; widgets never call HTTP directly.
 - `features/` — splash, auth/{login,register,recover}, home, feed, search,
   akame, create_post, profile.
-- `models/` — Post, MatrixUser, Comment, AkameMessage.
+- `models/` — Post, YazzokiUser, Comment, AkameMessage.
 - State: `AppState` (ChangeNotifier) via `AppStateScope` (InheritedNotifier).
 
 ## Conversa em grupo — menção em negrito no composer
@@ -74,7 +74,7 @@ Or just `docker compose up -d --build`.
   Toque dá um "punch" de escala curto (`_StickerTile`) que NÃO atrasa o envio.
 - **Confirmação de importação (share):** o lote compartilhado abre SEMPRE a
   `StickerImportScreen`, que mostra prévia + "Adicionar este pacote ao
-  Matrix?" com CANCELAR/ADICIONAR — nada entra na coleção antes do toque.
+  Yazzoki?" com CANCELAR/ADICIONAR — nada entra na coleção antes do toque.
   `app.dart` só SEGURA a abertura enquanto as rotas de BOOT (splash/login/
   register/recover) estão no topo; NÃO usar allowlist de rotas "permitidas"
   (isso já bloqueou a confirmação quando o usuário estava numa conversa).
@@ -101,7 +101,7 @@ Or just `docker compose up -d --build`.
 - **Import por código do Sticker.ly:** botão `+ Adicionar` no painel →
   `StickerlyImportSheet` (`features/chat/stickerly_import_sheet.dart`):
   código/link → BUSCAR → prévia (nome/autor/capa/figurinhas) →
-  `ADICIONAR AO MATRIX` (com confirmação; pacote já existente informado).
+  `ADICIONAR AO YAZZOKI` (com confirmação; pacote já existente informado).
   Reutiliza o sistema atual (`StickerRepository` → `AppState` →
   `POST /api/stickers/stickerly/{preview,import}`). O APK NUNCA fala com o
   Sticker.ly nem guarda credenciais — quem consulta/baixa é o SERVIDOR.
@@ -119,7 +119,7 @@ Or just `docker compose up -d --build`.
 ## Stickers — compartilhar Android (importação)
 - O app recebe figuritas via `ACTION_SEND` / `ACTION_SEND_MULTIPLE` / `VIEW`.
   O `MainActivity` (Kotlin) copia/extrai o conteúdo para o cache e entrega ao
-  Flutter pelo MethodChannel `matrix.share/stickers`
+  Flutter pelo MethodChannel `yazzoki.share/stickers`
   (`data/share_sticker_service.dart`). Não criar um segundo fluxo de entrada.
 
 ### Formato REAL do WhatsApp (importante)
@@ -141,8 +141,8 @@ Or just `docker compose up -d --build`.
   afinidade padrão do pacote = UMA task).
   - `singleTop` (usado antes) só reaproveita a Activity se ela estiver NO TOPO
     da própria task: o Sharesheet entrega com `FLAG_ACTIVITY_NEW_TASK` e, com
-    o MATRIX em segundo plano/em outra rota, cada share criava uma NOVA
-    instância/task — a cascata "MatrixApp → MatrixApp → …".
+    o Yazzoki em segundo plano/em outra rota, cada share criava uma NOVA
+    instância/task — a cascata "YazzokiApp → YazzokiApp → …".
   - `singleTask` garante no máximo UMA instância no sistema: qualquer novo
     share traz a task existente para a frente e entrega via `onNewIntent`.
   - `taskAffinity=""` (mitigação StrandHogg antiga) NÃO deve voltar: dá à

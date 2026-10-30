@@ -10,7 +10,7 @@ import '../../data/api_config.dart';
 import '../../models/sticker.dart';
 import 'stickerly_import_sheet.dart';
 
-/// O seletor nativo de figurinhas do MATRIX.
+/// O seletor nativo de figurinhas do Yazzoki.
 ///
 /// Painel inferior integrado ao composer (DM e grupos): grade responsiva e
 /// COMPACTA de figurinhas com abas Recentes / Favoritos / Pacotes e um botão
@@ -148,7 +148,7 @@ class _StickerPickerState extends State<StickerPicker>
           ),
         ),
         content: Text(
-          'As figurinhas deste pacote serão removidas do MATRIX.',
+          'As figurinhas deste pacote serão removidas do Yazzoki.',
           style: AppTextStyles.bodyMuted,
         ),
         actions: [
@@ -522,7 +522,7 @@ class _PickerMenuAction extends StatelessWidget {
 }
 
 /// Botão de lixeira do PACOTE selecionado (lado direito do painel). Ícone
-/// nativo, compacto, seguindo o visual do MATRIX.
+/// nativo, compacto, seguindo o visual do Yazzoki.
 class _DeletePackageButton extends StatelessWidget {
   const _DeletePackageButton({required this.onTap});
 

@@ -12,7 +12,7 @@ import 'api_client.dart';
 import 'api_config.dart';
 import 'token_store.dart';
 
-/// MATRIX push service — native Android notifications driven by the
+/// Yazzoki push service — native Android notifications driven by the
 /// ServidorMtx realtime channel (WebSocket) plus a device-token registry
 /// on the server. No Google/Firebase services involved.
 ///
@@ -82,9 +82,9 @@ class PushService {
   /// the authority on who is online, so the app only mirrors what arrives.
   void Function(Map<String, dynamic> data)? onPresence;
 
-  static const _channelId = 'matrix_notifications';
-  static const _channelName = 'MATRIX';
-  static const _chatChannelId = 'matrix_chat_messages';
+  static const _channelId = 'yazzoki_notifications';
+  static const _channelName = 'Yazzoki';
+  static const _chatChannelId = 'yazzoki_chat_messages';
   static const _chatChannelName = 'Mensagens';
 
   /// The id of the chat conversation that is currently on screen. When a
@@ -124,7 +124,7 @@ class PushService {
       const AndroidNotificationChannel(
         _channelId,
         _channelName,
-        description: 'Atividades do MATRIX',
+        description: 'Atividades do Yazzoki',
         importance: Importance.high,
       ),
     );
@@ -187,7 +187,7 @@ class PushService {
   ///
   /// This is what makes the online state HONEST: a backgrounded app keeps its
   /// socket (it must, to receive pushes) but is NOT online — the user is not
-  /// looking at MATRIX. The server flips the user offline until `active`
+  /// looking at Yazzoki. The server flips the user offline until `active`
   /// arrives again. Sent over the existing socket, so it costs no extra
   /// connection.
   void setForeground(bool foreground) {
@@ -255,7 +255,7 @@ class PushService {
     // Real-time chat message (private DM). Forward the whole payload to the
     // chat layer AND (unless the user is already looking at that exact
     // conversation) surface a native notification so an incoming message is
-    // seen even when MATRIX is in the background. Dedupe happens at the chat
+    // seen even when Yazzoki is in the background. Dedupe happens at the chat
     // layer by message id; native pushes dedupe via the converation id.
     if (message['kind'] == 'chat_message') {
       final data =
@@ -332,7 +332,7 @@ class PushService {
         android: AndroidNotificationDetails(
           _channelId,
           _channelName,
-          channelDescription: 'Atividades do MATRIX',
+          channelDescription: 'Atividades do Yazzoki',
           importance: Importance.high,
           priority: Priority.high,
           color: Color(0xFF00B4FF),
@@ -356,13 +356,13 @@ class PushService {
     if (conversationId.isEmpty) return;
 
     final nickname =
-        (peer['nickname'] ?? message['senderNickname']) as String? ?? 'MATRIX';
+        (peer['nickname'] ?? message['senderNickname']) as String? ?? 'Yazzoki';
     final avatarUrl = peer['avatarUrl'] as String?;
     final type = (message['type'] as String?) ?? 'text';
     final content = (message['content'] as String?) ?? '';
 
     // Wait for the avatar bytes (small, local-ish). Best-effort: on failure
-    // we simply fall back to the MATRIX glyph.
+    // we simply fall back to the Yazzoki glyph.
     Uint8List? avatars;
     if (avatarUrl != null && avatarUrl.isNotEmpty) {
       try {
@@ -382,7 +382,7 @@ class PushService {
 
     final body = (type == 'voice' ? '🎤 Áudio' : content);
     // Android automatically shows `largeIcon` on the LEFT as the app's photo
-    // and the persona avatar in the messaging style — giving the MATRIX look:
+    // and the persona avatar in the messaging style — giving the Yazzoki look:
     // [foto] nickname (bold) + message below.
     await _plugin.show(
       conversationId.hashCode,

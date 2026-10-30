@@ -4,9 +4,9 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
 
-/// MATRIX styled text field with focus glow.
-class MatrixTextField extends StatefulWidget {
-  const MatrixTextField({
+/// Yazzoki styled text field with focus glow.
+class YazzokiTextField extends StatefulWidget {
+  const YazzokiTextField({
     super.key,
     this.label,
     this.hint,
@@ -46,10 +46,10 @@ class MatrixTextField extends StatefulWidget {
   final bool enabled;
 
   @override
-  State<MatrixTextField> createState() => _MatrixTextFieldState();
+  State<YazzokiTextField> createState() => _YazzokiTextFieldState();
 }
 
-class _MatrixTextFieldState extends State<MatrixTextField> {
+class _YazzokiTextFieldState extends State<YazzokiTextField> {
   late FocusNode _focusNode;
   bool _focused = false;
 

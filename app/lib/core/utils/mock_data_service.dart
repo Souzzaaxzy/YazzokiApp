@@ -1,6 +1,6 @@
 import '../../models/akame_message.dart';
 import '../../models/comment.dart';
-import '../../models/matrix_user.dart';
+import '../../models/yazzoki_user.dart';
 import '../../models/post.dart';
 
 /// Local mocked data for Phase 1.
@@ -10,7 +10,7 @@ import '../../models/post.dart';
 class MockDataService {
   MockDataService._();
 
-  static const MatrixUser currentUser = MatrixUser(
+  static const YazzokiUser currentUser = YazzokiUser(
     id: 'u0',
     nickname: 'leonardo',
     bio: 'Construindo o futuro, uma linha por vez. ⚡',
@@ -75,7 +75,7 @@ class MockDataService {
       Post(
         id: 'p4',
         authorNickname: 'Akame',
-        text: 'A rede MATRIX está online. Bem-vindos. ✦',
+        text: 'A rede Yazzoki está online. Bem-vindos. ✦',
         createdAt: now.subtract(const Duration(hours: 1)),
         avatarSeed: 'akame',
         likes: 56,
@@ -101,24 +101,24 @@ class MockDataService {
     ];
   }
 
-  static List<MatrixUser> users() => const [
+  static List<YazzokiUser> users() => const [
         currentUser,
-        MatrixUser(
+        YazzokiUser(
           id: 'u2',
           nickname: 'maria',
           bio: 'Design e código em harmonia.',
           avatarSeed: 'maria',
         ),
-        MatrixUser(
+        YazzokiUser(
           id: 'u3',
           nickname: 'joao',
           bio: 'Engenheiro de software. Café ☕.',
           avatarSeed: 'joao',
         ),
-        MatrixUser(
+        YazzokiUser(
           id: 'u4',
           nickname: 'akame',
-          bio: 'Núcleo da rede MATRIX. ✦',
+          bio: 'Núcleo da rede Yazzoki. ✦',
           avatarSeed: 'akame',
         ),
       ];
@@ -141,7 +141,7 @@ class MockDataService {
     'Interessante. Pode me contar mais?',
     'Entendi. Estou processando essa informação. ✦',
     'Estou aqui para ajudar no que precisar.',
-    'Recebido. A rede MATRIX está ativa.',
+    'Recebido. A rede Yazzoki está ativa.',
     'Boa pergunta. Vamos explorar isso juntos.',
     'Sistema operando normalmente. Como posso apoiar?',
   ];

@@ -4,8 +4,8 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimensions.dart';
 
 /// Surface card used for feed, chat and profile blocks.
-class MatrixCard extends StatelessWidget {
-  const MatrixCard({
+class YazzokiCard extends StatelessWidget {
+  const YazzokiCard({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(AppDimensions.spaceLg),

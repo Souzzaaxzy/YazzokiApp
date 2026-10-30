@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/conversation_screen.dart';
-import 'package:matrix_app/features/chat/group_conversation_screen.dart';
-import 'package:matrix_app/models/conversation.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/conversation_screen.dart';
+import 'package:yazzoki/features/chat/group_conversation_screen.dart';
+import 'package:yazzoki/models/conversation.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -29,7 +29,7 @@ Future<AppState> seededGroup() async {
     id: id,
     group: const GroupHeader(
       id: id,
-      name: 'Equipe MATRIX',
+      name: 'Equipe Yazzoki',
       avatarUrl: null,
       description: '',
       createdById: 'u0',
@@ -54,7 +54,7 @@ void main() {
     testWidgets('DM: empty field shows mic, text shows send, never both',
         (tester) async {
       final state = await seededChat();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const ConversationScreen(
           args: ConversationRouteArgs(
@@ -131,7 +131,7 @@ void main() {
       'DM: sendMediaMessage envia uma mensagem de mídia (image) com reply preservado',
       (tester) async {
     final state = await seededChat();
-    await pumpMatrixApp(
+    await pumpYazzokiApp(
       tester,
       const ConversationScreen(
         args: ConversationRouteArgs(
@@ -150,7 +150,7 @@ void main() {
     final sent = await state.sendMediaMessage(
       'u0|u2',
       kind: 'image',
-      url: 'https://cdn.matrix.app/static/x.png',
+      url: 'https://cdn.yazzoki.app/static/x.png',
     );
     expect(sent.isImage, isTrue);
     expect(sent.imageUrl, contains('x.png'));
@@ -168,10 +168,10 @@ void main() {
         createdAt: DateTime(2024, 1, 1, 20, 0),
         mine: false,
         type: 'video',
-        videoUrl: 'https://cdn.matrix.app/static/video/v1.mp4',
+        videoUrl: 'https://cdn.yazzoki.app/static/video/v1.mp4',
       ),
     ]);
-    await pumpMatrixApp(
+    await pumpYazzokiApp(
       tester,
       const ConversationScreen(
         args: ConversationRouteArgs(
@@ -191,12 +191,12 @@ void main() {
       'Grupo: sendGroupMediaMessage envia e o bubble aparece (compacto)',
       (tester) async {
     final state = await seededGroup();
-    await pumpMatrixApp(
+    await pumpYazzokiApp(
       tester,
       const GroupConversationScreen(
         args: GroupConversationRouteArgs(
           groupId: 'g1',
-          groupName: 'Equipe MATRIX',
+          groupName: 'Equipe Yazzoki',
           groupAvatarUrl: null,
         ),
       ),
@@ -207,7 +207,7 @@ void main() {
     final sent = await state.sendGroupMediaMessage(
       'g1',
       kind: 'video',
-      url: 'https://cdn.matrix.app/static/video/g.mp4',
+      url: 'https://cdn.yazzoki.app/static/video/g.mp4',
     );
     expect(sent.isVideo, isTrue);
   });

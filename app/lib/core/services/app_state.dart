@@ -17,8 +17,8 @@ import '../../models/search_history_entry.dart';
 import '../../models/comment.dart';
 import '../../models/conversation.dart';
 import '../../models/friend_request.dart';
-import '../../models/matrix_notification.dart';
-import '../../models/matrix_user.dart';
+import '../../models/yazzoki_notification.dart';
+import '../../models/yazzoki_user.dart';
 import '../../models/post.dart';
 import '../../models/profile_music.dart';
 import '../../models/sticker.dart';
@@ -55,7 +55,7 @@ class AppState extends ChangeNotifier {
   final List<SearchHistoryEntry> _searchHistory = [];
   bool _searchHistoryLoaded = false;
 
-  MatrixUser? _currentUser;
+  YazzokiUser? _currentUser;
   String? _feedCursor;
   bool _loadingFeed = false;
   bool _disposed = false;
@@ -71,7 +71,7 @@ class AppState extends ChangeNotifier {
   bool _loadingProfile = false;
 
   /// Notifications of the session user (persistent server-side list).
-  final List<MatrixNotification> _notifications = [];
+  final List<YazzokiNotification> _notifications = [];
   bool _loadingNotifications = false;
 
   // ── Stories (24h ephemeral media, feed header) ────────────
@@ -192,7 +192,7 @@ class AppState extends ChangeNotifier {
     return _profiles[key.toLowerCase()];
   }
 
-  List<MatrixNotification> get notifications =>
+  List<YazzokiNotification> get notifications =>
       List.unmodifiable(_notifications);
   int get unreadNotifications => _notifications.where((n) => !n.read).length;
   bool get isLoadingNotifications => _loadingNotifications;
@@ -241,7 +241,7 @@ class AppState extends ChangeNotifier {
   /// Registers a visited profile in the history (newest first, deduped by id.v
   /// Does nothing for the session user's own profile or for unloaded guest
   /// users (id missing.v Returns immediately — persistence is best-effort.v
-  void recordProfileVisit(MatrixUser user) {
+  void recordProfileVisit(YazzokiUser user) {
     final userId = user.id;
     if (userId.isEmpty || _currentUser == null || userId == _currentUser!.id) {
       return;
@@ -351,7 +351,7 @@ class AppState extends ChangeNotifier {
   bool get isLoadingStickerRecents => _loadingStickerRecents;
 
   List<AkameMessage> get akameMessages => List.unmodifiable(_akameMessages);
-  MatrixUser? get currentUser => _currentUser;
+  YazzokiUser? get currentUser => _currentUser;
   bool get isLoadingFeed => _loadingFeed;
   bool get isAuthenticated => _currentUser != null;
 
@@ -1129,7 +1129,7 @@ class AppState extends ChangeNotifier {
 
   /// Loads one page of the friends list of [userId] (own or another
   /// user's profile — the server returns accepted friendships only).
-  Future<({List<MatrixUser> friends, int total, int page, int pageSize})>
+  Future<({List<YazzokiUser> friends, int total, int page, int pageSize})>
       loadFriends(String userId, {int page = 1, int pageSize = 20}) {
     return _friends.list(userId, page: page, pageSize: pageSize);
   }
@@ -1142,7 +1142,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _removeNotificationWhere(bool Function(MatrixNotification n) kill) {
+  void _removeNotificationWhere(bool Function(YazzokiNotification n) kill) {
     _notifications.removeWhere(kill);
   }
 
@@ -1265,7 +1265,7 @@ class AppState extends ChangeNotifier {
   }
 
   /// Searches users by name / nickname.
-  Future<List<MatrixUser>> searchUsers(String query) async {
+  Future<List<YazzokiUser>> searchUsers(String query) async {
     return _users.search(query);
   }
 
@@ -2597,12 +2597,12 @@ class ProfileData {
     this.friendship,
   });
 
-  final MatrixUser user;
+  final YazzokiUser user;
   final List<Post> posts;
   final Friendship? friendship;
 
   ProfileData copyWith({
-    MatrixUser? user,
+    YazzokiUser? user,
     List<Post>? posts,
     Friendship? friendship,
   }) =>

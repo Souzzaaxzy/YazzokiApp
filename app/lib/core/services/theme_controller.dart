@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import '../../data/theme_store.dart';
 
 /// User-selectable theme option persisted locally ("theme = dark/light/system").
-enum MatrixThemeMode { dark, light, system }
+enum YazzokiThemeMode { dark, light, system }
 
 /// Global theme controller: holds the user's preference, persists it via
 /// [ThemeStore], and notifies the root [MaterialApp] to rebuild.
 ///
 /// The `system` mode follows platform brightness changes (a
 /// [WidgetsBindingObserver] emits [notifyListeners] when Android flips
-/// dark/light), so the MatrixApp re-resolves and follows the phone.
+/// dark/light), so the YazzokiApp re-resolves and follows the phone.
 class ThemeController extends ChangeNotifier with WidgetsBindingObserver {
   ThemeController._({ThemeStore? store}) : _store = store ?? ThemeStore() {
     WidgetsBinding.instance.addObserver(this);
@@ -25,14 +25,14 @@ class ThemeController extends ChangeNotifier with WidgetsBindingObserver {
 
   final ThemeStore _store;
 
-  MatrixThemeMode _mode = MatrixThemeMode.dark;
+  YazzokiThemeMode _mode = YazzokiThemeMode.dark;
 
-  MatrixThemeMode get mode => _mode;
+  YazzokiThemeMode get mode => _mode;
 
   ThemeMode get materialMode => switch (_mode) {
-        MatrixThemeMode.dark => ThemeMode.dark,
-        MatrixThemeMode.light => ThemeMode.light,
-        MatrixThemeMode.system => ThemeMode.system,
+        YazzokiThemeMode.dark => ThemeMode.dark,
+        YazzokiThemeMode.light => ThemeMode.light,
+        YazzokiThemeMode.system => ThemeMode.system,
       };
 
   /// Platform brightness changed -> re-resolve the effective theme so
@@ -47,14 +47,14 @@ class ThemeController extends ChangeNotifier with WidgetsBindingObserver {
     try {
       _mode = await _store.read();
     } catch (_) {
-      _mode = MatrixThemeMode.dark;
+      _mode = YazzokiThemeMode.dark;
     }
     notifyListeners();
   }
 
   /// Changes the mode and persists it. Re-calling [load] afterwards keeps
   /// the chosen value — this is what makes the theme survive restarts.
-  Future<void> setMode(MatrixThemeMode mode) async {
+  Future<void> setMode(YazzokiThemeMode mode) async {
     _mode = mode;
     notifyListeners();
     try {

@@ -68,23 +68,23 @@ class SettingsSheet extends StatelessWidget {
                   _ThemeOption(
                     icon: Icons.dark_mode_rounded,
                     label: 'Escuro',
-                    mode: MatrixThemeMode.dark,
-                    active: controller.mode == MatrixThemeMode.dark,
-                    onSelected: () => controller.setMode(MatrixThemeMode.dark),
+                    mode: YazzokiThemeMode.dark,
+                    active: controller.mode == YazzokiThemeMode.dark,
+                    onSelected: () => controller.setMode(YazzokiThemeMode.dark),
                   ),
                   _ThemeOption(
                     icon: Icons.light_mode_rounded,
                     label: 'Claro',
-                    mode: MatrixThemeMode.light,
-                    active: controller.mode == MatrixThemeMode.light,
-                    onSelected: () => controller.setMode(MatrixThemeMode.light),
+                    mode: YazzokiThemeMode.light,
+                    active: controller.mode == YazzokiThemeMode.light,
+                    onSelected: () => controller.setMode(YazzokiThemeMode.light),
                   ),
                   _ThemeOption(
                     icon: Icons.smartphone_rounded,
                     label: 'Sistema',
-                    mode: MatrixThemeMode.system,
-                    active: controller.mode == MatrixThemeMode.system,
-                    onSelected: () => controller.setMode(MatrixThemeMode.system),
+                    mode: YazzokiThemeMode.system,
+                    active: controller.mode == YazzokiThemeMode.system,
+                    onSelected: () => controller.setMode(YazzokiThemeMode.system),
                   ),
                 ],
               ),
@@ -150,7 +150,7 @@ class SettingsSheet extends StatelessWidget {
         title: Text('Excluir conta?', style: AppTextStyles.h3),
         content: Text(
           'Essa ação é permanente. Todos os seus dados poderão ser removidos '
-          'de acordo com a política do MATRIX.',
+          'de acordo com a política do Yazzoki.',
           style: AppTextStyles.bodyMuted,
         ),
         actions: [
@@ -245,7 +245,7 @@ class _ThemeOption extends StatelessWidget {
 
   final IconData icon;
   final String label;
-  final MatrixThemeMode mode;
+  final YazzokiThemeMode mode;
   final bool active;
   final VoidCallback onSelected;
 

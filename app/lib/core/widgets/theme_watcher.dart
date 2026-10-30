@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Forces [builder] to rebuild whenever the app theme changes.
 ///
-/// MATRIX widgets read colors from the static `AppColors` tokens (resolved
+/// Yazzoki widgets read colors from the static `AppColors` tokens (resolved
 /// against the active palette at build time) instead of `Theme.of(context)`.
 /// Static reads register NO inherited dependency, and Flutter's route layer
 /// caches the pageBuilder result — so without this widget a theme switch

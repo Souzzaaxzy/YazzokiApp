@@ -12,8 +12,8 @@ import '../../core/utils/gallery_picker.dart';
 import '../../core/utils/profile_navigation.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
-import '../../core/widgets/matrix_text_field.dart';
+import '../../core/widgets/yazzoki_button.dart';
+import '../../core/widgets/yazzoki_text_field.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../data/api_config.dart';
 import '../../data/dtos/dtos.dart';
@@ -246,7 +246,7 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
         content: Text(
           'O grupo "${_name ?? ''}" será excluído permanentemente. '
           'Todos os membros serão removidos, o histórico e os dados '
-          'relacionados serão apagados conforme as regras do MATRIX, e '
+          'relacionados serão apagados conforme as regras do Yazzoki, e '
           'nenhum participante poderá mais acessá-lo. Esta ação não pode '
           'ser desfeita e não é uma simples saída.',
           style: AppTextStyles.bodyMuted,
@@ -376,7 +376,7 @@ class _GroupProfileScreenState extends State<GroupProfileScreen> {
               Text(_error!,
                   style: AppTextStyles.bodyMuted, textAlign: TextAlign.center),
               const SizedBox(height: AppDimensions.spaceMd),
-              MatrixButton(
+              YazzokiButton(
                 label: 'TENTAR NOVAMENTE',
                 expanded: false,
                 onPressed: () {
@@ -533,7 +533,7 @@ class _EditMenuTile extends StatelessWidget {
   final String label;
   final String value;
 
-  /// Destructive actions (Excluir grupo) render in MATRIX's error red to
+  /// Destructive actions (Excluir grupo) render in Yazzoki's error red to
   /// signal irreversible consequences.
   final bool destructive;
 
@@ -583,9 +583,9 @@ class _NameEditDialogState extends State<_NameEditDialog> {
       title: Text('Editar nome',
           style: AppTextStyles.hud
               .copyWith(fontSize: 16, color: AppColors.techWhite)),
-      content: MatrixTextField(
+      content: YazzokiTextField(
         label: 'Nome do grupo',
-        hint: 'Ex.: Grupo MATRIX',
+        hint: 'Ex.: Grupo Yazzoki',
         controller: widget.controller,
         textCapitalization: TextCapitalization.sentences,
       ),
@@ -636,7 +636,7 @@ class _DescriptionEditDialogState extends State<_DescriptionEditDialog> {
       title: Text('Editar descrição',
           style: AppTextStyles.hud
               .copyWith(fontSize: 16, color: AppColors.techWhite)),
-      content: MatrixTextField(
+      content: YazzokiTextField(
         label: 'Descrição',
         hint: 'Descrição do grupo (opcional)',
         controller: widget.controller,

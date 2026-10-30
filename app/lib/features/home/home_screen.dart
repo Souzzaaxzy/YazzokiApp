@@ -7,7 +7,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../core/widgets/app_state_scope.dart';
-import '../../core/widgets/matrix_bottom_bar.dart';
+import '../../core/widgets/yazzoki_bottom_bar.dart';
 import '../akame/akame_screen.dart';
 import '../chat/chat_screen.dart';
 import '../feed/feed_screen.dart';
@@ -126,29 +126,29 @@ class _HomeScreenState extends State<HomeScreen> {
     final state = AppStateScope.of(context);
 
     final destinations = [
-      const MatrixNavDestination(
+      const YazzokiNavDestination(
         icon: Icons.home_outlined,
         activeIcon: Icons.home_rounded,
         label: 'Início',
       ),
-      MatrixNavDestination(
+      YazzokiNavDestination(
         icon: Icons.chat_bubble_outline_rounded,
         activeIcon: Icons.chat_bubble_rounded,
         label: 'Chat',
         badgeCount: state.unreadConversations,
       ),
-      const MatrixNavDestination(
+      const YazzokiNavDestination(
         icon: Icons.search_rounded,
         activeIcon: Icons.search,
         label: 'Buscar',
       ),
-      MatrixNavDestination(
+      YazzokiNavDestination(
         icon: Icons.notifications_outlined,
         activeIcon: Icons.notifications_rounded,
         label: 'Atividades',
         badgeCount: state.unreadNotifications,
       ),
-      const MatrixNavDestination(
+      const YazzokiNavDestination(
         icon: Icons.person_outline_rounded,
         activeIcon: Icons.person_rounded,
         label: 'Perfil',
@@ -186,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Scaffold(
             backgroundColor: AppColors.absoluteBlack,
             body: IndexedStack(index: _index, children: pages),
-            bottomNavigationBar: MatrixBottomBar(
+            bottomNavigationBar: YazzokiBottomBar(
               currentIndex: _index,
               destinations: destinations,
               onTap: _onTap,

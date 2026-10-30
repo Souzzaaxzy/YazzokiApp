@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/utils/gallery_picker.dart';
+import 'package:yazzoki/core/utils/gallery_picker.dart';
 
 import '../helpers/fake_gallery_channels.dart';
 

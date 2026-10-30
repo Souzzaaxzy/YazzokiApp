@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-/// Centralized text styles for MATRIX.
+/// Centralized text styles for Yazzoki.
 ///
-/// UI uses Inter (bundled), technical/HUD elements use JetBrains Mono
-/// (bundled). Fonts are shipped as assets so the app renders identically
-/// offline and in tests.
+/// UI uses Inter (bundled); the display/title voice uses Zen Old Mincho, a
+/// classic Japanese serif that carries the "old Japan" identity; technical
+/// accents use JetBrains Mono (bundled). Fonts are shipped as assets so the
+/// app renders identically offline and in tests.
 ///
 /// Colors follow the ACTIVE palette (see [AppColors.setActive]) so the same
 /// style names render correctly in both dark and light themes.
@@ -15,21 +16,22 @@ class AppTextStyles {
 
   static const String uiFont = 'Inter';
   static const String monoFont = 'JetBrainsMono';
+  static const String displayFont = 'ZenOldMincho';
 
   static TextStyle get display => TextStyle(
-        fontFamily: uiFont,
-        fontWeight: FontWeight.w900,
+        fontFamily: displayFont,
+        fontWeight: FontWeight.w700,
         color: AppColors.techWhite,
-        letterSpacing: 4,
-        fontSize: 32,
+        letterSpacing: 6,
+        fontSize: 34,
       );
 
   static TextStyle get h1 => TextStyle(
-        fontFamily: uiFont,
-        fontWeight: FontWeight.w800,
+        fontFamily: displayFont,
+        fontWeight: FontWeight.w700,
         color: AppColors.techWhite,
-        fontSize: 26,
-        letterSpacing: 0.5,
+        fontSize: 27,
+        letterSpacing: 1,
       );
 
   static TextStyle get h2 => TextStyle(
@@ -47,11 +49,11 @@ class AppTextStyles {
       );
 
   static TextStyle get title => TextStyle(
-        fontFamily: uiFont,
-        fontWeight: FontWeight.w800,
+        fontFamily: displayFont,
+        fontWeight: FontWeight.w700,
         color: AppColors.techWhite,
-        fontSize: 18,
-        letterSpacing: 2,
+        fontSize: 19,
+        letterSpacing: 3,
       );
 
   static TextStyle get body => TextStyle(

@@ -1,6 +1,6 @@
 import 'comment.dart';
 
-/// A post in the MATRIX feed.
+/// A post in the Yazzoki feed.
 class Post {
   Post({
     required this.id,

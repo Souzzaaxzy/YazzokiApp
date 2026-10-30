@@ -5,7 +5,7 @@ import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
 import 'glow_container.dart';
 
-/// Decorative MATRIX empty state.
+/// Decorative Yazzoki empty state.
 class EmptyState extends StatelessWidget {
   const EmptyState({
     super.key,

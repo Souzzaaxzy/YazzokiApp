@@ -9,7 +9,7 @@ import '../../app/theme/app_text_styles.dart';
 import '../../core/utils/sticker_import_validator.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
+import '../../core/widgets/yazzoki_button.dart';
 import '../../data/api_config.dart';
 import '../../data/share_sticker_service.dart';
 
@@ -176,7 +176,7 @@ class _StickerImportScreenState extends State<StickerImportScreen> {
               return _NoValidStickers(
                 invalidCount: 0,
                 message: data.error ??
-                    'O conteúdo compartilhado não é compatível com o MATRIX.',
+                    'O conteúdo compartilhado não é compatível com o Yazzoki.',
               );
             }
             if (data.stickers.isEmpty) {
@@ -358,7 +358,7 @@ class _StickerImportScreenState extends State<StickerImportScreen> {
               // antes de o usuário tocar em ADICIONAR.
               Center(
                 child: Text(
-                  'Adicionar este pacote ao Matrix?',
+                  'Adicionar este pacote ao Yazzoki?',
                   style: AppTextStyles.bodyMuted
                       .copyWith(color: AppColors.techWhite),
                 ),
@@ -367,15 +367,15 @@ class _StickerImportScreenState extends State<StickerImportScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: MatrixButton(
+                    child: YazzokiButton(
                       label: 'CANCELAR',
-                      variant: MatrixButtonVariant.outline,
+                      variant: YazzokiButtonVariant.outline,
                       onPressed: _importing ? null : _cancel,
                     ),
                   ),
                   const SizedBox(width: AppDimensions.spaceMd),
                   Expanded(
-                    child: MatrixButton(
+                    child: YazzokiButton(
                       label: 'ADICIONAR',
                       icon: Icons.add_rounded,
                       isLoading: _importing,
@@ -457,9 +457,9 @@ class _NoValidStickers extends StatelessWidget {
               style: AppTextStyles.bodyMuted,
             ),
             const SizedBox(height: AppDimensions.spaceLg),
-            MatrixButton(
+            YazzokiButton(
               label: 'VOLTAR',
-              variant: MatrixButtonVariant.outline,
+              variant: YazzokiButtonVariant.outline,
               onPressed: () {
                 ShareStickerService.instance.clearCurrent();
                 unawaited(ShareStickerService.instance.cleanupTemporaries());

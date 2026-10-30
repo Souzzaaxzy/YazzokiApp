@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/widgets/user_avatar.dart';
-import 'package:matrix_app/features/profile/profile_screen.dart';
+import 'package:yazzoki/core/widgets/user_avatar.dart';
+import 'package:yazzoki/features/profile/profile_screen.dart';
 
 import '../helpers/test_app.dart';
 
@@ -18,7 +18,7 @@ void main() {
   Finder headerAvatar() => find.byType(UserAvatar).first;
 
   testWidgets('avatar sits to the LEFT, not centred', (tester) async {
-    await pumpMatrixApp(tester, const ProfileScreen());
+    await pumpYazzokiApp(tester, const ProfileScreen());
     await tester.pump(const Duration(milliseconds: 400));
 
     final screen = tester.getSize(find.byType(ProfileScreen));
@@ -32,7 +32,7 @@ void main() {
 
   testWidgets('banner is above the avatar and the avatar overlaps its edge',
       (tester) async {
-    await pumpMatrixApp(tester, const ProfileScreen());
+    await pumpYazzokiApp(tester, const ProfileScreen());
     await tester.pump(const Duration(milliseconds: 400));
 
     final avatar = tester.getRect(headerAvatar());
@@ -50,7 +50,7 @@ void main() {
   });
 
   testWidgets('nickname sits to the RIGHT of the avatar', (tester) async {
-    await pumpMatrixApp(tester, const ProfileScreen());
+    await pumpYazzokiApp(tester, const ProfileScreen());
     await tester.pump(const Duration(milliseconds: 400));
 
     final avatar = tester.getRect(headerAvatar());
@@ -63,7 +63,7 @@ void main() {
   });
 
   testWidgets('bio comes below the avatar and the nickname', (tester) async {
-    await pumpMatrixApp(tester, const ProfileScreen());
+    await pumpYazzokiApp(tester, const ProfileScreen());
     await tester.pump(const Duration(milliseconds: 400));
 
     final avatar = tester.getRect(headerAvatar());
@@ -78,7 +78,7 @@ void main() {
   });
 
   testWidgets('counters come below the bio', (tester) async {
-    await pumpMatrixApp(tester, const ProfileScreen());
+    await pumpYazzokiApp(tester, const ProfileScreen());
     await tester.pump(const Duration(milliseconds: 400));
 
     final bio = tester.getRect(find.textContaining('Construindo o futuro'));
@@ -90,7 +90,7 @@ void main() {
   testWidgets('renders the banner cover when the user has one',
       (tester) async {
     // 'joao' is seeded WITH a banner in the fake store.
-    await pumpMatrixApp(tester, const ProfileScreen(nickname: 'joao'));
+    await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'));
     await tester.pump(const Duration(milliseconds: 400));
 
     // A banner image widget exists for this profile.
@@ -100,7 +100,7 @@ void main() {
   testWidgets('falls back to a default cover when there is no banner',
       (tester) async {
     // The own user ('leonardo') has no banner → default gradient, no crash.
-    await pumpMatrixApp(tester, const ProfileScreen());
+    await pumpYazzokiApp(tester, const ProfileScreen());
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.byType(ProfileScreen), findsOneWidget);
@@ -110,7 +110,7 @@ void main() {
   });
 
   testWidgets('banner is 157px tall', (tester) async {
-    await pumpMatrixApp(tester, const ProfileScreen());
+    await pumpYazzokiApp(tester, const ProfileScreen());
     await tester.pump(const Duration(milliseconds: 400));
 
     // The banner occupies the top of the header. Its height is asserted via
@@ -127,7 +127,7 @@ void main() {
 
   testWidgets('the photo has NO decorative blue ring/glow around it',
       (tester) async {
-    await pumpMatrixApp(tester, const ProfileScreen());
+    await pumpYazzokiApp(tester, const ProfileScreen());
     await tester.pump(const Duration(milliseconds: 400));
 
     // The avatar is rendered bare. Previously a GlowContainer (blue halo)

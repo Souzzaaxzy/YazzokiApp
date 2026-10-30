@@ -1,4 +1,4 @@
-/// Spacing, radii and sizing tokens used across the MATRIX UI.
+/// Spacing, radii and sizing tokens used across the Yazzoki UI.
 class AppDimensions {
   AppDimensions._();
 

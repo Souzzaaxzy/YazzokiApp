@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/widgets/online_status.dart';
-import 'package:matrix_app/data/dtos/dtos.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/conversation_screen.dart';
-import 'package:matrix_app/features/feed/story_viewer.dart';
-import 'package:matrix_app/models/conversation.dart';
-import 'package:matrix_app/models/story.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/widgets/online_status.dart';
+import 'package:yazzoki/data/dtos/dtos.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/conversation_screen.dart';
+import 'package:yazzoki/features/feed/story_viewer.dart';
+import 'package:yazzoki/models/conversation.dart';
+import 'package:yazzoki/models/story.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -28,7 +28,7 @@ Future<AppState> seededDm() async {
 }
 
 Future<void> openDm(WidgetTester tester, AppState state) async {
-  await pumpMatrixApp(
+  await pumpYazzokiApp(
     tester,
     ConversationScreen(
       args: const ConversationRouteArgs(
@@ -250,7 +250,7 @@ void main() {
       tester.view.physicalSize = const Size(1080, 2340);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.reset);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Builder(
           builder: (ctx) => ElevatedButton(

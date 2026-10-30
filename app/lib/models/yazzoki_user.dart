@@ -1,9 +1,9 @@
 import 'conversation.dart';
 import 'profile_music.dart';
 
-/// A MATRIX network user.
-class MatrixUser {
-  const MatrixUser({
+/// A Yazzoki network user.
+class YazzokiUser {
+  const YazzokiUser({
     required this.id,
     required this.nickname,
     this.bio = '',
@@ -73,7 +73,7 @@ class MatrixUser {
         avatarUrl: avatarUrl,
       );
 
-  MatrixUser copyWith({
+  YazzokiUser copyWith({
     String? nickname,
     String? bio,
     String? avatarSeed,
@@ -85,7 +85,7 @@ class MatrixUser {
     String? Function()? publicIdLabel,
     ProfileMusic? Function()? music,
   }) =>
-      MatrixUser(
+      YazzokiUser(
         id: id,
         nickname: nickname ?? this.nickname,
         bio: bio ?? this.bio,

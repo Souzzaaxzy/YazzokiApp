@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/features/auth/login/login_screen.dart';
-import 'package:matrix_app/features/auth/register/register_screen.dart';
+import 'package:yazzoki/features/auth/login/login_screen.dart';
+import 'package:yazzoki/features/auth/register/register_screen.dart';
 
 import '../helpers/test_app.dart';
 
 void main() {
-  testWidgets('shows MATRIX branding and access label', (tester) async {
-    await pumpMatrixApp(tester, const LoginScreen());
+  testWidgets('shows Yazzoki branding and access label', (tester) async {
+    await pumpYazzokiApp(tester, const LoginScreen());
 
-    expect(find.text('MATRIX'), findsWidgets);
-    expect(find.text('ACCESS NETWORK'), findsOneWidget);
+    expect(find.text('Yazzoki'), findsWidgets);
+    expect(find.text('ENTRAR NA REDE'), findsOneWidget);
     expect(find.text('ENTRAR'), findsOneWidget);
   });
 
   testWidgets('nickname field has NO "@" prefix and no "@" decoration',
       (tester) async {
-    await pumpMatrixApp(tester, const LoginScreen());
+    await pumpYazzokiApp(tester, const LoginScreen());
 
     // The label now advertises both ways in (nickname OR public #id),
-    // uppercased by MatrixTextField.
+    // uppercased by YazzokiTextField.
     expect(find.text('NICKNAME OU #ID'), findsOneWidget);
     // No "@" text widget anywhere (no separate @ prefix/decoration).
     expect(find.text('@'), findsNothing);
@@ -27,7 +27,7 @@ void main() {
   });
 
   testWidgets('validates empty fields and blocks submission', (tester) async {
-    await pumpMatrixApp(tester, const LoginScreen());
+    await pumpYazzokiApp(tester, const LoginScreen());
 
     await tester.tap(find.text('ENTRAR'));
     await tester.pump();
@@ -37,7 +37,7 @@ void main() {
   });
 
   testWidgets('accepts a nickname and navigates to home', (tester) async {
-    await pumpMatrixApp(tester, const LoginScreen());
+    await pumpYazzokiApp(tester, const LoginScreen());
 
     await tester.enterText(find.byType(TextField).at(0), 'leonardo');
     await tester.enterText(find.byType(TextField).at(1), '123456');
@@ -45,16 +45,16 @@ void main() {
     await tester.pumpAndSettle();
 
     // Successful login navigates to the home route.
-    expect(find.text('MATRIX'), findsWidgets);
+    expect(find.text('Yazzoki'), findsWidgets);
   });
 
   testWidgets('shows a recovery link', (tester) async {
-    await pumpMatrixApp(tester, const LoginScreen());
+    await pumpYazzokiApp(tester, const LoginScreen());
     expect(find.text('Esqueci a senha'), findsOneWidget);
   });
 
   testWidgets('toggles password visibility', (tester) async {
-    await pumpMatrixApp(tester, const LoginScreen());
+    await pumpYazzokiApp(tester, const LoginScreen());
 
     final visibilityToggle = find.byIcon(Icons.visibility_outlined);
     expect(visibilityToggle, findsOneWidget);
@@ -67,7 +67,7 @@ void main() {
 
   testWidgets('register screen renders with CRIAR CONTA title when shown',
       (tester) async {
-    await pumpMatrixApp(tester, const RegisterScreen());
+    await pumpYazzokiApp(tester, const RegisterScreen());
 
     expect(find.text('CRIAR CONTA'), findsWidgets);
     expect(find.text('JOIN THE NETWORK'), findsOneWidget);

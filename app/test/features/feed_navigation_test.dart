@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/utils/profile_navigation.dart';
-import 'package:matrix_app/core/widgets/user_avatar.dart';
-import 'package:matrix_app/features/feed/feed_screen.dart';
-import 'package:matrix_app/features/profile/profile_screen.dart';
+import 'package:yazzoki/core/utils/profile_navigation.dart';
+import 'package:yazzoki/core/widgets/user_avatar.dart';
+import 'package:yazzoki/features/feed/feed_screen.dart';
+import 'package:yazzoki/features/profile/profile_screen.dart';
 
 import '../helpers/test_app.dart';
 
@@ -11,7 +11,7 @@ void main() {
 
   testWidgets('tapping the post author photo opens THAT author profile',
       (tester) async {
-    await pumpMatrixApp(tester, const FeedScreen());
+    await pumpYazzokiApp(tester, const FeedScreen());
     await tester.pumpAndSettle();
 
     // p2 is authored by joao (another user), the SECOND card in the
@@ -28,7 +28,7 @@ void main() {
 
   testWidgets('tapping the post author nickname opens THAT author profile',
       (tester) async {
-    await pumpMatrixApp(tester, const FeedScreen());
+    await pumpYazzokiApp(tester, const FeedScreen());
     await tester.pumpAndSettle();
 
     // Tap joao's nickname within his post card.

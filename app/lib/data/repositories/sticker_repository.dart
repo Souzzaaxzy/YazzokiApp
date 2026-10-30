@@ -4,7 +4,7 @@ import '../../models/sticker.dart';
 
 /// Sticker (figurinha) repository — the data layer for the sticker picker.
 ///
-/// Talks ONLY to the existing MATRIX API (same auth/realtime/storage stack);
+/// Talks ONLY to the existing Yazzoki API (same auth/realtime/storage stack);
 /// every endpoint hits the server catalog and the session user's persisted
 /// installs/favorites/recents, so the picker state survives restarts.
 class StickerRepository {

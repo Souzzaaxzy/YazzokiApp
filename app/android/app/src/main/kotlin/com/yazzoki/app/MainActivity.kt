@@ -1,4 +1,4 @@
-package com.matrix.matrix_app
+package com.yazzoki.app
 
 import android.content.ClipData
 import android.content.Intent
@@ -15,7 +15,7 @@ import java.io.InputStream
 import java.util.concurrent.Executors
 
 /**
- * MATRIX main activity.
+ * Yazzoki main activity.
  *
  * Além do launcher padrão, a activity recebe figuritas pelo compartilhamento
  * nativo do Android. O WhatsApp NÃO envia um pacote de figurinhas como várias
@@ -36,15 +36,15 @@ import java.util.concurrent.Executors
  *  * Um pacote `.wastickers`/ZIP é aberto com proteção contra path traversal,
  *    limites de quantidade/tamanho e limpeza em caso de erro.
  *  * O resultado (imagens soltas OU pacote) vai para o Flutter pelo canal
- *    `matrix.share/stickers`; o Flutter valida os bytes e abre a tela de
+ *    `yazzoki.share/stickers`; o Flutter valida os bytes e abre a tela de
  *    importação.
  *
  * Nada é executado do conteúdo recebido — arquivos externos são somente dados.
  */
 class MainActivity : FlutterActivity() {
     companion object {
-        private const val CHANNEL = "matrix.share/stickers"
-        private const val TAG = "MatrixShare"
+        private const val CHANNEL = "yazzoki.share/stickers"
+        private const val TAG = "YazzokiShare"
 
         // Limites de segurança (espelham/antecedem o servidor).
         private const val MAX_STICKERS = 60
@@ -185,7 +185,7 @@ class MainActivity : FlutterActivity() {
 
         if (uris.isEmpty()) {
             deliverBatch(
-                error("O conteúdo compartilhado não é compatível com o MATRIX."),
+                error("O conteúdo compartilhado não é compatível com o Yazzoki."),
             )
             return
         }

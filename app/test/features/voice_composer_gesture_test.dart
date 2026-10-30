@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/conversation_screen.dart';
-import 'package:matrix_app/features/chat/voice_player_bubble.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/conversation_screen.dart';
+import 'package:yazzoki/features/chat/voice_player_bubble.dart';
 
 import '../helpers/fake_record_channel.dart';
 import '../helpers/fake_repositories.dart';
@@ -25,7 +25,7 @@ void main() {
     }
 
     Future<void> pumpConversation(WidgetTester tester, AppState state) async {
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
           tester,
           ConversationScreen(
             args: const ConversationRouteArgs(

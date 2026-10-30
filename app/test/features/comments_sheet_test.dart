@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/widgets/app_state_scope.dart';
-import 'package:matrix_app/core/widgets/user_avatar.dart';
-import 'package:matrix_app/features/feed/comments_sheet.dart';
-import 'package:matrix_app/models/comment.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/widgets/app_state_scope.dart';
+import 'package:yazzoki/core/widgets/user_avatar.dart';
+import 'package:yazzoki/features/feed/comments_sheet.dart';
+import 'package:yazzoki/models/comment.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -43,7 +43,7 @@ void main() {
     final state = await stateWithComments();
     final post = state.posts.firstWhere((p) => p.id == 'p1');
 
-    await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+    await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
     await tester.pumpAndSettle();
 
     expect(find.textContaining('leonardo', findRichText: true), findsOneWidget);
@@ -59,7 +59,7 @@ void main() {
     final state = await stateWithComments();
     final post = state.posts.firstWhere((p) => p.id == 'p1');
 
-    await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+    await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
     await tester.pumpAndSettle();
 
     // Exactly one badge: the comment whose authorId == post.authorId.
@@ -73,7 +73,7 @@ void main() {
     final state = await seededAppState();
     final post = state.posts.firstWhere((p) => p.id == 'p1');
 
-    await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+    await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'Ficou ótimo!');
@@ -93,7 +93,7 @@ void main() {
         (tester) async {
       final state = await stateWithComments();
       final post = state.posts.firstWhere((p) => p.id == 'p1');
-      await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+      await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
       await tester.pumpAndSettle();
 
       // The post author (u0) can delete joao's (u2) comment → long-press shows
@@ -118,7 +118,7 @@ void main() {
         (tester) async {
       final state = await stateWithComments();
       final post = state.posts.firstWhere((p) => p.id == 'p1');
-      await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+      await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
       await tester.pumpAndSettle();
       expect(find.text('Comentário de outra pessoa'), findsOneWidget);
 
@@ -139,7 +139,7 @@ void main() {
     final state = await stateWithComments();
     final post = state.posts.firstWhere((p) => p.id == 'p1');
 
-    await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+    await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
     await tester.pumpAndSettle();
 
     // Simulate the Android soft keyboard raising the bottom IME inset.
@@ -163,7 +163,7 @@ void main() {
     final state = await stateWithComments();
     final post = state.posts.firstWhere((p) => p.id == 'p1');
 
-    await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+    await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
     await tester.pumpAndSettle();
 
     // The sheet's own background is a solid palette color (no transparency),
@@ -176,7 +176,7 @@ void main() {
     final state = await stateWithComments();
     final post = state.posts.firstWhere((p) => p.id == 'p1');
 
-    await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+    await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
     await tester.pumpAndSettle();
 
     // sc2 (joao) starts unliked → outline heart.
@@ -196,7 +196,7 @@ void main() {
     final state = await stateWithComments();
     final post = state.posts.firstWhere((p) => p.id == 'p1');
 
-    await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+    await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
     await tester.pumpAndSettle();
 
     // Tap "Responder" on joao's comment (first matching).
@@ -240,7 +240,7 @@ void main() {
     await state.loadFeed();
     final post = state.posts.firstWhere((p) => p.id == 'p1');
 
-    await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+    await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Ver respostas').first);
     await tester.pumpAndSettle();
@@ -273,7 +273,7 @@ void main() {
     final state = await stateWithComments(); // sc1/sc2 have no replies
     final post = state.posts.firstWhere((p) => p.id == 'p1');
 
-    await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+    await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
     await tester.pumpAndSettle();
 
     expect(find.text('Ver respostas'), findsNothing);
@@ -319,7 +319,7 @@ void main() {
     await state.loadFeed();
     final post = state.posts.firstWhere((p) => p.id == 'p1');
 
-    await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+    await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
     await tester.pumpAndSettle();
 
     // Only the comment WITH a reply shows the toggle.
@@ -358,7 +358,7 @@ void main() {
     await state.loadFeed();
     final post = state.posts.firstWhere((p) => p.id == 'p1');
 
-    await pumpMatrixApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
+    await pumpYazzokiApp(tester, Scaffold(body: CommentsSheet(post: post)), state: state);
     await tester.pumpAndSettle();
 
     // Has one reply → toggle + reply both visible.

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/app/routes.dart';
-import 'package:matrix_app/app/theme/app_theme.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/widgets/app_state_scope.dart';
-import 'package:matrix_app/features/home/home_screen.dart';
-import 'package:matrix_app/features/profile/profile_screen.dart';
-import 'package:matrix_app/features/splash/splash_screen.dart';
+import 'package:yazzoki/app/routes.dart';
+import 'package:yazzoki/app/theme/app_theme.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/widgets/app_state_scope.dart';
+import 'package:yazzoki/features/home/home_screen.dart';
+import 'package:yazzoki/features/profile/profile_screen.dart';
+import 'package:yazzoki/features/splash/splash_screen.dart';
 
 import '../helpers/fake_repositories.dart';
 

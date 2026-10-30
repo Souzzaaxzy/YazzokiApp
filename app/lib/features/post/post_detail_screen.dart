@@ -8,7 +8,7 @@ import '../../core/utils/profile_navigation.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
+import '../../core/widgets/yazzoki_button.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../data/api_config.dart';
 import '../../models/post.dart';
@@ -230,7 +230,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           title: 'ERROR',
           hud: 'REQUEST FAILED',
           subtitle: _error!,
-          action: MatrixButton(
+          action: YazzokiButton(
             label: 'Tentar novamente',
             icon: Icons.refresh_rounded,
             onPressed: _load,

@@ -97,7 +97,7 @@ class VoiceRecorderController extends ChangeNotifier {
     }
     final dir = await getTemporaryDirectory();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final path = '${dir.path}/matrix_voice_$now.m4a';
+    final path = '${dir.path}/yazzoki_voice_$now.m4a';
     final recorder = AudioRecorder();
     _recorder = recorder;
     try {

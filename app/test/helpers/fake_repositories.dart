@@ -1,20 +1,20 @@
 import 'dart:io';
 
-import 'package:matrix_app/data/api_config.dart';
-import 'package:matrix_app/data/dtos/dtos.dart';
-import 'package:matrix_app/data/repositories/repositories.dart';
-import 'package:matrix_app/data/repositories/music_repository.dart';
-import 'package:matrix_app/data/repositories/sticker_repository.dart';
-import 'package:matrix_app/data/repositories/story_repository.dart';
-import 'package:matrix_app/models/comment.dart';
-import 'package:matrix_app/models/conversation.dart';
-import 'package:matrix_app/models/friend_request.dart';
-import 'package:matrix_app/models/matrix_notification.dart';
-import 'package:matrix_app/models/matrix_user.dart';
-import 'package:matrix_app/models/post.dart';
-import 'package:matrix_app/models/profile_music.dart';
-import 'package:matrix_app/models/sticker.dart';
-import 'package:matrix_app/models/story.dart';
+import 'package:yazzoki/data/api_config.dart';
+import 'package:yazzoki/data/dtos/dtos.dart';
+import 'package:yazzoki/data/repositories/repositories.dart';
+import 'package:yazzoki/data/repositories/music_repository.dart';
+import 'package:yazzoki/data/repositories/sticker_repository.dart';
+import 'package:yazzoki/data/repositories/story_repository.dart';
+import 'package:yazzoki/models/comment.dart';
+import 'package:yazzoki/models/conversation.dart';
+import 'package:yazzoki/models/friend_request.dart';
+import 'package:yazzoki/models/yazzoki_notification.dart';
+import 'package:yazzoki/models/yazzoki_user.dart';
+import 'package:yazzoki/models/post.dart';
+import 'package:yazzoki/models/profile_music.dart';
+import 'package:yazzoki/models/sticker.dart';
+import 'package:yazzoki/models/story.dart';
 
 /// In-memory fake repositories for widget/unit tests.
 ///
@@ -44,7 +44,7 @@ class FakeRepositories extends Repositories {
     Map<String, List<Comment>> seedComments = const {},
     Map<String, List<Comment>> seedReplies = const {},
     Set<String> seedLikedCommentIds = const {},
-    List<MatrixNotification> seedNotifications = const [],
+    List<YazzokiNotification> seedNotifications = const [],
     List<StickerPackage> seedStickerPackages = const [],
     List<Sticker> seedStickerFavorites = const [],
     List<Sticker> seedStickerRecents = const [],
@@ -160,7 +160,7 @@ class FakeStore {
 
   FakeStore() {
     users = {
-      'u0': MatrixUser(
+      'u0': YazzokiUser(
         id: 'u0',
         nickname: 'leonardo',
         bio: 'Construindo o futuro. ⚡',
@@ -169,7 +169,7 @@ class FakeStore {
         publicIdLabel: '#00000001',
       ),
       // A second full user — needed for search/profile/friendship tests.
-      'u2': MatrixUser(
+      'u2': YazzokiUser(
         id: 'u2',
         nickname: 'joao',
         bio: '',
@@ -182,7 +182,7 @@ class FakeStore {
       ),
       // A third full user — needed for multi-mention / independence tests.
       // Has a pinned song so the profile's music bar can be asserted.
-      'u3': MatrixUser(
+      'u3': YazzokiUser(
         id: 'u3',
         nickname: 'carla',
         bio: '',
@@ -231,13 +231,13 @@ class FakeStore {
     repliesByParent = <String, List<Comment>>{};
     likedCommentIds = <String>{};
     commentLikeCount = <String, int>{};
-    notifications = <MatrixNotification>[];
+    notifications = <YazzokiNotification>[];
     friendRequests = <String, FriendRequest>{};
     friendships = <String>{};
     chatMessagesByPair = <String, List<ChatMessage>>{};
   }
 
-  late final Map<String, MatrixUser> users;
+  late final Map<String, YazzokiUser> users;
   late String? currentUserId;
   late List<Post> posts;
   late Set<String> likedPostIds;
@@ -248,7 +248,7 @@ class FakeStore {
   late Map<String, int> commentLikeCount;
 
   /// Server-side persistent notifications (recipient = current user).
-  late final List<MatrixNotification> notifications;
+  late final List<YazzokiNotification> notifications;
 
   /// Friend requests by id; status is a plain string (PENDING/ACCEPTED).
   late final Map<String, FriendRequest> friendRequests;
@@ -262,7 +262,7 @@ class FakeStore {
 
   /// Cosmetics equipped by the session user, keyed by slot.
 
-  MatrixUser get currentUser => users[currentUserId]!;
+  YazzokiUser get currentUser => users[currentUserId]!;
 
   String _pairKey(String a, String b) => a.compareTo(b) < 0 ? '$a|$b' : '$b|$a';
 
@@ -295,7 +295,7 @@ class _FakeAuthRepository implements AuthRepository {
     required String nickname,
     required String password,
   }) async {
-    final user = MatrixUser(
+    final user = YazzokiUser(
       id: 'u${_store.users.length}',
       nickname: nickname,
       bio: '',
@@ -536,7 +536,7 @@ class _FakeUserRepository implements UserRepository {
   final FakeStore _store;
 
   @override
-  Future<({MatrixUser user, List<Post> posts, Friendship? friendship})> profile(
+  Future<({YazzokiUser user, List<Post> posts, Friendship? friendship})> profile(
     String nickname,
   ) async {
     final user = _store.users.values.firstWhere(
@@ -562,7 +562,7 @@ class _FakeUserRepository implements UserRepository {
   }
 
   @override
-  Future<MatrixUser> updateProfile({
+  Future<YazzokiUser> updateProfile({
     String? nickname,
     String? bio,
     String? avatarUrl,
@@ -570,7 +570,7 @@ class _FakeUserRepository implements UserRepository {
     bool clearBanner = false,
   }) async {
     final old = _store.currentUser;
-    final updated = MatrixUser(
+    final updated = YazzokiUser(
       id: old.id,
       nickname: nickname ?? old.nickname,
       bio: bio ?? old.bio,
@@ -584,7 +584,7 @@ class _FakeUserRepository implements UserRepository {
   }
 
   @override
-  Future<List<MatrixUser>> search(String query) async {
+  Future<List<YazzokiUser>> search(String query) async {
     final users = _store.users.values.toList();
     if (query.trim().isEmpty) return users;
     final q = query.toLowerCase();
@@ -597,11 +597,11 @@ class _FakeUploadRepository implements UploadRepository {
 
   @override
   Future<String> upload(File file, {String? contentType, String? filename}) async =>
-      'https://fake.matrix.app/u/test.png';
+      'https://fake.yazzoki.app/u/test.png';
 
   @override
   Future<String> uploadVideo(File file, {int? durationMs}) async =>
-      'https://fake.matrix.app/u/test.mp4';
+      'https://fake.yazzoki.app/u/test.mp4';
 }
 
 class _FakeFriendRepository implements FriendRepository {
@@ -679,7 +679,7 @@ class _FakeFriendRepository implements FriendRepository {
       _store.friendshipState(userId);
 
   @override
-  Future<({List<MatrixUser> friends, int total, int page, int pageSize})> list(
+  Future<({List<YazzokiUser> friends, int total, int page, int pageSize})> list(
     String userId, {
     int page = 1,
     int pageSize = 20,
@@ -692,10 +692,10 @@ class _FakeFriendRepository implements FriendRepository {
       }
     }
     final all =
-        ids.map((id) => _store.users[id]).whereType<MatrixUser>().toList();
+        ids.map((id) => _store.users[id]).whereType<YazzokiUser>().toList();
     final start = (page - 1) * pageSize;
     final slice = start >= all.length
-        ? <MatrixUser>[]
+        ? <YazzokiUser>[]
         : all.sublist(start, (start + pageSize).clamp(0, all.length));
     return (friends: slice, total: all.length, page: page, pageSize: pageSize);
   }
@@ -707,7 +707,7 @@ class _FakeNotificationRepository implements NotificationRepository {
   final FakeStore _store;
 
   @override
-  Future<({List<MatrixNotification> notifications, int unreadCount})>
+  Future<({List<YazzokiNotification> notifications, int unreadCount})>
       list() async {
     final items = List.of(_store.notifications);
     return (
@@ -1635,10 +1635,10 @@ class _FakeStickerRepository implements StickerRepository {
       code: code.toUpperCase(),
       name: 'Pacote Sticker.ly',
       author: 'Autor Ly',
-      iconUrl: 'https://fake.matrix.app/ly/tray.png',
+      iconUrl: 'https://fake.yazzoki.app/ly/tray.png',
       stickerCount: 2,
       animated: false,
-      previewUrls: const ['https://fake.matrix.app/ly/1.webp'],
+      previewUrls: const ['https://fake.yazzoki.app/ly/1.webp'],
       alreadyInstalled: _store.stickerlyImported.contains(code.toUpperCase()),
     );
   }
@@ -1657,7 +1657,7 @@ class _FakeStickerRepository implements StickerRepository {
       slug: 'stickerly-${upper.toLowerCase()}',
       description: 'Importado do Sticker.ly.',
       author: 'Autor Ly',
-      iconUrl: 'https://fake.matrix.app/ly/tray.png',
+      iconUrl: 'https://fake.yazzoki.app/ly/tray.png',
       installed: true,
       stickerCount: 1,
       stickers: [
@@ -1665,7 +1665,7 @@ class _FakeStickerRepository implements StickerRepository {
           id: 'ly_${upper}_0',
           packageId: 'ly_$upper',
           order: 0,
-          fileUrl: 'https://fake.matrix.app/ly/1.webp',
+          fileUrl: 'https://fake.yazzoki.app/ly/1.webp',
         ),
       ],
     );
@@ -1723,7 +1723,7 @@ class _FakeStickerRepository implements StickerRepository {
         name: name.isNotEmpty ? name : 'Meus stickers',
         slug: 'compartilhados-fake',
         description: 'Importado do compartilhamento.',
-        author: 'MATRIX',
+        author: 'Yazzoki',
         iconUrl: newStickers.first.fileUrl,
         installed: true,
         stickerCount: newStickers.length,
@@ -1787,7 +1787,7 @@ class _FakeStoryRepository implements StoryRepository {
     final story = Story(
       id: 'story_${now.microsecondsSinceEpoch}',
       authorId: _store.currentUserId ?? "",
-      authorNickname: 'matrixuser0',
+      authorNickname: 'yazzokiuser0',
       authorAvatarUrl: null,
       mediaUrl: mediaUrl,
       mediaType: mediaType,
@@ -1815,7 +1815,7 @@ class _FakeStoryRepository implements StoryRepository {
     } else {
       _store.storyGroups.add(StoryGroup(
         authorId: _store.currentUserId ?? "",
-        authorNickname: 'matrixuser0',
+        authorNickname: 'yazzokiuser0',
         authorAvatarUrl: null,
         stories: [story],
         allViewed: false,

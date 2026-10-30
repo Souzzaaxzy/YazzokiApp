@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/app/routes.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/widgets/app_state_scope.dart';
-import 'package:matrix_app/core/widgets/matrix_card.dart';
-import 'package:matrix_app/features/search/search_screen.dart';
-import 'package:matrix_app/models/matrix_user.dart';
+import 'package:yazzoki/app/routes.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/widgets/app_state_scope.dart';
+import 'package:yazzoki/core/widgets/yazzoki_card.dart';
+import 'package:yazzoki/features/search/search_screen.dart';
+import 'package:yazzoki/models/yazzoki_user.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/in_memory_search_history_store.dart';
@@ -28,7 +28,7 @@ void main() {
 
     // Result shows — but nothing recorded yet.
 
-    expect(find.ancestor(of: find.textContaining('joao', findRichText: true), matching: find.byType(MatrixCard)), findsOneWidget);
+    expect(find.ancestor(of: find.textContaining('joao', findRichText: true), matching: find.byType(YazzokiCard)), findsOneWidget);
     expect(state.searchHistory, isEmpty);
   });
 
@@ -54,7 +54,7 @@ void main() {
 
     final result = find.ancestor(
       of: find.textContaining('joao', findRichText: true),
-      matching: find.byType(MatrixCard),
+      matching: find.byType(YazzokiCard),
     );
     await tester.tap(result);
     await tester.pump(const Duration(milliseconds: 800));
@@ -81,7 +81,7 @@ void main() {
     final state = AppState(repositories: repos, searchHistoryStore: store);
     await state.restoreSession();
     await state.loadFeed();
-    state.recordProfileVisit(MatrixUser(id: 'u2', nickname: 'joao'));
+    state.recordProfileVisit(YazzokiUser(id: 'u2', nickname: 'joao'));
     await tester.pumpWidget(AppStateScope(
       state: state,
       child: MaterialApp(home: const SearchScreen()),
@@ -89,7 +89,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('PESQUISAS RECENTES'), findsOneWidget);
-expect(find.ancestor(of: find.textContaining('joao', findRichText: true), matching: find.byType(MatrixCard)), findsOneWidget);
+expect(find.ancestor(of: find.textContaining('joao', findRichText: true), matching: find.byType(YazzokiCard)), findsOneWidget);
 
      await tester.tap(find.byIcon(Icons.close_rounded));
     await tester.pump();
@@ -104,7 +104,7 @@ expect(find.ancestor(of: find.textContaining('joao', findRichText: true), matchi
     final state = AppState(repositories: repos, searchHistoryStore: store);
     await state.restoreSession();
     await state.loadFeed();
-    state.recordProfileVisit(MatrixUser(id: 'u2', nickname: 'joao'));
+    state.recordProfileVisit(YazzokiUser(id: 'u2', nickname: 'joao'));
     // Flush the unawaited persist microtask so the store now has the entry.
 
     await tester.pumpWidget(const SizedBox());
@@ -123,7 +123,7 @@ expect(find.ancestor(of: find.textContaining('joao', findRichText: true), matchi
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('PESQUISAS RECENTES'), findsOneWidget);
-expect(find.ancestor(of: find.textContaining('joao', findRichText: true), matching: find.byType(MatrixCard)), findsOneWidget);
+expect(find.ancestor(of: find.textContaining('joao', findRichText: true), matching: find.byType(YazzokiCard)), findsOneWidget);
    });
 }
 
@@ -150,7 +150,7 @@ class _ProfileScreenStubState extends State<ProfileScreenStub> {
       if (!mounted) return;
       final state = AppStateScope.of(context);
       if (widget.nickname != null) {
-        state.recordProfileVisit(MatrixUser(
+        state.recordProfileVisit(YazzokiUser(
           id: 'u2',
           nickname: widget.nickname!,
           avatarSeed: widget.nickname,

@@ -1,6 +1,6 @@
-# MATRIX 💤 — Flutter App
+# Yazzoki — Flutter App
 
-Cyberpunk futuristic social platform — **app (cliente Flutter)**.
+Social platform with a Japanese old-age aesthetic — **app (cliente Flutter)**.
 
 > **Backend separado**: o servidor agora está em
 > [Souzzaaxzy/ServidorMtx](https://github.com/Souzzaaxzy/ServidorMtx).
@@ -10,7 +10,16 @@ Cyberpunk futuristic social platform — **app (cliente Flutter)**.
 ## O que é este repositório
 
 Apenas o app Flutter (camada de apresentação). Ele consome a API do
-backend MATRIX e **não** contém código de servidor.
+backend Yazzoki e **não** contém código de servidor.
+
+## Identidade visual
+
+- **Paleta**: preto tinta, branco/off-white (papel washi), bege e azul cor de
+  gelo — tema claro e escuro em `app/lib/app/theme/`.
+- **Logo**: emblema caligráfico (pincel) em `app/assets/brand/`; o lockup
+  (emblema + nome) é o widget `YazzokiLogo`.
+- **Tipografia**: Inter (UI), JetBrains Mono (HUD) e Zen Old Mincho (display).
+- **Application ID**: `com.yazzoki.app`; label Android `Yazzoki`.
 
 ## Configurar o endereço do backend
 

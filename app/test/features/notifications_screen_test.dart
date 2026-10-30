@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/features/notifications/notifications_screen.dart';
-import 'package:matrix_app/models/friend_request.dart';
-import 'package:matrix_app/models/matrix_notification.dart';
-import 'package:matrix_app/models/matrix_user.dart';
+import 'package:yazzoki/features/notifications/notifications_screen.dart';
+import 'package:yazzoki/models/friend_request.dart';
+import 'package:yazzoki/models/yazzoki_notification.dart';
+import 'package:yazzoki/models/yazzoki_user.dart';
 
 import '../helpers/test_app.dart';
 
-MatrixNotification _notification({
+YazzokiNotification _notification({
   required String id,
   required String type,
   String? postId,
@@ -16,7 +16,7 @@ MatrixNotification _notification({
   String? friendRequestStatus,
   bool read = false,
 }) {
-  return MatrixNotification(
+  return YazzokiNotification(
     id: id,
     type: type,
     read: read,
@@ -35,14 +35,14 @@ FriendRequest _request(String id) {
     id: id,
     status: 'PENDING',
     createdAt: DateTime(2024, 1, 10),
-    sender: MatrixUser(id: 'u2', nickname: 'joao'),
+    sender: YazzokiUser(id: 'u2', nickname: 'joao'),
     receiverId: 'u0',
   );
 }
 
 void main() {
   testWidgets('shows the ALL CLEAR empty state without notifications', (tester) async {
-    await pumpMatrixApp(tester, const NotificationsScreen());
+    await pumpYazzokiApp(tester, const NotificationsScreen());
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('ATIVIDADES'), findsOneWidget);
@@ -55,7 +55,7 @@ void main() {
     final state = await seededAppStateWithSocial(notifications: [
       _notification(id: 'n9', type: 'FRIEND_ACCEPTED', read: false),
     ]);
-    await pumpMatrixApp(tester, const NotificationsScreen(), state: state);
+    await pumpYazzokiApp(tester, const NotificationsScreen(), state: state);
     await tester.pump(const Duration(milliseconds: 400));
 
     // The actor's nickname is rendered as plain text (the nickname cosmetics
@@ -78,7 +78,7 @@ void main() {
     final state = await seededAppStateWithSocial(notifications: [
       _notification(id: 'n1', type: 'LIKE', postId: 'p1'),
     ]);
-    await pumpMatrixApp(tester, const NotificationsScreen(), state: state);
+    await pumpYazzokiApp(tester, const NotificationsScreen(), state: state);
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.textContaining('joao', findRichText: true), findsOneWidget);
@@ -99,7 +99,7 @@ void main() {
       ],
       friendRequests: [_request('fr_u2_u0')],
     );
-    await pumpMatrixApp(tester, const NotificationsScreen(), state: state);
+    await pumpYazzokiApp(tester, const NotificationsScreen(), state: state);
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('enviou uma solicitação de amizade.'), findsOneWidget);
@@ -128,7 +128,7 @@ void main() {
       ],
       friendRequests: [_request('fr_u2_u0b')],
     );
-    await pumpMatrixApp(tester, const NotificationsScreen(), state: state);
+    await pumpYazzokiApp(tester, const NotificationsScreen(), state: state);
     await tester.pump(const Duration(milliseconds: 400));
 
     await tester.tap(find.text('RECUSAR'));
@@ -142,7 +142,7 @@ void main() {
     final state = await seededAppStateWithSocial(notifications: [
       _notification(id: 'n4', type: 'LIKE', postId: 'p1'),
     ]);
-    await pumpMatrixApp(tester, const NotificationsScreen(), state: state);
+    await pumpYazzokiApp(tester, const NotificationsScreen(), state: state);
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(state.unreadNotifications, 1);
@@ -157,7 +157,7 @@ void main() {
     final state = await seededAppStateWithSocial(notifications: [
       _notification(id: 'n5', type: 'COMMENT', postId: 'p1', commentId: 'c1'),
     ]);
-    await pumpMatrixApp(tester, const NotificationsScreen(), state: state);
+    await pumpYazzokiApp(tester, const NotificationsScreen(), state: state);
     await tester.pump(const Duration(milliseconds: 400));
 
     await tester.tap(find.textContaining('comentou na sua publicação.', findRichText: true));

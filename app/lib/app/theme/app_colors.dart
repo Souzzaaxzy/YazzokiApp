@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_palette.dart';
 
-/// Centralized MATRIX design tokens.
+/// Centralized Yazzoki design tokens.
 ///
 /// Brand colors are theme-independent statics. Mood-dependent tokens
 /// (backgrounds, surfaces, text) resolve through the currently ACTIVE
@@ -12,21 +12,26 @@ import 'app_palette.dart';
 class AppColors {
   AppColors._();
 
-  // Active palette (theme-dependent). Defaults to dark, the classic MATRIX.
-  static MatrixPalette _active = MatrixPalette.dark;
+  // Active palette (theme-dependent). Defaults to dark.
+  static YazzokiPalette _active = YazzokiPalette.dark;
 
-  static void setActive(MatrixPalette palette) {
+  static void setActive(YazzokiPalette palette) {
     if (_active != palette) _active = palette;
   }
 
   /// Currently active palette (used by tests to verify theme resolution).
-  static MatrixPalette get activePalette => _active;
+  static YazzokiPalette get activePalette => _active;
 
-  // Brand blues — same across themes.
-  static const Color primaryBlue = Color(0xFF0066FF);
-  static const Color electricBlue = Color(0xFF008CFF);
-  static const Color success = Color(0xFF00FF88);
-  static const Color error = Color(0xFFFF304F);
+  // Brand accents — same across themes.
+  /// Ice blue ("azul cor de gelo") — the signature Yazzoki accent.
+  static const Color primaryBlue = Color(0xFF7FA9CE);
+  static const Color electricBlue = Color(0xFF9DC4E4);
+  /// Muted moss/jade for success states.
+  static const Color success = Color(0xFF7C9A6D);
+  /// Shu-iro vermillion for errors and destructive actions.
+  static const Color error = Color(0xFFB4553F);
+  /// Warm beige, used for borders, dividers and secondary accents.
+  static const Color beige = Color(0xFFD8C6A6);
 
   // Theme-dependent tokens.
   static Color get absoluteBlack => _active.scaffold;
@@ -39,7 +44,7 @@ class AppColors {
   static Color get scaffoldBackground => _active.scaffold;
   static Color get navBarBackground => _active.navBar;
 
-  // Glow presets. Translucent brand blue; softer on the light theme.
+  // Glow presets. Translucent ice blue; softer on the light theme.
   static Color get glowSmall => primaryBlue.withValues(alpha: 0.45 * _active.glowAlpha);
   static Color get glowMedium => primaryBlue.withValues(alpha: 0.55 * _active.glowAlpha);
   static Color get glowStrong => electricBlue.withValues(alpha: 0.75 * _active.glowAlpha);
@@ -48,7 +53,7 @@ class AppColors {
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [primaryBlue, Color(0xFF003B8F)],
+    colors: [primaryBlue, Color(0xFF4E7BA6)],
   );
 
   static LinearGradient get deepGradient => LinearGradient(
@@ -60,6 +65,6 @@ class AppColors {
   static const LinearGradient akameGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [electricBlue, Color(0xFF6EB6FF)],
+    colors: [electricBlue, Color(0xFFC7DDF0)],
   );
 }

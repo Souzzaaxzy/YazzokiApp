@@ -1,6 +1,9 @@
 # ──────────────────────────────────────────────
-# MATRIX monorepo root .gitignore
+# Yazzoki monorepo root .gitignore
 # ──────────────────────────────────────────────
+
+# Agent working memory (local only)
+.openhands/
 
 # Miscellaneous
 *.class

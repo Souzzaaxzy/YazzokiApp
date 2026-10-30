@@ -7,8 +7,8 @@ import '../../models/comment.dart';
 import '../../models/conversation.dart';
 import '../local/chat_history_service.dart';
 import '../../models/friend_request.dart';
-import '../../models/matrix_notification.dart';
-import '../../models/matrix_user.dart';
+import '../../models/yazzoki_notification.dart';
+import '../../models/yazzoki_user.dart';
 import '../../models/post.dart';
 import '../api_client.dart';
 import '../dtos/dtos.dart';
@@ -242,7 +242,7 @@ class UserRepository {
 
   /// Fetches a public profile by nickname: user, posts and (for an
   /// authenticated viewer) the friendship state Seguir/Solicitado/Amigos.
-  Future<({MatrixUser user, List<Post> posts, Friendship? friendship})> profile(
+  Future<({YazzokiUser user, List<Post> posts, Friendship? friendship})> profile(
     String nickname,
   ) async {
     // Nicknames are full Unicode (emojis, spaces, symbols) — the path
@@ -259,7 +259,7 @@ class UserRepository {
     return (user: user, posts: posts, friendship: friendship);
   }
 
-  Future<MatrixUser> updateProfile({
+  Future<YazzokiUser> updateProfile({
     String? nickname,
     String? bio,
     String? avatarUrl,
@@ -280,7 +280,7 @@ class UserRepository {
     return AuthUserDto.fromJson(json['user'] as Map<String, dynamic>).toModel();
   }
 
-  Future<List<MatrixUser>> search(String query) async {
+  Future<List<YazzokiUser>> search(String query) async {
     final json = await _api.get<Map<String, dynamic>>(
       '/api/users/search',
       queryParameters: {'q': query},
@@ -341,7 +341,7 @@ class FriendRepository {
   /// Paginated friends list of a user (accepted friendships only). Used by
   /// the profile "Amigos" bottom sheet; [total] matches the profile
   /// counter because both come from the same server query.
-  Future<({List<MatrixUser> friends, int total, int page, int pageSize})> list(
+  Future<({List<YazzokiUser> friends, int total, int page, int pageSize})> list(
     String userId, {
     int page = 1,
     int pageSize = 20,
@@ -368,7 +368,7 @@ class NotificationRepository {
   final ApiClient _api;
 
   /// Fetches the notification list plus the unread counter.
-  Future<({List<MatrixNotification> notifications, int unreadCount})>
+  Future<({List<YazzokiNotification> notifications, int unreadCount})>
       list() async {
     final json = await _api.get<Map<String, dynamic>>('/api/notifications');
     final list = (json['notifications'] as List).cast<Map<String, dynamic>>();

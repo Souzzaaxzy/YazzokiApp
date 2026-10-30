@@ -4,16 +4,16 @@ import '../../app/routes.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
-import '../../core/utils/date_utils.dart' as matrix;
+import '../../core/utils/date_utils.dart' as yazzoki;
 import '../../core/utils/profile_navigation.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
-import '../../core/widgets/matrix_card.dart';
+import '../../core/widgets/yazzoki_button.dart';
+import '../../core/widgets/yazzoki_card.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../data/api_config.dart';
-import '../../models/matrix_notification.dart';
+import '../../models/yazzoki_notification.dart';
 
 /// Notifications tab — persistent server-side notifications.
 ///
@@ -49,7 +49,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       setState(() => _error = e.message);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _error = 'Sem conexão com o MATRIX.');
+      setState(() => _error = 'Sem conexão com o Yazzoki.');
     }
   }
 
@@ -75,7 +75,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  void _open(MatrixNotification notification) {
+  void _open(YazzokiNotification notification) {
     AppStateScope.of(context).markNotificationRead(notification.id);
     if (notification.postId != null) {
       Navigator.of(context)
@@ -91,7 +91,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   /// Tapping the ACTOR's photo or nickname on a notification opens THEIR
   /// profile (by real id) — the same no-op guard if already open.
-  void _openActor(MatrixNotification notification) {
+  void _openActor(YazzokiNotification notification) {
     AppStateScope.of(context).markNotificationRead(notification.id);
     openProfileById(
       context,
@@ -145,7 +145,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   title: 'CONNECTION ERROR',
                   hud: 'OFFLINE',
                   subtitle: _error!,
-                  action: MatrixButton(
+                  action: YazzokiButton(
                     label: 'Tentar novamente',
                     icon: Icons.refresh_rounded,
                     onPressed: _load,
@@ -208,11 +208,11 @@ class _NotificationTile extends StatelessWidget {
     required this.onActorTap,
   });
 
-  final MatrixNotification notification;
+  final YazzokiNotification notification;
   final VoidCallback onTap;
   final VoidCallback onActorTap;
 
-  static String description(MatrixNotification n) {
+  static String description(YazzokiNotification n) {
     switch (n.type) {
       case 'LIKE':
         return 'curtiu sua publicação.';
@@ -232,7 +232,7 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final n = notification;
-    return MatrixCard(
+    return YazzokiCard(
       margin: const EdgeInsets.symmetric(vertical: AppDimensions.spaceSm),
       onTap: onTap,
       border: Border.all(
@@ -303,7 +303,7 @@ class _NotificationTile extends StatelessWidget {
                 ),
                 const SizedBox(height: AppDimensions.spaceXs),
                 Text(
-                  matrix.relativeTime(n.createdAt),
+                  yazzoki.relativeTime(n.createdAt),
                   style: AppTextStyles.caption,
                 ),
               ],
@@ -325,7 +325,7 @@ class _FriendRequestCard extends StatelessWidget {
     required this.onReject,
   });
 
-  final MatrixNotification notification;
+  final YazzokiNotification notification;
   final bool busy;
   final VoidCallback onAccept;
   final VoidCallback onReject;
@@ -333,7 +333,7 @@ class _FriendRequestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final n = notification;
-    return MatrixCard(
+    return YazzokiCard(
       margin: const EdgeInsets.symmetric(vertical: AppDimensions.spaceSm),
       padding: const EdgeInsets.all(AppDimensions.spaceXl),
       border: const Border.fromBorderSide(
@@ -359,7 +359,7 @@ class _FriendRequestCard extends StatelessWidget {
             style: AppTextStyles.bodyMuted,
           ),
           const SizedBox(height: AppDimensions.spaceLg),
-          MatrixButton(
+          YazzokiButton(
             label: 'Aceitar',
             icon: Icons.check_rounded,
             expanded: true,
@@ -367,16 +367,16 @@ class _FriendRequestCard extends StatelessWidget {
             onPressed: busy ? null : onAccept,
           ),
           const SizedBox(height: AppDimensions.spaceMd),
-          MatrixButton(
+          YazzokiButton(
             label: 'Recusar',
             icon: Icons.close_rounded,
-            variant: MatrixButtonVariant.outline,
+            variant: YazzokiButtonVariant.outline,
             expanded: true,
             onPressed: busy ? null : onReject,
           ),
           const SizedBox(height: AppDimensions.spaceMd),
           Text(
-            matrix.relativeTime(n.createdAt),
+            yazzoki.relativeTime(n.createdAt),
             style: AppTextStyles.caption,
           ),
         ],

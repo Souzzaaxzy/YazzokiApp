@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/app/routes.dart';
-import 'package:matrix_app/app/theme/app_theme.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/widgets/app_state_scope.dart';
-import 'package:matrix_app/features/auth/login/login_screen.dart';
-import 'package:matrix_app/features/home/home_screen.dart';
-import 'package:matrix_app/features/splash/splash_screen.dart';
+import 'package:yazzoki/app/routes.dart';
+import 'package:yazzoki/app/theme/app_theme.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/widgets/app_state_scope.dart';
+import 'package:yazzoki/features/auth/login/login_screen.dart';
+import 'package:yazzoki/features/home/home_screen.dart';
+import 'package:yazzoki/features/splash/splash_screen.dart';
 
 import '../helpers/fake_repositories.dart';
 
@@ -35,17 +35,17 @@ Future<void> pumpSplash(WidgetTester tester,
 }
 
 void main() {
-  testWidgets('splash shows ONLY the MATRIX text (no secondary labels)',
+  testWidgets('splash shows ONLY the Yazzoki text (no secondary labels)',
       (tester) async {
     await pumpSplash(tester, authenticated: true);
     await tester.pump(const Duration(milliseconds: 300));
 
-    // The neon "MATRIX" title is PAINTED on the CustomPaint canvas (not a
+    // The neon "Yazzoki" title is PAINTED on the CustomPaint canvas (not a
     // Text widget), which keeps the scene light. Assert it structurally:
     // the only real widget text in the tree MUST NOT include any of the
     // forbidden labels.
     expect(find.byType(SplashScreen), findsOneWidget);
-    expect(find.textContaining('MATRIX NETWORK'), findsNothing);
+    expect(find.textContaining('Yazzoki NETWORK'), findsNothing);
     expect(find.textContaining('SYSTEM INITIALIZING'), findsNothing);
     expect(find.textContaining('LOADING'), findsNothing);
     expect(find.textContaining('INITIAL'), findsNothing);
@@ -120,7 +120,7 @@ void main() {
     await pumpSplash(tester, authenticated: true);
     await tester.pump(const Duration(milliseconds: 300));
 
-    // "MATRIX" is rasterized by the CustomPainter (masked layers), so the
+    // "Yazzoki" is rasterized by the CustomPainter (masked layers), so the
     // widget tree contains no Text node — the strongest guarantee that the
     // letters are NOT wrapped in a container/panel.
     expect(find.byType(Text), findsNothing);

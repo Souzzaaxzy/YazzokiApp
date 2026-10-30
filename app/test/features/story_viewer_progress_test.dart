@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/widgets/user_avatar.dart';
-import 'package:matrix_app/features/feed/story_viewer.dart';
-import 'package:matrix_app/models/story.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/widgets/user_avatar.dart';
+import 'package:yazzoki/features/feed/story_viewer.dart';
+import 'package:yazzoki/models/story.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -57,7 +57,7 @@ void main() {
       addTearDown(tester.view.reset);
 
       final state = await seededStories();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Builder(
           builder: (ctx) => ElevatedButton(
@@ -82,7 +82,7 @@ void main() {
       addTearDown(tester.view.reset);
 
       final state = await seededStories();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Builder(
           builder: (ctx) => ElevatedButton(
@@ -109,7 +109,7 @@ void main() {
       addTearDown(tester.view.reset);
 
       final state = await seededStories();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Builder(
           builder: (ctx) => ElevatedButton(

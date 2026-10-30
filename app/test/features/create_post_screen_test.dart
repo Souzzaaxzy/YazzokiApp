@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/features/create_post/create_post_screen.dart';
-import 'package:matrix_app/features/home/home_screen.dart';
+import 'package:yazzoki/features/create_post/create_post_screen.dart';
+import 'package:yazzoki/features/home/home_screen.dart';
 
 import '../helpers/test_app.dart';
 
 void main() {
   testWidgets('renders title, field and publish button', (tester) async {
-    await pumpMatrixApp(tester, const CreatePostScreen());
+    await pumpYazzokiApp(tester, const CreatePostScreen());
 
     expect(find.text('NOVA PUBLICAÇÃO'), findsOneWidget);
     expect(find.text('O que você está pensando?'), findsOneWidget);
@@ -16,7 +16,7 @@ void main() {
   });
 
   testWidgets('validates empty text on publish', (tester) async {
-    await pumpMatrixApp(tester, const CreatePostScreen());
+    await pumpYazzokiApp(tester, const CreatePostScreen());
 
     await tester.tap(find.text('PUBLICAR'));
     await tester.pump();
@@ -29,7 +29,7 @@ void main() {
     final initialCount = state.posts.length;
     // Open create-post from the home shell so the navigator has a proper
     // route stack (the screen pops back on publish).
-    await pumpMatrixApp(tester, const HomeScreen(), state: state);
+    await pumpYazzokiApp(tester, const HomeScreen(), state: state);
 
     // The old bottom-bar entry is gone: the flow now starts from the
     // floating "+" button on the own profile tab, which offers the TWO

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/features/chat/voice_recorder.dart';
+import 'package:yazzoki/features/chat/voice_recorder.dart';
 
 import '../helpers/fake_record_channel.dart';
 

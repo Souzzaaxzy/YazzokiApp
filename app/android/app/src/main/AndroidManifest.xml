@@ -14,7 +14,7 @@
       server without TLS yet). Remove it once the API is served over HTTPS.
     -->
     <application
-        android:label="MATRIX"
+        android:label="Yazzoki"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
@@ -25,9 +25,9 @@
           Por que singleTask (e não singleTop): o Sharesheet entrega o
           compartilhamento com FLAG_ACTIVITY_NEW_TASK na task de afinidade
           padrão do app. Com singleTop a Activity só é reaproveitada quando
-          ela já está NO TOPO da própria task; se o MATRIX estiver em segundo
+          ela já está NO TOPO da própria task; se o Yazzoki estiver em segundo
           plano (ou o usuário estiver em outra tela/rota), cada novo share
-          criava uma NOVA instância/task — a cascata "MatrixApp → MatrixApp →
+          criava uma NOVA instância/task — a cascata "YazzokiApp → YazzokiApp →
           …" relatada. singleTask garante NO MÁXIMO uma instância no sistema:
           qualquer novo share traz a task existente para a frente e entrega o
           Intent via onNewIntent, sem criar Activity/task nova.
@@ -68,7 +68,7 @@
               application/zip ou application/*. Por isso os filtros abaixo
               cobrem `image/*` (figurinha única) E `application/*` /
               `*/*` (pacote). O conteúdo real (bytes) é SEMPRE validado no
-              app antes de importar — o filtro apenas torna o MATRIX um
+              app antes de importar — o filtro apenas torna o Yazzoki um
               destino possível.
             -->
             <intent-filter>

@@ -1,10 +1,10 @@
-/// A MATRIX notification (like, comment, friend request, friend accepted).
+/// A Yazzoki notification (like, comment, friend request, friend accepted).
 ///
 /// The server owns notification creation; the APK only renders them. Every
 /// notification embeds the acting user (actor) so no second lookup is
 /// needed, and may reference a post / comment / friend request.
-class MatrixNotification {
-  const MatrixNotification({
+class YazzokiNotification {
+  const YazzokiNotification({
     required this.id,
     required this.type,
     required this.read,
@@ -52,7 +52,7 @@ class MatrixNotification {
   /// for non-request types. Used to decide if the actionable card shows.
   final String? friendRequestStatus;
 
-  MatrixNotification copyWith({bool? read}) => MatrixNotification(
+  YazzokiNotification copyWith({bool? read}) => YazzokiNotification(
         id: id,
         type: type,
         read: read ?? this.read,

@@ -12,9 +12,9 @@ import '../../core/utils/chat_format.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/glow_container.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
+import '../../core/widgets/yazzoki_button.dart';
 import '../../core/widgets/puzzle_icon.dart';
-import '../../core/widgets/matrix_text_field.dart';
+import '../../core/widgets/yazzoki_text_field.dart';
 import '../../core/widgets/online_status.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../data/api_config.dart';
@@ -1312,7 +1312,7 @@ class _ConversationScreenState extends State<ConversationScreen>
                 style: AppTextStyles.body,
               ),
               const SizedBox(height: AppDimensions.spaceLg),
-              MatrixButton(
+              YazzokiButton(
                 label: 'Tentar novamente',
                 icon: Icons.refresh_rounded,
                 onPressed: _load,
@@ -1770,7 +1770,7 @@ class _MessageBubble extends StatelessWidget {
                 name: peerName!,
                 imageUrl: peerAvatar,
                 // Proportional to the 300px-max bubble — keeping the
-                // received layout balanced (MATRIX's visual format).
+                // received layout balanced (Yazzoki's visual format).
                 size: 38,
                 seed: peerName,
               ),
@@ -1942,7 +1942,7 @@ class _ComposerState extends State<_Composer> {
                         cancelZone: widget.dragCancelZone,
                         sending: widget.voiceSending,
                       )
-                    : MatrixTextField(
+                    : YazzokiTextField(
                         hint: 'Escreva sua mensagem...',
                         controller: widget.controller,
                         focusNode: widget.focusNode,

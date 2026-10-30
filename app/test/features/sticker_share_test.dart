@@ -3,14 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/utils/sticker_import_validator.dart';
-import 'package:matrix_app/core/widgets/puzzle_icon.dart';
-import 'package:matrix_app/data/share_sticker_service.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/conversation_screen.dart';
-import 'package:matrix_app/features/chat/sticker_picker.dart';
-import 'package:matrix_app/models/sticker.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/utils/sticker_import_validator.dart';
+import 'package:yazzoki/core/widgets/puzzle_icon.dart';
+import 'package:yazzoki/data/share_sticker_service.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/conversation_screen.dart';
+import 'package:yazzoki/features/chat/sticker_picker.dart';
+import 'package:yazzoki/models/sticker.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -107,7 +107,7 @@ void main() {
         name: 'Pack',
         slug: 'pack',
         description: '',
-        author: 'MATRIX',
+        author: 'Yazzoki',
         iconUrl: 'http://x/pack.png',
         installed: true,
         stickerCount: 1,
@@ -135,7 +135,7 @@ void main() {
       addTearDown(tester.view.reset);
 
       final state = await seededChat();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(
@@ -166,7 +166,7 @@ void main() {
   });
 
   group('ShareStickerService — lote do compartir nativo', () {
-    const channel = MethodChannel('matrix.share/stickers');
+    const channel = MethodChannel('yazzoki.share/stickers');
 
     tearDown(() async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -254,7 +254,7 @@ void main() {
         const StandardMethodCodec().encodeMethodCall(
           MethodCall('onSharedBatch', {
             'kind': 'error',
-            'error': 'O conteúdo compartilhado não é compatível com o MATRIX.',
+            'error': 'O conteúdo compartilhado não é compatível com o Yazzoki.',
             'batchId': 'err-1',
             'stickers': <dynamic>[],
           }),

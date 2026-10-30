@@ -6,9 +6,9 @@ import '../../app/theme/app_text_styles.dart';
 import '../../core/utils/chat_format.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_button.dart';
+import '../../core/widgets/yazzoki_button.dart';
 import '../../core/widgets/user_avatar.dart';
-import '../../models/matrix_user.dart';
+import '../../models/yazzoki_user.dart';
 
 /// Result of the add-member picker (the confirmed selection + each picked
 /// user's nickname for the success snackbar).
@@ -44,7 +44,7 @@ class AddMemberSheet extends StatefulWidget {
 }
 
 class _AddMemberSheetState extends State<AddMemberSheet> {
-  List<MatrixUser> _friends = const [];
+  List<YazzokiUser> _friends = const [];
 
   /// Ids of the friends currently ticked (select/deselect before confirming).
   final Set<String> _selected = {};
@@ -82,7 +82,7 @@ class _AddMemberSheetState extends State<AddMemberSheet> {
 
   /// Toggles a friend in/out of the pending selection (Etapa 3: selecionar /
   /// desselecionar antes de confirmar).
-  void _toggle(MatrixUser u) {
+  void _toggle(YazzokiUser u) {
     setState(() {
       if (!_selected.add(u.id)) {
         _selected.remove(u.id);
@@ -173,7 +173,7 @@ class _AddMemberSheetState extends State<AddMemberSheet> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: MatrixButton(
+                        child: YazzokiButton(
                           label: 'CANCELAR',
                           expanded: true,
                           onPressed: () => Navigator.of(context).pop(),
@@ -181,7 +181,7 @@ class _AddMemberSheetState extends State<AddMemberSheet> {
                       ),
                       const SizedBox(width: AppDimensions.spaceMd),
                       Expanded(
-                        child: MatrixButton(
+                        child: YazzokiButton(
                           label: _selected.isEmpty
                               ? 'ADICIONAR'
                               : 'ADICIONAR (${_selected.length})',

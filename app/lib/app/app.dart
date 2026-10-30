@@ -15,15 +15,15 @@ import 'theme/app_colors.dart';
 import 'theme/app_palette.dart';
 import 'theme/app_theme.dart';
 
-/// Root widget for the MATRIX app.
-class MatrixApp extends StatefulWidget {
-  const MatrixApp({super.key});
+/// Root widget for the Yazzoki app.
+class YazzokiApp extends StatefulWidget {
+  const YazzokiApp({super.key});
 
   @override
-  State<MatrixApp> createState() => _MatrixAppState();
+  State<YazzokiApp> createState() => _YazzokiAppState();
 }
 
-class _MatrixAppState extends State<MatrixApp> with WidgetsBindingObserver {
+class _YazzokiAppState extends State<YazzokiApp> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   final _RouteWatcher _routeWatcher = _RouteWatcher();
   StreamSubscription<SharedStickerBatch>? _shareSub;
@@ -41,7 +41,7 @@ class _MatrixAppState extends State<MatrixApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  /// The app moved to/from the foreground. This is the ONLINE signal: MATRIX
+  /// The app moved to/from the foreground. This is the ONLINE signal: Yazzoki
   /// only counts a user as online while the app is actually in front of them,
   /// so a backgrounded app (still holding its socket for pushes) reports
   /// itself offline. The server relays the change to the people who talk to
@@ -86,7 +86,7 @@ class _MatrixAppState extends State<MatrixApp> with WidgetsBindingObserver {
   void _onSharedBatch(SharedStickerBatch batch) {
     if (batch.kind == SharedBatchKind.error) {
       _pendingShareError =
-          batch.error ?? 'O conteúdo compartilhado não é compatível com o MATRIX.';
+          batch.error ?? 'O conteúdo compartilhado não é compatível com o Yazzoki.';
       ShareStickerService.instance.clearCurrent();
       _flushPendingShare();
       return;
@@ -401,7 +401,7 @@ class _MatrixAppState extends State<MatrixApp> with WidgetsBindingObserver {
           ));
           final appState = AppStateScope.of(context);
           return MaterialApp(
-            title: 'MATRIX',
+            title: 'Yazzoki',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,

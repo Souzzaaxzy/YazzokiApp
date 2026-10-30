@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/widgets/range_selector.dart';
+import 'package:yazzoki/core/widgets/range_selector.dart';
 
 /// A REGRA do seletor, testada direto (sem widget): é aqui que ficam as
 /// garantias de que o trecho nunca sai da faixa nem do teto de 1 minuto.

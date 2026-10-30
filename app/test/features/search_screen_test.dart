@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/widgets/matrix_card.dart';
-import 'package:matrix_app/features/search/search_screen.dart';
+import 'package:yazzoki/core/widgets/yazzoki_card.dart';
+import 'package:yazzoki/features/search/search_screen.dart';
 
 import '../helpers/test_app.dart';
 
 void main() {
   testWidgets('shows the search header and hint', (tester) async {
-    await pumpMatrixApp(tester, const SearchScreen());
+    await pumpYazzokiApp(tester, const SearchScreen());
 
-    expect(find.text('MATRIX SEARCH'), findsOneWidget);
+    expect(find.text('Yazzoki'), findsOneWidget);
     expect(find.text('Pesquisar por nickname ou #id...'), findsOneWidget);
   });
 
   testWidgets('filters users by nickname', (tester) async {
-    await pumpMatrixApp(tester, const SearchScreen());
+    await pumpYazzokiApp(tester, const SearchScreen());
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'Leonardo');
@@ -25,7 +25,7 @@ void main() {
   });
 
   testWidgets('tapping a result opens that user profile', (tester) async {
-    await pumpMatrixApp(tester, const SearchScreen());
+    await pumpYazzokiApp(tester, const SearchScreen());
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'joao');
@@ -34,7 +34,7 @@ void main() {
     // The RichText result (NOT the EditableText query field) is the target.
     final result = find.ancestor(
       of: find.textContaining('joao', findRichText: true),
-      matching: find.byType(MatrixCard),
+      matching: find.byType(YazzokiCard),
     );
     expect(result, findsOneWidget);
     await tester.tap(result);
@@ -47,7 +47,7 @@ void main() {
   });
 
   testWidgets('shows empty state when no user matches', (tester) async {
-    await pumpMatrixApp(tester, const SearchScreen());
+    await pumpYazzokiApp(tester, const SearchScreen());
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextField), 'zzznopezzz');

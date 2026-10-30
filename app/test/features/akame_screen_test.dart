@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/features/akame/akame_screen.dart';
+import 'package:yazzoki/features/akame/akame_screen.dart';
 
 import '../helpers/test_app.dart';
 
 void main() {
   testWidgets('renders AKAME header and the initial greeting message',
       (tester) async {
-    await pumpMatrixApp(tester, const AkameScreen());
+    await pumpYazzokiApp(tester, const AkameScreen());
 
     expect(find.text('AKAME'), findsWidgets);
     expect(find.text('ONLINE'), findsOneWidget);
@@ -16,7 +16,7 @@ void main() {
   });
 
   testWidgets('sends a user message and shows it in the chat', (tester) async {
-    await pumpMatrixApp(tester, const AkameScreen());
+    await pumpYazzokiApp(tester, const AkameScreen());
 
     await tester.enterText(find.byType(TextField), 'Oi Akame');
     await tester.testTextInput.receiveAction(TextInputAction.send);

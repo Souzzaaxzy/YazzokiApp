@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/models/friend_request.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/models/friend_request.dart';
 
 import '../helpers/fake_repositories.dart';
 

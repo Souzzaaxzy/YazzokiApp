@@ -5,7 +5,7 @@ import '../../app/theme/app_dimensions.dart';
 
 /// A container that adds a soft neon glow via [BoxShadow].
 ///
-/// Glow intensity follows the MATRIX spec and should be reserved for
+/// Glow intensity follows the Yazzoki spec and should be reserved for
 /// important elements only.
 class GlowContainer extends StatelessWidget {
   const GlowContainer({

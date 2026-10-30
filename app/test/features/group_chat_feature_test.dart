@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/widgets/user_avatar.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/chat_screen.dart';
-import 'package:matrix_app/features/chat/group_conversation_screen.dart';
-import 'package:matrix_app/features/chat/group_members_screen.dart';
-import 'package:matrix_app/features/chat/group_profile_screen.dart';
-import 'package:matrix_app/features/profile/profile_screen.dart';
-import 'package:matrix_app/models/conversation.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/widgets/user_avatar.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/chat_screen.dart';
+import 'package:yazzoki/features/chat/group_conversation_screen.dart';
+import 'package:yazzoki/features/chat/group_members_screen.dart';
+import 'package:yazzoki/features/chat/group_profile_screen.dart';
+import 'package:yazzoki/features/profile/profile_screen.dart';
+import 'package:yazzoki/models/conversation.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -16,7 +16,7 @@ import '../helpers/test_app.dart';
 /// Seeds a group owned by u0 (leonardo) with a fixed id e some messages.
 Future<AppState> seededGroup({
   List<String> messages = const [],
-  String? groupName = 'Equipe MATRIX',
+  String? groupName = 'Equipe Yazzoki',
   String? avatarUrl,
   int memberCount = 3,
   int onlineCount = 0,
@@ -30,7 +30,7 @@ Future<AppState> seededGroup({
     id: id,
     group: GroupHeader(
       id: id,
-      name: groupName ?? 'Equipe MATRIX',
+      name: groupName ?? 'Equipe Yazzoki',
       avatarUrl: avatarUrl,
       description: 'Grupo de testes',
       createdById: 'u0',
@@ -83,7 +83,7 @@ void main() {
         'group photo appears in the Chat list, in the conversation and in the profile',
         (tester) async {
       final state = await seededGroup(avatarUrl: '/static/g1.png');
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const ChatScreen(),
         state: state,
@@ -93,7 +93,7 @@ void main() {
       // The group tile uses the real photo (UserAvatar with imageUrl), below
       // the friends/conversas sections — scroll until it is visible..
       await tester.scrollUntilVisible(
-        find.text('Equipe MATRIX'),
+        find.text('Equipe Yazzoki'),
         200,
         scrollable: find.byType(Scrollable).first,
       );
@@ -101,7 +101,7 @@ void main() {
       expect(find.byType(UserAvatar), findsWidgets);
 
       // Opens the group conversation → the header shows the same photo block.
-      await tester.tap(find.text('Equipe MATRIX'));
+      await tester.tap(find.text('Equipe Yazzoki'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
@@ -109,7 +109,7 @@ void main() {
       expect(find.byType(UserAvatar), findsWidgets);
 
       // Opens the group profile from the header → the photo shows there too.
-      await tester.tap(find.text('Equipe MATRIX').first);
+      await tester.tap(find.text('Equipe Yazzoki').first);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pumpAndSettle();
@@ -122,15 +122,15 @@ void main() {
     testWidgets('shows back arrow, group photo,name and member count',
         (tester) async {
       final state = await seededGroup(avatarUrl: '/static/g1.png', onlineCount: 2);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
-        _groupScreen('g1', 'Equipe MATRIX', '/static/g1.png'),
+        _groupScreen('g1', 'Equipe Yazzoki', '/static/g1.png'),
         state: state,
       );
       await tester.pumpAndSettle();
 
       expect(find.byType(BackButton), findsOneWidget);
-      expect(find.text('Equipe MATRIX'), findsOneWidget);
+      expect(find.text('Equipe Yazzoki'), findsOneWidget);
       // O cabeçalho do grupo mostra quantos estão ONLINE agora (não o total
       // de membros): o número vem do servidor.
       expect(find.textContaining('2 usuários online'), findsOneWidget);
@@ -140,7 +140,7 @@ void main() {
     testWidgets('long group name truncates without overflow', (tester) async {
       final longName = 'G' * 60;
       final state = await seededGroup(groupName: longName);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         _groupScreen('g1', longName, null),
         state: state,
@@ -153,7 +153,7 @@ void main() {
     testWidgets('typing indicator shows single user and hides on stop',
         (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(tester, _groupScreen('g1', 'Equipe MATRIX', null),
+      await pumpYazzokiApp(tester, _groupScreen('g1', 'Equipe Yazzoki', null),
           state: state);
       await tester.pumpAndSettle();
 
@@ -181,7 +181,7 @@ void main() {
 
     testWidgets('recording indicator shows single user', (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(tester, _groupScreen('g1', 'Equipe MATRIX', null),
+      await pumpYazzokiApp(tester, _groupScreen('g1', 'Equipe Yazzoki', null),
           state: state);
       await tester.pumpAndSettle();
 
@@ -209,7 +209,7 @@ void main() {
 
     testWidgets('multiple typing users show the plural label', (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(tester, _groupScreen('g1', 'Equipe MATRIX', null),
+      await pumpYazzokiApp(tester, _groupScreen('g1', 'Equipe Yazzoki', null),
           state: state);
       await tester.pumpAndSettle();
 
@@ -239,7 +239,7 @@ void main() {
         (i) => i.isEven ? 'minha $i' : 'dela $i',
       );
       final state = await seededGroup(messages: messages);
-      await pumpMatrixApp(tester, _groupScreen('g1', 'Equipe MATRIX', null),
+      await pumpYazzokiApp(tester, _groupScreen('g1', 'Equipe Yazzoki', null),
           state: state);
       await tester.pumpAndSettle();
       await tester.pump(const Duration(milliseconds: 50));
@@ -275,12 +275,12 @@ void main() {
         'participant tap opens the mini menu, then Ver perfil opens the profile',
         (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         GroupProfileScreen(
           args: const GroupProfileRouteArgs(
             groupId: 'g1',
-            initialName: 'Equipe MATRIX',
+            initialName: 'Equipe Yazzoki',
             initialAvatarUrl: null,
             initialDescription: 'Grupo de testes',
             initialOwnerId: 'u0',
@@ -320,12 +320,12 @@ void main() {
 
     testWidgets('members do not show "@" prefix', (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         GroupProfileScreen(
           args: const GroupProfileRouteArgs(
             groupId: 'g1',
-            initialName: 'Equipe MATRIX',
+            initialName: 'Equipe Yazzoki',
             initialAvatarUrl: null,
             initialDescription: 'Grupo de testes',
             initialOwnerId: 'u0',
@@ -351,9 +351,9 @@ void main() {
     testWidgets('tapping the sender nickname opens the REAL sender profile',
         (tester) async {
       final state = await seededGroup(messages: const ['bom dia', 'ola!']);
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
-        _groupScreen('g1', 'Equipe MATRIX', null),
+        _groupScreen('g1', 'Equipe Yazzoki', null),
         state: state,
       );
       await tester.pumpAndSettle();
@@ -374,12 +374,12 @@ void main() {
     testWidgets('owner sees pencil and can open the mini edit menu',
         (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         GroupProfileScreen(
           args: const GroupProfileRouteArgs(
             groupId: 'g1',
-            initialName: 'Equipe MATRIX',
+            initialName: 'Equipe Yazzoki',
             initialAvatarUrl: null,
             initialDescription: 'Grupo de testes',
             initialOwnerId: 'u0',
@@ -411,12 +411,12 @@ void main() {
 
     testWidgets('non-owner does not see the edit pencil', (tester) async {
       final state = await seededGroup(sessionUserId: 'u2');
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         GroupProfileScreen(
           args: const GroupProfileRouteArgs(
             groupId: 'g1',
-            initialName: 'Equipe MATRIX',
+            initialName: 'Equipe Yazzoki',
             initialAvatarUrl: null,
             initialDescription: 'Grupo de testes',
             initialOwnerId: 'u9',
@@ -435,12 +435,12 @@ void main() {
     testWidgets('owner sees the ADICIONAR MEMBRO button in the members list',
         (tester) async {
       final state = await seededGroup();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         GroupMembersScreen(
           args: const GroupMembersRouteArgs(
             groupId: 'g1',
-            groupName: 'Equipe MATRIX',
+            groupName: 'Equipe Yazzoki',
             ownerId: 'u0',
           ),
         ),

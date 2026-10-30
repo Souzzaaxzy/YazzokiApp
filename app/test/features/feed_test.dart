@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/features/feed/feed_screen.dart';
+import 'package:yazzoki/features/feed/feed_screen.dart';
 
 import '../helpers/test_app.dart';
 
 void main() {
   testWidgets('renders the feed header and online indicator', (tester) async {
-    await pumpMatrixApp(tester, const FeedScreen());
+    await pumpYazzokiApp(tester, const FeedScreen());
 
-    expect(find.text('MATRIX'), findsOneWidget);
+    expect(find.text('Yazzoki'), findsOneWidget);
     expect(find.text('ONLINE'), findsOneWidget);
   });
 
   testWidgets('renders posts and allows scrolling', (tester) async {
-    await pumpMatrixApp(tester, const FeedScreen());
+    await pumpYazzokiApp(tester, const FeedScreen());
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.favorite_border_rounded), findsWidgets);
@@ -26,7 +26,7 @@ void main() {
   testWidgets('tapping the like heart toggles like state and count',
       (tester) async {
     final state = await seededAppState();
-    await pumpMatrixApp(tester, const FeedScreen(), state: state);
+    await pumpYazzokiApp(tester, const FeedScreen(), state: state);
     await tester.pumpAndSettle();
 
     final initialLikes = state.posts.first.likes;
@@ -40,7 +40,7 @@ void main() {
 
   testWidgets('opens the comments sheet and adds a comment', (tester) async {
     final state = await seededAppState();
-    await pumpMatrixApp(tester, const FeedScreen(), state: state);
+    await pumpYazzokiApp(tester, const FeedScreen(), state: state);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.chat_bubble_outline_rounded).first);

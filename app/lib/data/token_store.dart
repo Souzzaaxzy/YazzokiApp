@@ -11,8 +11,8 @@ class TokenStore {
 
   final FlutterSecureStorage _storage;
 
-  static const _keyAccess = 'matrix.access_token';
-  static const _keyRefresh = 'matrix.refresh_token';
+  static const _keyAccess = 'yazzoki.access_token';
+  static const _keyRefresh = 'yazzoki.refresh_token';
 
   Future<String?> get accessToken => _storage.read(key: _keyAccess);
   Future<String?> get refreshToken => _storage.read(key: _keyRefresh);

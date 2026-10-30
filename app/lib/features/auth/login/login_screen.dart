@@ -9,8 +9,9 @@ import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_state_scope.dart';
 import '../../../core/widgets/glow_container.dart';
 import '../../../core/widgets/hud_label.dart';
-import '../../../core/widgets/matrix_button.dart';
-import '../../../core/widgets/matrix_text_field.dart';
+import '../../../core/widgets/yazzoki_button.dart';
+import '../../../core/widgets/yazzoki_logo.dart';
+import '../../../core/widgets/yazzoki_text_field.dart';
 import '../../../data/api_config.dart';
 
 /// Login screen. The flow is simulated in Phase 1 (no real auth).
@@ -86,14 +87,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         horizontal: AppDimensions.spaceXl,
                         vertical: AppDimensions.spaceLg,
                       ),
-                      child: Text('MATRIX', style: AppTextStyles.display),
+                      child: const YazzokiLogo(height: 84),
                     ),
                   ),
                 ),
                 const SizedBox(height: AppDimensions.spaceSm),
                 FadeSlideTransition(
                   delay: const Duration(milliseconds: 150),
-                  child: const Center(child: HudLabel(text: 'ACCESS NETWORK', dot: true)),
+                  child: const Center(child: HudLabel(text: 'ENTRAR NA REDE', dot: true)),
                 ),
                 const SizedBox(height: AppDimensions.spaceXxl),
                 if (_error != null)
@@ -106,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 FadeSlideTransition(
                   delay: const Duration(milliseconds: 250),
-                  child: MatrixTextField(
+                  child: YazzokiTextField(
                     label: 'Nickname ou #id',
                     hint: 'user ou #00000001',
                     controller: _nicknameController,
@@ -120,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: AppDimensions.spaceLg),
                 FadeSlideTransition(
                   delay: const Duration(milliseconds: 320),
-                  child: MatrixTextField(
+                  child: YazzokiTextField(
                     label: 'Senha',
                     hint: '••••••••',
                     controller: _passwordController,
@@ -162,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: AppDimensions.spaceLg),
                 FadeSlideTransition(
                   delay: const Duration(milliseconds: 400),
-                  child: MatrixButton(
+                  child: YazzokiButton(
                     label: 'Entrar',
                     expanded: true,
                     isLoading: _loading,

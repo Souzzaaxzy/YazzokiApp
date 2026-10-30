@@ -128,7 +128,7 @@ class SharedStickerBatch {
 /// ACTION_SEND_MULTIPLE / ACTION_VIEW).
 ///
 /// Recibe los lotes preparados por `MainActivity` (MethodChannel
-/// `matrix.share/stickers`) y los expone para la UI. Dos caminos:
+/// `yazzoki.share/stickers`) y los expone para la UI. Dos caminos:
 ///  * app recién abierto por el share → consulta [initialBatch] (el nativo
 ///    conserva el contenido hasta que el Flutter lo pida);
 ///  * app ya abierto → el stream [onBatches] recibe el push del `onNewIntent`.
@@ -137,7 +137,7 @@ class ShareStickerService {
 
   static final ShareStickerService instance = ShareStickerService._();
 
-  static const MethodChannel _channel = MethodChannel('matrix.share/stickers');
+  static const MethodChannel _channel = MethodChannel('yazzoki.share/stickers');
 
   /// Evento emitido cuando Android entrega un nuevo lote compartido mientras
   /// el app está en ejecución.

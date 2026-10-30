@@ -6,7 +6,7 @@ import '../../models/story.dart';
 /// Story (24h ephemeral media) repository — the data layer for the feed
 /// header's Stories strip.
 ///
-/// Talks ONLY to the existing MATRIX API (same auth/storage stack the feed
+/// Talks ONLY to the existing Yazzoki API (same auth/storage stack the feed
 /// uses): stories reference media already uploaded through the standard
 /// `/api/uploads` endpoints, so no second media pipeline exists.
 class StoryRepository {

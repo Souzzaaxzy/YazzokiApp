@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/group_conversation_screen.dart';
-import 'package:matrix_app/features/chat/group_members_screen.dart';
-import 'package:matrix_app/features/chat/group_profile_screen.dart';
-import 'package:matrix_app/models/conversation.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/group_conversation_screen.dart';
+import 'package:yazzoki/features/chat/group_members_screen.dart';
+import 'package:yazzoki/features/chat/group_profile_screen.dart';
+import 'package:yazzoki/models/conversation.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -15,7 +15,7 @@ import '../helpers/test_app.dart';
 /// [sessionUserId] when provided (defaults to the FakeStore's 'u0').
 Future<AppState> seededGroup({
   List<String> messages = const [],
-  String groupName = 'Equipe MATRIX',
+  String groupName = 'Equipe Yazzoki',
   Set<String> memberIds = const {'u0', 'u2'},
   String ownerId = 'u0',
   String? sessionUserId,
@@ -66,7 +66,7 @@ Future<AppState> seededGroup({
 Widget groupScreen() => const GroupConversationScreen(
       args: GroupConversationRouteArgs(
         groupId: 'g1',
-        groupName: 'Equipe MATRIX',
+        groupName: 'Equipe Yazzoki',
         groupAvatarUrl: null,
       ),
     );
@@ -74,7 +74,7 @@ Widget groupScreen() => const GroupConversationScreen(
 Widget profileScreen() => const GroupProfileScreen(
       args: GroupProfileRouteArgs(
         groupId: 'g1',
-        initialName: 'Equipe MATRIX',
+        initialName: 'Equipe Yazzoki',
         initialAvatarUrl: null,
         initialDescription: 'Grupo de testes',
         initialOwnerId: 'u0',
@@ -88,7 +88,7 @@ void main() {
         'deslizar esquerda→direita na mensagem de OUTRO user ativa responder',
         (tester) async {
       final state = await seededGroup(messages: ['Oi!', 'Bora!']);
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       // "Bora!" is joao's (u2) message — swipe it left→right (+140 dx).
@@ -102,7 +102,7 @@ void main() {
     testWidgets('deslizar direita→esquerda na PRÓPRIA mensagem ativa responder',
         (tester) async {
       final state = await seededGroup(messages: ['Eu', 'Deles']);
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       // "Eu" is the session user's message — swipe right→left (-140 dx).
@@ -116,7 +116,7 @@ void main() {
     testWidgets('cancelar o reply via ✕ limpa o preview do grupo',
         (tester) async {
       final state = await seededGroup(messages: ['Oi!', 'Bora!']);
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       await tester.drag(find.text('Bora!'), const Offset(140, 0),
@@ -135,7 +135,7 @@ void main() {
         (tester) async {
       // Session user IS the owner → menu shows the destructive option.
       final ownerState = await seededGroup(ownerId: 'u0');
-      await pumpMatrixApp(tester, profileScreen(), state: ownerState);
+      await pumpYazzokiApp(tester, profileScreen(), state: ownerState);
       await tester.pumpAndSettle();
 
       await tester.tap(find.byIcon(Icons.edit_rounded));
@@ -145,7 +145,7 @@ void main() {
 
     testWidgets('confirmar exclui o grupo e sai da tela', (tester) async {
       final state = await seededGroup(ownerId: 'u0');
-      await pumpMatrixApp(tester, profileScreen(), state: state);
+      await pumpYazzokiApp(tester, profileScreen(), state: state);
       await tester.pumpAndSettle();
 
       await tester.tap(find.byIcon(Icons.edit_rounded));
@@ -169,12 +169,12 @@ void main() {
     testWidgets('membro ativo vê "Sair do grupo" no mini menu', (tester) async {
       // Session user is joao (u2), a MEMBER (owner = u0) → can leave.
       final state = await seededGroup(sessionUserId: 'u2');
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const GroupMembersScreen(
           args: GroupMembersRouteArgs(
             groupId: 'g1',
-            groupName: 'Equipe MATRIX',
+            groupName: 'Equipe Yazzoki',
             ownerId: 'u0',
           ),
         ),
@@ -192,12 +192,12 @@ void main() {
 
     testWidgets('dono não vê "Sair do grupo" no mini menu', (tester) async {
       final state = await seededGroup(ownerId: 'u0'); // session user = owner
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const GroupMembersScreen(
           args: GroupMembersRouteArgs(
             groupId: 'g1',
-            groupName: 'Equipe MATRIX',
+            groupName: 'Equipe Yazzoki',
             ownerId: 'u0',
           ),
         ),
@@ -215,12 +215,12 @@ void main() {
     testWidgets('confirmar sair remove o usuário do grupo e sai da tela',
         (tester) async {
       final state = await seededGroup(sessionUserId: 'u2');
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const GroupMembersScreen(
           args: GroupMembersRouteArgs(
             groupId: 'g1',
-            groupName: 'Equipe MATRIX',
+            groupName: 'Equipe Yazzoki',
             ownerId: 'u0',
           ),
         ),

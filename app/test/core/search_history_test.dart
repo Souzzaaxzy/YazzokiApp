@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/models/matrix_user.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/models/yazzoki_user.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/in_memory_search_history_store.dart';
@@ -19,7 +19,7 @@ void main() {
     });
 
     test('loads the persisted history for the session user', () async {
-      final other = MatrixUser(id: 'u2', nickname: 'joao', avatarSeed: 'joao');
+      final other = YazzokiUser(id: 'u2', nickname: 'joao', avatarSeed: 'joao');
       state.recordProfileVisit(other);
       expect(state.searchHistory, hasLength(1));
       await Future<void>.delayed(Duration.zero);
@@ -27,8 +27,8 @@ void main() {
     });
 
     test('dedupes by user idand moves to the top', () {
-      final a = MatrixUser(id: 'u1', nickname: 'akame', avatarSeed: 'akame');
-      final b = MatrixUser(id: 'u2', nickname: 'joao', avatarSeed: 'joao');
+      final a = YazzokiUser(id: 'u1', nickname: 'akame', avatarSeed: 'akame');
+      final b = YazzokiUser(id: 'u2', nickname: 'joao', avatarSeed: 'joao');
       state.recordProfileVisit(a);
       state.recordProfileVisit(b);
       expect(state.searchHistory.map((e) => e.userId), ['u2', 'u1']);
@@ -40,19 +40,19 @@ void main() {
     });
 
     test('removes a single entry immediately', () {
-      state.recordProfileVisit(MatrixUser(id: 'u1', nickname: 'akame'));
-      state.recordProfileVisit(MatrixUser(id: 'u2', nickname: 'joao'));
+      state.recordProfileVisit(YazzokiUser(id: 'u1', nickname: 'akame'));
+      state.recordProfileVisit(YazzokiUser(id: 'u2', nickname: 'joao'));
       state.removeSearchHistory('u1');
       expect(state.searchHistory.map((e) => e.userId), ['u2']);
     });
 
     test('ignores the session user\'s own profile', () {
-      state.recordProfileVisit(MatrixUser(id: 'u0', nickname: 'leonardo'));
+      state.recordProfileVisit(YazzokiUser(id: 'u0', nickname: 'leonardo'));
       expect(state.searchHistory, isEmpty);
     });
 
     test('isolation between users: switching account loads a separate list', () async {
-      state.recordProfileVisit(MatrixUser(id: 'u2', nickname: 'joao'));
+      state.recordProfileVisit(YazzokiUser(id: 'u2', nickname: 'joao'));
       await Future<void>.delayed(Duration.zero);
       expect(store.persisted('u0'), hasLength(1));
 
@@ -65,7 +65,7 @@ void main() {
       expect(second.isAuthenticated, isTrue);
       expect(second.currentUser!.id,'u2');
       expect(second.searchHistory, isEmpty);
-      second.recordProfileVisit(MatrixUser(id: 'u1', nickname: 'akame'));
+      second.recordProfileVisit(YazzokiUser(id: 'u1', nickname: 'akame'));
       await Future<void>.delayed(Duration.zero);
 
       // Both persist isolated per user id: u0 kept its entry; u2 got the new one.
@@ -75,7 +75,7 @@ void main() {
     });
 
     test('logout clears the session history and the persisted store', () async {
-      state.recordProfileVisit(MatrixUser(id: 'u2', nickname: 'joao'));
+      state.recordProfileVisit(YazzokiUser(id: 'u2', nickname: 'joao'));
       await state.logout();
       await Future<void>.delayed(Duration.zero);
       expect(state.searchHistory, isEmpty);

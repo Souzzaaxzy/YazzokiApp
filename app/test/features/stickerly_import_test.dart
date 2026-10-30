@@ -1,14 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/conversation_screen.dart';
-import 'package:matrix_app/features/chat/sticker_picker.dart';
-import 'package:matrix_app/features/chat/stickerly_import_sheet.dart';
-import 'package:matrix_app/core/widgets/puzzle_icon.dart';
-import 'package:matrix_app/features/chat/sticker_panel.dart';
-import 'package:matrix_app/models/sticker.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/conversation_screen.dart';
+import 'package:yazzoki/features/chat/sticker_picker.dart';
+import 'package:yazzoki/features/chat/stickerly_import_sheet.dart';
+import 'package:yazzoki/core/widgets/puzzle_icon.dart';
+import 'package:yazzoki/features/chat/sticker_panel.dart';
+import 'package:yazzoki/models/sticker.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -20,7 +20,7 @@ Future<AppState> seededState() async {
     name: 'Pack',
     slug: 'pack',
     description: '',
-    author: 'MATRIX',
+    author: 'Yazzoki',
     iconUrl: 'http://x/pack.png',
     installed: true,
     stickerCount: 1,
@@ -86,7 +86,7 @@ void main() {
       addTearDown(tester.view.reset);
 
       final state = await seededState();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Scaffold(
           body: StickerPicker(state: state, onPick: (_) {}),
@@ -112,7 +112,7 @@ void main() {
         name: 'Pack',
         slug: 'pack',
         description: '',
-        author: 'MATRIX',
+        author: 'Yazzoki',
         iconUrl: 'http://x/pack.png',
         installed: true,
         stickerCount: 1,
@@ -129,7 +129,7 @@ void main() {
       await state.loadStickerRecents();
 
       String? picked;
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Scaffold(
           body: StickerPicker(state: state, onPick: (s) => picked = s.id),
@@ -150,7 +150,7 @@ void main() {
       addTearDown(tester.view.reset);
 
       final state = await seededState();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Scaffold(
           body: StickerPicker(state: state, onPick: (_) {}),
@@ -169,7 +169,7 @@ void main() {
       addTearDown(tester.view.reset);
 
       final state = await seededState();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Scaffold(
           body: StickerPicker(state: state, onPick: (_) {}),
@@ -189,7 +189,7 @@ void main() {
   group('StickerlyImportSheet — fluxo', () {
     testWidgets('ID inválido/vazio mostra erro em português', (tester) async {
       final state = await seededState();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Scaffold(body: StickerlyImportSheet(state: state)),
         state: state,
@@ -207,7 +207,7 @@ void main() {
     testWidgets('código válido mostra prévia e importa ao confirmar',
         (tester) async {
       final state = await seededState();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Scaffold(body: StickerlyImportSheet(state: state)),
         state: state,
@@ -220,9 +220,9 @@ void main() {
 
       // Prévia: nome do pacote + botão de confirmação.
       expect(find.text('Pacote Sticker.ly'), findsOneWidget);
-      expect(find.text('ADICIONAR AO MATRIX'), findsOneWidget);
+      expect(find.text('ADICIONAR AO YAZZOKI'), findsOneWidget);
 
-      await tester.tap(find.text('ADICIONAR AO MATRIX'));
+      await tester.tap(find.text('ADICIONAR AO YAZZOKI'));
       await tester.pumpAndSettle();
 
       expect(
@@ -282,7 +282,7 @@ void main() {
         name: 'Pack',
         slug: 'pack',
         description: '',
-        author: 'MATRIX',
+        author: 'Yazzoki',
         iconUrl: 'http://x/pack.png',
         installed: true,
         stickerCount: 1,
@@ -295,7 +295,7 @@ void main() {
       await state.loadConversations();
       await state.loadStickers();
 
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const ConversationScreen(
           args: ConversationRouteArgs(
@@ -329,7 +329,7 @@ void main() {
         name: 'Pacote Importado',
         slug: 'importado',
         description: '',
-        author: 'MATRIX',
+        author: 'Yazzoki',
         iconUrl: 'http://x/pack.png',
         installed: true,
         stickerCount: 2,
@@ -375,7 +375,7 @@ void main() {
       addTearDown(tester.view.reset);
 
       final state = await ownedState();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Scaffold(body: StickerPicker(state: state, onPick: (_) {})),
         state: state,
@@ -415,7 +415,7 @@ void main() {
         name: 'Pack',
         slug: 'pack',
         description: '',
-        author: 'MATRIX',
+        author: 'Yazzoki',
         iconUrl: 'http://x/pack.png',
         installed: true,
         stickerCount: 1,
@@ -455,7 +455,7 @@ void main() {
       addTearDown(tester.view.reset);
 
       final state = await favState();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         Scaffold(body: StickerPicker(state: state, onPick: (_) {})),
         state: state,

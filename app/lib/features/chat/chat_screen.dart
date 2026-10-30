@@ -11,11 +11,11 @@ import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/glow_container.dart';
 import '../../core/widgets/hud_label.dart';
-import '../../core/widgets/matrix_card.dart';
-import '../../core/widgets/matrix_text_field.dart';
+import '../../core/widgets/yazzoki_card.dart';
+import '../../core/widgets/yazzoki_text_field.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../models/conversation.dart';
-import '../../models/matrix_user.dart';
+import '../../models/yazzoki_user.dart';
 import '../../core/utils/chat_format.dart';
 import 'chat_navigation.dart';
 
@@ -42,8 +42,8 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _search = TextEditingController();
-  List<MatrixUser> _searchResults = const [];
-  List<MatrixUser> _friends = const [];
+  List<YazzokiUser> _searchResults = const [];
+  List<YazzokiUser> _friends = const [];
   bool _searching = false;
   bool _searched = false;
   StreamSubscription<ChatMessage>? _chatSub;
@@ -116,7 +116,7 @@ class _ChatScreenState extends State<ChatScreen> {
       // valid friendship is ever hidden behind the first batch.
       const pageSize = 50;
       var page = 1;
-      final collected = <MatrixUser>[];
+      final collected = <YazzokiUser>[];
       var total = -1;
       while (page == 1 || collected.length < total) {
         final result =
@@ -221,12 +221,12 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _openSearchResult(MatrixUser user) {
+  void _openSearchResult(YazzokiUser user) {
     if (user.id == _me?.id) return; // never DM yourself
     openChatWithUser(context, user);
   }
 
-  MatrixUser? get _me => AppStateScope.of(context).currentUser;
+  YazzokiUser? get _me => AppStateScope.of(context).currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -265,7 +265,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 AppDimensions.spaceLg,
                 AppDimensions.spaceLg,
               ),
-              child: MatrixTextField(
+              child: YazzokiTextField(
                 hint: 'Pesquisar usuários',
                 controller: _search,
                 prefix: Icon(Icons.search_rounded,
@@ -304,7 +304,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   itemCount: _searchResults.length,
                   itemBuilder: (context, i) {
                     final user = _searchResults[i];
-                    return MatrixCard(
+                    return YazzokiCard(
                       margin: const EdgeInsets.symmetric(
                           vertical: AppDimensions.spaceSm),
                       onTap: () => _openSearchResult(user),
@@ -510,7 +510,7 @@ class _ConversationTile extends StatelessWidget {
         : (conversation.lastMine ? 'Você: ' : '') + last.content;
     final time = last == null ? '' : chatListTime(last.createdAt);
 
-    return MatrixCard(
+    return YazzokiCard(
       margin: const EdgeInsets.symmetric(vertical: AppDimensions.spaceSm),
       onTap: onTap,
       onLongPress: onLongPress,
@@ -680,7 +680,7 @@ class _AkameCard extends StatelessWidget {
 }
 
 /// The floating "+" button that opens group creation. It is anchored in the
-/// bottom-right of the Chat tab, visually consistent with the MATRIX HUD.
+/// bottom-right of the Chat tab, visually consistent with the Yazzoki HUD.
 class _ChatFab extends StatelessWidget {
   const _ChatFab({required this.onTap});
 
@@ -731,7 +731,7 @@ class _ChatFab extends StatelessWidget {
 /// A single GROUP conversation card — mirrors [ _ConversationTile] but renders
 /// the group's identity (photo + name) and the last message (with the real
 /// sender's nickname as the preview prefix, matching the required
-/// "[ FOTO ] Grupo MATRIX / M06: Tudo bem?" layout). Tapping it opens the
+/// "[ FOTO ] Grupo Yazzoki / M06: Tudo bem?" layout). Tapping it opens the
 /// SAME group conversation screen.
 //
 /// Unread badge/state lives in [GroupConversation.unreadCount] — the server
@@ -750,7 +750,7 @@ class _GroupTile extends StatelessWidget {
         : '${group.lastMine ? 'Você: ' : ''}${last.senderNickname != null ? '${last.senderNickname}: ' : ''}${last.content}';
     final time = last == null ? '' : chatListTime(last.createdAt);
 
-    return MatrixCard(
+    return YazzokiCard(
       margin: const EdgeInsets.symmetric(vertical: AppDimensions.spaceSm),
       onTap: onTap,
       child: Row(

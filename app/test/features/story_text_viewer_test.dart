@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/features/feed/story_viewer.dart';
-import 'package:matrix_app/models/story.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/features/feed/story_viewer.dart';
+import 'package:yazzoki/models/story.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -45,7 +45,7 @@ Future<void> openViewer(WidgetTester tester, AppState state) async {
   tester.view.devicePixelRatio = 2.0;
   addTearDown(tester.view.reset);
 
-  await pumpMatrixApp(
+  await pumpYazzokiApp(
     tester,
     Builder(
       builder: (ctx) => ElevatedButton(

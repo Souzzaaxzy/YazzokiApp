@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/features/post/post_detail_screen.dart';
-import 'package:matrix_app/features/profile/profile_screen.dart';
+import 'package:yazzoki/features/post/post_detail_screen.dart';
+import 'package:yazzoki/features/profile/profile_screen.dart';
 
 import '../helpers/test_app.dart';
 
@@ -9,7 +9,7 @@ void main() {
   testWidgets('loads the post by id and renders its content', (tester) async {
     final state = await seededAppState();
     final post = state.posts.first;
-    await pumpMatrixApp(tester, PostDetailScreen(postId: post.id), state: state);
+    await pumpYazzokiApp(tester, PostDetailScreen(postId: post.id), state: state);
     await tester.pumpAndSettle();
 
     expect(find.text('PUBLICAÇÃO'), findsOneWidget);
@@ -24,7 +24,7 @@ void main() {
     final state = await seededAppState();
     final post = state.posts.first;
     final initialLikes = post.likes;
-    await pumpMatrixApp(tester, PostDetailScreen(postId: post.id), state: state);
+    await pumpYazzokiApp(tester, PostDetailScreen(postId: post.id), state: state);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.favorite_border_rounded));
@@ -38,7 +38,7 @@ void main() {
 
   testWidgets('back button pops the detail screen', (tester) async {
     final state = await seededAppState();
-    await pumpMatrixApp(
+    await pumpYazzokiApp(
       tester,
       PostDetailScreen(postId: state.posts.first.id),
       state: state,
@@ -54,7 +54,7 @@ void main() {
   testWidgets('profile grid tile opens the post detail', (tester) async {
     final state = await seededAppState();
     await state.loadProfile(state.currentUser!.nickname);
-    await pumpMatrixApp(tester, const ProfileScreen(), state: state);
+    await pumpYazzokiApp(tester, const ProfileScreen(), state: state);
     await tester.pumpAndSettle();
 
     // The fake store seeds one post authored by leonardo — tap its tile.
@@ -82,7 +82,7 @@ void main() {
       expect(post.liked, isFalse);
       expect(post.likes, greaterThan(0)); // counter must NOT imply a like
 
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
           tester, const PostDetailScreen(postId: 'p2'), state: state);
       await tester.pumpAndSettle();
 
@@ -93,7 +93,7 @@ void main() {
     testWidgets('like → filled; reopen → still filled; unlike → empty',
         (tester) async {
       final state = await seededAppState();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
           tester, const PostDetailScreen(postId: 'p2'), state: state);
       await tester.pumpAndSettle();
 
@@ -103,7 +103,7 @@ void main() {
 
       // Close and reopen: the state comes from the (fake) server store.
       await tester.pumpWidget(const SizedBox());
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
           tester, const PostDetailScreen(postId: 'p2'), state: state);
       await tester.pumpAndSettle();
       expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
@@ -117,7 +117,7 @@ void main() {
         (tester) async {
       final state = await seededAppState();
       await state.loadProfile('joao');
-      await pumpMatrixApp(tester, const ProfileScreen(nickname: 'joao'),
+      await pumpYazzokiApp(tester, const ProfileScreen(nickname: 'joao'),
           state: state);
       await tester.pumpAndSettle();
 
@@ -140,7 +140,7 @@ void main() {
     testWidgets('author sees the menu and can delete after confirmation',
         (tester) async {
       final state = await seededAppState();
-      await pumpMatrixApp(tester, const PostDetailScreen(postId: 'p1'),
+      await pumpYazzokiApp(tester, const PostDetailScreen(postId: 'p1'),
           state: state);
       await tester.pumpAndSettle();
 
@@ -161,7 +161,7 @@ void main() {
 
     testWidgets('cancelling keeps the post', (tester) async {
       final state = await seededAppState();
-      await pumpMatrixApp(tester, const PostDetailScreen(postId: 'p1'),
+      await pumpYazzokiApp(tester, const PostDetailScreen(postId: 'p1'),
           state: state);
       await tester.pumpAndSettle();
 
@@ -178,7 +178,7 @@ void main() {
 
     testWidgets('menu is hidden for posts by other users', (tester) async {
       final state = await seededAppState();
-      await pumpMatrixApp(tester, const PostDetailScreen(postId: 'p2'),
+      await pumpYazzokiApp(tester, const PostDetailScreen(postId: 'p2'),
           state: state);
       await tester.pumpAndSettle();
 

@@ -4,23 +4,24 @@ import '../../core/services/theme_controller.dart';
 
 /// Resolves which palette is ACTIVE for a given preference + platform
 /// brightness. Pure function so the resolution rule is unit-testable.
-MatrixPalette effectivePalette(MatrixThemeMode mode, Brightness platform) {
+YazzokiPalette effectivePalette(YazzokiThemeMode mode, Brightness platform) {
   return switch (mode) {
-    MatrixThemeMode.dark => MatrixPalette.dark,
-    MatrixThemeMode.light => MatrixPalette.light,
-    MatrixThemeMode.system =>
-      platform == Brightness.dark ? MatrixPalette.dark : MatrixPalette.light,
+    YazzokiThemeMode.dark => YazzokiPalette.dark,
+    YazzokiThemeMode.light => YazzokiPalette.light,
+    YazzokiThemeMode.system =>
+      platform == Brightness.dark ? YazzokiPalette.dark : YazzokiPalette.light,
   };
 }
 
-/// Per-theme color tokens for the mood-dependent part of the MATRIX
-/// identity (brand blues are shared and stay in [AppColors]).
+/// Per-theme color tokens for the mood-dependent part of the Yazzoki
+/// identity (brand accents are shared and stay in [AppColors]).
 ///
-/// `dark` is the original cyberpunk MATRIX look; `light` is a designed
-/// light variant — white surfaces, dark text and the same blue accent,
+/// `dark` is the classic look: ink-black night paper, off-white ink text and
+/// a cold ice-blue accent. `light` is the day variant — warm off-white
+/// (washi) paper, ink-black text, beige borders and the same ice-blue accent,
 /// with borders/shadows tuned for a bright background (not an inversion).
-class MatrixPalette {
-  const MatrixPalette({
+class YazzokiPalette {
+  const YazzokiPalette({
     required this.scaffold,
     required this.surface,
     required this.surfaceDeep,
@@ -39,28 +40,28 @@ class MatrixPalette {
   final Color textMuted;
   final Color navBar;
 
-  /// Alpha of the neon glow emphasis: strong on dark, subtle on light.
+  /// Alpha of the glow emphasis: strong on dark, subtle on light.
   final double glowAlpha;
 
-  static const dark = MatrixPalette(
-    scaffold: Color(0xFF000000),
-    surface: Color(0xFF050914),
-    surfaceDeep: Color(0xFF00142E),
-    border: Color(0xFF003B8F),
-    text: Color(0xFFEAF4FF),
-    textMuted: Color(0xFF6EB6FF),
-    navBar: Color(0xF2000512),
+  static const dark = YazzokiPalette(
+    scaffold: Color(0xFF12100C),
+    surface: Color(0xFF1B1813),
+    surfaceDeep: Color(0xFF241F18),
+    border: Color(0xFF3A3226),
+    text: Color(0xFFF4EFE6),
+    textMuted: Color(0xFFC9B48C),
+    navBar: Color(0xF21B1813),
     glowAlpha: 1.0,
   );
 
-  static const light = MatrixPalette(
-    scaffold: Color(0xFFF4F7FC),
+  static const light = YazzokiPalette(
+    scaffold: Color(0xFFF5F1E8),
     surface: Color(0xFFFFFFFF),
-    surfaceDeep: Color(0xFFE3EDFA),
-    border: Color(0xFFB9CCE8),
-    text: Color(0xFF0B1524),
-    textMuted: Color(0xFF3A4F6B),
+    surfaceDeep: Color(0xFFEAE3D5),
+    border: Color(0xFFD8C6A6),
+    text: Color(0xFF14120E),
+    textMuted: Color(0xFF6B6152),
     navBar: Color(0xF2FFFFFF),
-    glowAlpha: 0.25,
+    glowAlpha: 0.2,
   );
 }

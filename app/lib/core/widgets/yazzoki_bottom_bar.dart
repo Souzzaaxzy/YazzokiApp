@@ -6,8 +6,8 @@ import '../../app/theme/app_text_styles.dart';
 import 'glow_container.dart';
 
 /// Destination model for the bottom navigation bar.
-class MatrixNavDestination {
-  const MatrixNavDestination({
+class YazzokiNavDestination {
+  const YazzokiNavDestination({
     required this.icon,
     required this.activeIcon,
     required this.label,
@@ -25,8 +25,8 @@ class MatrixNavDestination {
 /// Persistent futuristic bottom navigation bar.
 ///
 /// Highlights the active item with neon blue and a glow.
-class MatrixBottomBar extends StatelessWidget {
-  const MatrixBottomBar({
+class YazzokiBottomBar extends StatelessWidget {
+  const YazzokiBottomBar({
     super.key,
     required this.currentIndex,
     required this.destinations,
@@ -34,7 +34,7 @@ class MatrixBottomBar extends StatelessWidget {
   });
 
   final int currentIndex;
-  final List<MatrixNavDestination> destinations;
+  final List<YazzokiNavDestination> destinations;
   final ValueChanged<int> onTap;
 
   @override
@@ -80,7 +80,7 @@ class _NavButton extends StatelessWidget {
     required this.onTap,
   });
 
-  final MatrixNavDestination destination;
+  final YazzokiNavDestination destination;
   final bool active;
   final VoidCallback onTap;
 

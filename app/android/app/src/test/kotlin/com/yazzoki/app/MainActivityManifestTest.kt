@@ -1,4 +1,4 @@
-package com.matrix.matrix_app
+package com.yazzoki.app
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -8,7 +8,7 @@ import java.io.File
 /**
  * Guarda de regressão do compartilhamento com UMA única instância.
  *
- * O bug relatado ("cada share abre um MATRIX novo") vinha da configuração da
+ * O bug relatado ("cada share abre um Yazzoki novo") vinha da configuração da
  * Activity no manifesto. Este teste lê o `AndroidManifest.xml` real e falha
  * se alguém reintroduzir a configuração quebrada — sem precisar de emulador.
  *

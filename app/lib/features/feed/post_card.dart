@@ -9,7 +9,7 @@ import '../../core/utils/profile_navigation.dart';
 import '../../data/api_config.dart';
 import '../../models/post.dart';
 import '../../core/widgets/app_state_scope.dart';
-import '../../core/widgets/matrix_card.dart';
+import '../../core/widgets/yazzoki_card.dart';
 import '../../core/widgets/user_avatar.dart';
 import 'post_video_preview.dart';
 import 'responsive_post_image.dart';
@@ -98,7 +98,7 @@ class _PostCardState extends State<PostCard>
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
-    return MatrixCard(
+    return YazzokiCard(
       margin: const EdgeInsets.symmetric(
         horizontal: AppDimensions.spaceLg,
         vertical: AppDimensions.spaceSm,

@@ -6,7 +6,7 @@ import '../../app/theme/app_text_styles.dart';
 /// Online/offline status of a user, as reported by the SERVER.
 ///
 /// The state is never guessed locally: the backend owns the live sockets, so
-/// a user counts as online only while MATRIX is actually open in front of
+/// a user counts as online only while Yazzoki is actually open in front of
 /// them. Leaving the app flips them offline.
 ///
 /// Two presentations, one source of truth:

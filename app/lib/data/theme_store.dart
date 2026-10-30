@@ -16,18 +16,18 @@ class ThemeStore {
 
   final FlutterSecureStorage _storage;
 
-  static const _keyTheme = 'matrix.theme_mode';
+  static const _keyTheme = 'yazzoki.theme_mode';
 
   /// Reads the saved mode. Unknown/absent values fall back to `dark` (the
-  /// classic MATRIX look).
-  Future<MatrixThemeMode> read() async {
+  /// classic Yazzoki look).
+  Future<YazzokiThemeMode> read() async {
     final raw = await _storage.read(key: _keyTheme);
-    for (final mode in MatrixThemeMode.values) {
+    for (final mode in YazzokiThemeMode.values) {
       if (mode.name == raw) return mode;
     }
-    return MatrixThemeMode.dark;
+    return YazzokiThemeMode.dark;
   }
 
-  Future<void> write(MatrixThemeMode mode) =>
+  Future<void> write(YazzokiThemeMode mode) =>
       _storage.write(key: _keyTheme, value: mode.name);
 }

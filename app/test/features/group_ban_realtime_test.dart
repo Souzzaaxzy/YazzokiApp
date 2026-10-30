@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/app/theme/app_theme.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/widgets/app_state_scope.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/conversation_screen.dart';
-import 'package:matrix_app/features/chat/group_conversation_screen.dart';
-import 'package:matrix_app/models/conversation.dart';
+import 'package:yazzoki/app/theme/app_theme.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/widgets/app_state_scope.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/conversation_screen.dart';
+import 'package:yazzoki/features/chat/group_conversation_screen.dart';
+import 'package:yazzoki/models/conversation.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -40,7 +40,7 @@ Future<AppState> seededGroupForBan() async {
     id: id,
     group: const GroupHeader(
       id: id,
-      name: 'Equipe MATRIX',
+      name: 'Equipe Yazzoki',
       avatarUrl: null,
       description: 'Grupo de testes',
       createdById: 'u0',
@@ -86,7 +86,7 @@ Widget _groupScreen(String groupId) {
   return GroupConversationScreen(
     args: GroupConversationRouteArgs(
       groupId: groupId,
-      groupName: 'Equipe MATRIX',
+      groupName: 'Equipe Yazzoki',
       groupAvatarUrl: null,
     ),
   );
@@ -103,7 +103,7 @@ void main() {
 
       // Server bans the session user (frame arrives from push_service).
       state.handleIncomingGroupBanned(
-        const GroupBannedEvent(groupId: 'g1', groupName: 'Equipe MATRIX'),
+        const GroupBannedEvent(groupId: 'g1', groupName: 'Equipe Yazzoki'),
       );
       await tester.pumpAndSettle();
 
@@ -135,7 +135,7 @@ void main() {
       expect(find.byType(GroupConversationScreen), findsOneWidget);
 
       state.handleIncomingGroupDeleted(
-        const GroupDeletedEvent(groupId: 'g1', groupName: 'Equipe MATRIX'),
+        const GroupDeletedEvent(groupId: 'g1', groupName: 'Equipe Yazzoki'),
       );
       await tester.pumpAndSettle();
 
@@ -148,9 +148,9 @@ void main() {
       expect(state.groups.where((g) => g.id == 'g1'), hasLength(1));
 
       state.handleIncomingGroupDeleted(
-        const GroupDeletedEvent(groupId: 'g1', groupName: 'Equipe MATRIX'),
+        const GroupDeletedEvent(groupId: 'g1', groupName: 'Equipe Yazzoki'),
       );
-      await pumpMatrixApp(tester, const SizedBox(), state: state);
+      await pumpYazzokiApp(tester, const SizedBox(), state: state);
       await tester.pumpAndSettle();
 
       expect(state.groups.where((g) => g.id == 'g1'), isEmpty);
@@ -181,7 +181,7 @@ void main() {
       await state.restoreSession();
       await state.loadFeed();
       await state.loadConversations();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         ConversationScreen(
           args: const ConversationRouteArgs(

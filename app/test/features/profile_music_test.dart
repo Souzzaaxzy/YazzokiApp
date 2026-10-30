@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/core/widgets/play_pause_icon.dart';
-import 'package:matrix_app/core/widgets/progress_ring.dart';
-import 'package:matrix_app/core/widgets/range_selector.dart';
-import 'package:matrix_app/core/widgets/user_avatar.dart';
-import 'package:matrix_app/features/profile/music_search_service.dart';
-import 'package:matrix_app/features/profile/profile_music_bar.dart';
-import 'package:matrix_app/features/profile/profile_music_picker.dart';
-import 'package:matrix_app/features/profile/profile_screen.dart';
-import 'package:matrix_app/models/profile_music.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/widgets/play_pause_icon.dart';
+import 'package:yazzoki/core/widgets/progress_ring.dart';
+import 'package:yazzoki/core/widgets/range_selector.dart';
+import 'package:yazzoki/core/widgets/user_avatar.dart';
+import 'package:yazzoki/features/profile/music_search_service.dart';
+import 'package:yazzoki/features/profile/profile_music_bar.dart';
+import 'package:yazzoki/features/profile/profile_music_picker.dart';
+import 'package:yazzoki/features/profile/profile_screen.dart';
+import 'package:yazzoki/models/profile_music.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -23,7 +23,7 @@ Future<void> pumpPickerHost(
   WidgetTester tester,
   void Function(PendingProfileMusic?) onResult,
 ) async {
-  await pumpMatrixApp(
+  await pumpYazzokiApp(
     tester,
     Builder(
       builder: (context) => Scaffold(
@@ -383,7 +383,7 @@ void main() {
         ];
       };
 
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const ProfileMusicPicker(initialQuery: 'queen'),
       );
@@ -399,7 +399,7 @@ void main() {
     testWidgets('an empty result set shows a helpful message, not a crash',
         (tester) async {
       debugMusicSearchOverride = (state, query) async => const [];
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const ProfileMusicPicker(initialQuery: 'nada'),
       );
@@ -417,7 +417,7 @@ void main() {
               durationMs: 300000,
             ),
           ];
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const ProfileMusicPicker(initialQuery: 'song'),
       );
@@ -446,7 +446,7 @@ void main() {
               durationMs: 600000,
             ),
           ];
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const ProfileMusicPicker(initialQuery: 'song'),
       );
@@ -545,7 +545,7 @@ void main() {
     testWidgets('the music bar sits BELOW the #id, above the bio',
         (tester) async {
       // carla is seeded with a pinned song.
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const ProfileScreen(nickname: 'carla'),
       );
@@ -562,7 +562,7 @@ void main() {
 
     testWidgets('the song name appears to the RIGHT of the ⏯️ button',
         (tester) async {
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const ProfileScreen(nickname: 'carla'),
       );
@@ -578,7 +578,7 @@ void main() {
     testWidgets('the progress ring WRAPS the button on the real profile', (tester) async {
       // Trava o pedido: o anel fica EM VOLTA do botão (padrão Instagram),
       // não como uma barra embaixo.
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const ProfileScreen(nickname: 'carla'),
       );
@@ -596,7 +596,7 @@ void main() {
 
     testWidgets('a profile with no music renders no music bar', (tester) async {
       // leonardo has no pinned song.
-      await pumpMatrixApp(tester, const ProfileScreen());
+      await pumpYazzokiApp(tester, const ProfileScreen());
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(ProfileMusicBar), findsNothing);
     });

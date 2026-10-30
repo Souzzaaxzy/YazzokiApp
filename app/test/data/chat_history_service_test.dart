@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/data/local/chat_history_service.dart';
-import 'package:matrix_app/data/local/local_chat_store.dart';
-import 'package:matrix_app/models/conversation.dart';
+import 'package:yazzoki/data/local/chat_history_service.dart';
+import 'package:yazzoki/data/local/local_chat_store.dart';
+import 'package:yazzoki/models/conversation.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 /// A fake server that records what was asked and can be made to fail, so the

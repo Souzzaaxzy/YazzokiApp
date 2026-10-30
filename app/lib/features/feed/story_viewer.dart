@@ -366,7 +366,7 @@ class _StoryViewerState extends State<StoryViewer>
               .copyWith(fontSize: 16, color: AppColors.techWhite),
         ),
         content: Text(
-          'O Story será removido do MATRIX.',
+          'O Story será removido do Yazzoki.',
           style: AppTextStyles.bodyMuted,
         ),
         actions: [

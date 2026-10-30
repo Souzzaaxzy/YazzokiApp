@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:matrix_app/core/services/app_state.dart';
-import 'package:matrix_app/data/dtos/dtos.dart';
-import 'package:matrix_app/features/chat/chat_navigation.dart';
-import 'package:matrix_app/features/chat/conversation_screen.dart';
-import 'package:matrix_app/features/chat/group_conversation_screen.dart';
-import 'package:matrix_app/features/chat/group_members_screen.dart';
-import 'package:matrix_app/models/conversation.dart';
+import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/data/dtos/dtos.dart';
+import 'package:yazzoki/features/chat/chat_navigation.dart';
+import 'package:yazzoki/features/chat/conversation_screen.dart';
+import 'package:yazzoki/features/chat/group_conversation_screen.dart';
+import 'package:yazzoki/features/chat/group_members_screen.dart';
+import 'package:yazzoki/models/conversation.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/test_app.dart';
@@ -25,7 +25,7 @@ Future<AppState> seededGroupState({
     id: id,
     group: const GroupHeader(
       id: id,
-      name: 'Equipe MATRIX',
+      name: 'Equipe Yazzoki',
       avatarUrl: null,
       description: 'Grupo de testes',
       createdById: 'u0',
@@ -64,7 +64,7 @@ Future<AppState> seededGroupState({
 Widget groupScreen() => const GroupConversationScreen(
       args: GroupConversationRouteArgs(
         groupId: 'g1',
-        groupName: 'Equipe MATRIX',
+        groupName: 'Equipe Yazzoki',
         groupAvatarUrl: null,
       ),
     );
@@ -72,7 +72,7 @@ Widget groupScreen() => const GroupConversationScreen(
 Widget membersScreen() => const GroupMembersScreen(
       args: GroupMembersRouteArgs(
         groupId: 'g1',
-        groupName: 'Equipe MATRIX',
+        groupName: 'Equipe Yazzoki',
         ownerId: 'u0',
       ),
     );
@@ -84,7 +84,7 @@ void main() {
       // joao (u2) is CURRENTLY banned — his OLD messages must stay in the
       // history but be labeled "banido(a)". leonardo (u0) is not.
       final state = await seededGroupState(bannedIds: {'u2'});
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       expect(find.text('banido(a)'), findsOneWidget);
@@ -95,7 +95,7 @@ void main() {
     testWidgets('an un-banned sender does not get the banido(a) tag',
         (tester) async {
       final state = await seededGroupState(bannedIds: const {});
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       expect(find.text('banido(a)'), findsNothing);
@@ -105,7 +105,7 @@ void main() {
         'realtime chat_group_updated with bannedUserIds tags the loaded '
         'messages live (no reload)', (tester) async {
       final state = await seededGroupState(bannedIds: const {});
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
       expect(find.text('banido(a)'), findsNothing);
 
@@ -116,7 +116,7 @@ void main() {
         groupId: 'g1',
         group: const GroupHeader(
           id: 'g1',
-          name: 'Equipe MATRIX',
+          name: 'Equipe Yazzoki',
           avatarUrl: null,
           description: '',
           createdById: 'u0',
@@ -132,7 +132,7 @@ void main() {
     testWidgets('realtime unban clears the banido(a) tag live',
         (tester) async {
       final state = await seededGroupState(bannedIds: {'u2'});
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
       expect(find.text('banido(a)'), findsOneWidget);
 
@@ -140,7 +140,7 @@ void main() {
         groupId: 'g1',
         group: const GroupHeader(
           id: 'g1',
-          name: 'Equipe MATRIX',
+          name: 'Equipe Yazzoki',
           avatarUrl: null,
           description: '',
           createdById: 'u0',
@@ -177,7 +177,7 @@ void main() {
       await state.restoreSession();
       await state.loadFeed();
       await state.loadConversations();
-      await pumpMatrixApp(
+      await pumpYazzokiApp(
         tester,
         const ConversationScreen(
           args: ConversationRouteArgs(
@@ -198,7 +198,7 @@ void main() {
     testWidgets('long-press shows Banir usuário fully visible for the owner',
         (tester) async {
       final state = await seededGroupState();
-      await pumpMatrixApp(tester, groupScreen(), state: state);
+      await pumpYazzokiApp(tester, groupScreen(), state: state);
       await tester.pumpAndSettle();
 
       // Long-press joao's message (message from u2, not mine, owner session).
@@ -216,7 +216,7 @@ void main() {
     testWidgets('owner sees the banned section with DESBANIR',
         (tester) async {
       final state = await seededGroupState(bannedIds: {'u2'});
-      await pumpMatrixApp(tester, membersScreen(), state: state);
+      await pumpYazzokiApp(tester, membersScreen(), state: state);
       await tester.pumpAndSettle();
 
       expect(find.text('BANIDOS'), findsOneWidget);
@@ -227,7 +227,7 @@ void main() {
     testWidgets('DESBANIR returns the member to the active list',
         (tester) async {
       final state = await seededGroupState(bannedIds: {'u2'});
-      await pumpMatrixApp(tester, membersScreen(), state: state);
+      await pumpYazzokiApp(tester, membersScreen(), state: state);
       await tester.pumpAndSettle();
       expect(find.text('BANIDOS'), findsOneWidget);
 

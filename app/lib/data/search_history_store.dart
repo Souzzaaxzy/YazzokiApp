@@ -7,7 +7,7 @@ import '../models/search_history_entry.dart';
 /// Persists the per-user search history ("Pesquisas recentes") next to the
 /// auth tokens in the Keystore-backed secure storage.
 ///
-/// Entries are keyed by the SESSION user's id (`matrix.search_history.<userId>`),
+/// Entries are keyed by the SESSION user's id (`yazzoki.search_history.<userId>`),
 /// so each account gets an isolated, private history that survives restarts.
 ///
 /// Kept thin + faked in widget tests with an in-memory implementation —
@@ -21,7 +21,7 @@ class SearchHistoryStore {
 
   final FlutterSecureStorage _storage;
 
-  String _key(String userId) => 'matrix.search_history.$userId';
+  String _key(String userId) => 'yazzoki.search_history.$userId';
 
   Future<List<SearchHistoryEntry>> read(String userId) async {
     try {

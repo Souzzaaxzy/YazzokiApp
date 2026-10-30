@@ -8,8 +8,8 @@ import '../../../core/animations/fade_slide_transition.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_state_scope.dart';
 import '../../../core/widgets/hud_label.dart';
-import '../../../core/widgets/matrix_button.dart';
-import '../../../core/widgets/matrix_text_field.dart';
+import '../../../core/widgets/yazzoki_button.dart';
+import '../../../core/widgets/yazzoki_text_field.dart';
 import '../../../data/api_config.dart';
 
 /// Register screen. Validation is local in Phase 1 (no real auth).
@@ -96,7 +96,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ],
         ),
         actions: [
-          MatrixButton(
+          YazzokiButton(
             label: 'Entendi',
             onPressed: () => Navigator.of(dialogContext).pop(),
           ),
@@ -146,7 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 FadeSlideTransition(
                   delay: const Duration(milliseconds: 120),
-                  child: MatrixTextField(
+                  child: YazzokiTextField(
                     label: 'Nickname',
                     hint: 'user',
                     controller: _nicknameController,
@@ -159,7 +159,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: AppDimensions.spaceLg),
                 FadeSlideTransition(
                   delay: const Duration(milliseconds: 280),
-                  child: MatrixTextField(
+                  child: YazzokiTextField(
                     label: 'Senha',
                     hint: 'Mínimo de 8, com letras e números',
                     controller: _passwordController,
@@ -183,7 +183,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: AppDimensions.spaceLg),
                 FadeSlideTransition(
                   delay: const Duration(milliseconds: 360),
-                  child: MatrixTextField(
+                  child: YazzokiTextField(
                     label: 'Confirmar senha',
                     hint: 'Repita a senha',
                     controller: _confirmController,
@@ -210,7 +210,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: AppDimensions.spaceXxl),
                 FadeSlideTransition(
                   delay: const Duration(milliseconds: 440),
-                  child: MatrixButton(
+                  child: YazzokiButton(
                     label: 'Criar conta',
                     expanded: true,
                     isLoading: _loading,

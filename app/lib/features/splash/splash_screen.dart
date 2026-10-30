@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../app/theme/app_colors.dart';
 import '../../app/routes.dart';
@@ -9,11 +12,11 @@ import '../../core/widgets/app_state_scope.dart';
 /// Splash total duration in ms — the animation HARD cap (spec: max 9s).
 const int splashDurationMs = 8500;
 
-/// Cyberpunk MATRIX splash screen — V2 (cinemática).
+/// Cyberpunk Yazzoki splash screen — V2 (cinemática).
 ///
 /// Fully native (CustomPaint + one AnimationController, no video/assets/deps).
 /// The composition is built in true LAYERS so effects pass literally
-/// behind, BETWEEN, OVER and THROUGH the individual letters of "MATRIX" —
+/// behind, BETWEEN, OVER and THROUGH the individual letters of "Yazzoki" —
 /// there is NO box/panel/card behind the logo:
 ///
 ///   background (deep gradient + vignette + transient grid + far digital rain)
@@ -107,7 +110,7 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.absoluteBlack,
-      body: _MatrixSplashScene(
+      body: _YazzokiSplashScene(
         animation: _controller,
         onReady: _onSceneReady,
       ),
@@ -117,17 +120,17 @@ class _SplashScreenState extends State<SplashScreen>
 
 /// Scene host: owns the persistent particle/burst/label data and steps it
 /// on every animation tick (deterministic seed → stable tests).
-class _MatrixSplashScene extends StatefulWidget {
-  const _MatrixSplashScene({required this.animation, required this.onReady});
+class _YazzokiSplashScene extends StatefulWidget {
+  const _YazzokiSplashScene({required this.animation, required this.onReady});
 
   final Animation<double> animation;
   final VoidCallback onReady;
 
   @override
-  State<_MatrixSplashScene> createState() => _MatrixSplashSceneState();
+  State<_YazzokiSplashScene> createState() => _YazzokiSplashSceneState();
 }
 
-class _MatrixSplashSceneState extends State<_MatrixSplashScene> {
+class _YazzokiSplashSceneState extends State<_YazzokiSplashScene> {
   late final math.Random _rng;
   late final List<_RainColumn> _columns;
   late final List<_Particle> _particles;
@@ -137,6 +140,7 @@ class _MatrixSplashSceneState extends State<_MatrixSplashScene> {
   late final List<_HudMarker> _hud;
   late final List<_Spark> _sparks;
   bool _readySent = false;
+  ui.Image? _logo;
 
   @override
   void initState() {
@@ -150,10 +154,28 @@ class _MatrixSplashSceneState extends State<_MatrixSplashScene> {
     _hud = List.generate(12, (_) => _HudMarker(rng: _rng));
     _sparks = List.generate(10, (_) => _Spark(rng: _rng));
     widget.animation.addListener(_onTick);
+    _loadLogo();
+  }
+
+  /// Loads the Yazzoki emblem once. If decoding fails (or is still pending
+  /// in a test environment) the painter falls back to the drawn wordmark.
+  Future<void> _loadLogo() async {
+    try {
+      final data = await rootBundle.load('assets/brand/logo_paper.png');
+      final completer = Completer<ui.Image>();
+      ui.decodeImageFromList(
+        data.buffer.asUint8List(),
+        completer.complete,
+      );
+      final img = await completer.future;
+      if (mounted) setState(() => _logo = img);
+    } catch (_) {
+      // No image: the painted wordmark keeps the splash usable.
+    }
   }
 
   @override
-  void didUpdateWidget(covariant _MatrixSplashScene oldWidget) {
+  void didUpdateWidget(covariant _YazzokiSplashScene oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.animation != widget.animation) {
       oldWidget.animation.removeListener(_onTick);
@@ -180,7 +202,7 @@ class _MatrixSplashSceneState extends State<_MatrixSplashScene> {
   Widget build(BuildContext context) {
     return RepaintBoundary(
       child: CustomPaint(
-        painter: _MatrixSplashPainter(
+        painter: _YazzokiSplashPainter(
           progress: widget.animation.value,
           columns: _columns,
           particles: _particles,
@@ -189,6 +211,7 @@ class _MatrixSplashSceneState extends State<_MatrixSplashScene> {
           beams: _beams,
           hud: _hud,
           sparks: _sparks,
+          logo: _logo,
         ),
         size: Size.infinite,
       ),
@@ -359,8 +382,8 @@ Color _accentColor(int index, double alpha) {
 /// background → far rain → back particles → beams → network → HUD (behind)
 /// → inner-letter mask layer → letters + per-letter glow → HUD (front) →
 /// near rain → front particles/sparks/glitch → scanline → center flash.
-class _MatrixSplashPainter extends CustomPainter {
-  _MatrixSplashPainter({
+class _YazzokiSplashPainter extends CustomPainter {
+  _YazzokiSplashPainter({
     required this.progress,
     required this.columns,
     required this.particles,
@@ -369,6 +392,7 @@ class _MatrixSplashPainter extends CustomPainter {
     required this.beams,
     required this.hud,
     required this.sparks,
+    this.logo,
   });
 
   final double progress;
@@ -379,6 +403,7 @@ class _MatrixSplashPainter extends CustomPainter {
   final List<_Beam> beams;
   final List<_HudMarker> hud;
   final List<_Spark> sparks;
+  final ui.Image? logo;
 
   static const _glyphBase = TextStyle(
     fontFamily: 'JetBrainsMono',
@@ -388,9 +413,6 @@ class _MatrixSplashPainter extends CustomPainter {
   );
   static const _kStep = 1 / 60;
 
-  // Per-letter geometry resolved each paint (cheap, cached within the frame).
-  final List<Rect> _letterRects = <Rect>[];
-  final List<Offset> _letterCenters = <Offset>[];
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -408,12 +430,8 @@ class _MatrixSplashPainter extends CustomPainter {
     _paintBeams(canvas, size, t);
     _paintNetwork(canvas, size, t);
 
-    // Per-letter geometry shared by the mask, letters and inner scan.
-    _measureTitle(size);
-
     _paintHud(canvas, size, t, front: false);
-    _paintLetterMaskInner(canvas, size, t);
-    _paintLetters(canvas, size, t);
+    _paintLogo(canvas, size, t);
     _paintFragments(canvas, size, t);
     _paintHud(canvas, size, t, front: true);
     _paintRain(canvas, size, t, far: false);
@@ -620,233 +638,80 @@ class _MatrixSplashPainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  // ── per-letter geometry ───────────────────────────────────
-  void _measureTitle(Size size) {
-    const letters = 'MATRIX';
-    const fontSize = 56.0;
-    const letterSpacing = 6.0;
-    final tp = TextPainter(
-      text: const TextSpan(
-        text: 'MATRIX',
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: fontSize,
-          fontWeight: FontWeight.w900,
-          letterSpacing: letterSpacing,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    final startX = size.width / 2 - tp.width / 2;
-    final topY = size.height * 0.46 - tp.height / 2;
-    _letterRects.clear();
-    _letterCenters.clear();
-    double x = startX;
-    for (var i = 0; i < letters.length; i++) {
-      final w = _letterAdvance(letters[i]);
-      final r = Rect.fromLTWH(x, topY, w, tp.height);
-      _letterRects.add(r);
-      _letterCenters.add(Offset(r.left + r.width / 2, r.top + r.height / 2));
-      x += w + letterSpacing;
-    }
-  }
-
-  double _letterAdvance(String ch) {
-    return switch (ch) {
-      'M' => 48.0,
-      'A' => 42.0,
-      'T' => 38.0,
-      'R' => 42.0,
-      'I' => 22.0,
-      'X' => 44.0,
-      _ => 40.0,
-    };
-  }
-
-  // ── inner-letter layer (effects BEHIND/BETWEEN/THROUGH letters) ──
-  void _paintLetterMaskInner(Canvas canvas, Size size, double t) {
+  // ── logo (real emblem image, painted on the canvas) ──────
+  //
+  // The emblem is a raster brush stroke, so it is painted as an image rather
+  // than rebuilt from glyphs. When the image is unavailable (decode pending
+  // or failed) a mincho wordmark is drawn instead, keeping the scene intact.
+  void _paintLogo(Canvas canvas, Size size, double t) {
     final appear = _easeOutBack(_fade(t, 0.2, 0.55));
     if (appear <= 0.004) return;
 
-    final tp = TextPainter(
-      text: TextSpan(
-        text: 'MATRIX',
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 56,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 6,
-          height: 1.0,
-          color: Colors.white.withValues(alpha: 0.5 + 0.5 * appear),
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    final startX = size.width / 2 - tp.width / 2;
-    final topY = size.height * 0.46 - tp.height / 2;
-    final bounds = Rect.fromLTWH(startX, topY, tp.width, tp.height);
-
-    // Layer W: the letters become the ALPHA MASK (white text drawn here).
-    canvas.saveLayer(bounds, Paint());
-    tp.paint(canvas, Offset(startX, topY));
-
-    // Layer X: the digital effects, composited WITH srcIn so they appear
-    // ONLY where the letters are opaque — i.e. literally THROUGH/BETWEEN
-    // the letter shapes, never behind a box around them.
-    canvas.saveLayer(bounds, Paint()..blendMode = BlendMode.srcIn);
-
-    // Fast particles streaming through the letters.
-    for (final p in particles) {
-      if (!p.fast) continue;
-      final twinkle = (math.sin(p.twinkle + t * 10) + 1) * 0.5;
-      final alpha = 0.85 * twinkle * appear;
-      if (alpha <= 0.04) continue;
-      final paint = Paint()
-        ..color = _accentColor(p.colorIndex, alpha)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.0);
-      canvas.drawCircle(
-        Offset(p.x * size.width, p.y * size.height),
-        p.size * 1.6,
-        paint,
+    final image = logo;
+    if (image != null) {
+      final targetH = size.height * 0.30;
+      final targetW = targetH * image.width / image.height;
+      final dst = Rect.fromCenter(
+        center: Offset(size.width / 2, size.height * 0.46),
+        width: targetW,
+        height: targetH,
       );
-    }
 
-    // Reconstruction scan bands inside each letter.
-    final scan = _fade(t, 0.2, 0.6);
-    for (var i = 0; i < _letterRects.length; i++) {
-      final r = _letterRects[i];
-      final bandY = r.top + r.height * ((t * 2.2 + i * 0.13) % 1.0);
-      final band = Paint()
-        ..color = _accentColor(i % 4, 0.85 * scan)
-        ..strokeWidth = 1.4;
-      canvas.drawLine(Offset(r.left, bandY), Offset(r.right, bandY), band);
-    }
+      // Soft ice-blue halo behind the emblem.
+      final halo = Paint()
+        ..color = AppColors.electricBlue.withValues(alpha: 0.18 * appear)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 42);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(dst.inflate(14), const Radius.circular(24)),
+        halo,
+      );
 
-    // Glitch slice crossing the letters.
-    final glitchAmp = _glitchAmp(t);
-    if (glitchAmp > 0.05) {
-      final gp = Paint()
-        ..color = _accentColor((t % 4).floor(), 1.0 * glitchAmp)
-        ..strokeWidth = 2.2;
-      final y1 = bounds.top + bounds.height * ((t * 31) % 1.0);
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+        dst,
+        Paint()
+          ..colorFilter = ColorFilter.mode(
+            Colors.white.withValues(alpha: appear),
+            BlendMode.modulate,
+          ),
+      );
+
+      // Scanline crossing the emblem (kept from the previous composition).
+      final y = dst.top + dst.height * ((t * 3.1) % 1.0);
       canvas.drawLine(
-          Offset(bounds.left, y1), Offset(bounds.right, y1 + 3), gp);
+        Offset(dst.left, y),
+        Offset(dst.right, y),
+        Paint()
+          ..color = AppColors.electricBlue.withValues(alpha: 0.35 * appear)
+          ..strokeWidth = 1.4
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+      );
+      return;
     }
 
-    // Subtle per-letter fill pulse so the mask threshold reads as neon.
-    final fill = Paint()
-      ..color = AppColors.electricBlue.withValues(alpha: 0.28 * appear);
-    canvas.drawRect(bounds, fill);
-
-    canvas.restore(); // X srcIn W → effects confined to the letters
-    canvas.restore(); // composite W+X onto the scene
-
-    // Separator ticks BETWEEN letters (part of the digital structure).
-    if (appear > 0.2) {
-      for (var i = 1; i < _letterRects.length; i++) {
-        final sep = Paint()
-          ..color = _accentColor(i, 0.16 * appear)
-          ..strokeWidth = 0.6;
-        final x = _letterRects[i].left - 3;
-        for (var k = -2; k <= 2; k++) {
-          final dy = k * 9.0;
-          canvas.drawLine(
-            Offset(x, bounds.top + bounds.height / 2 + dy - 8),
-            Offset(x, bounds.top + bounds.height / 2 + dy + 8),
-            sep,
-          );
-        }
-      }
-    }
-  }
-
-  // ── the letters themselves ────────────────────────────────
-  void _paintLetters(Canvas canvas, Size size, double t) {
-    final appear = _easeOutBack(_fade(t, 0.2, 0.55));
-    if (appear <= 0.004) return;
-    final glitch = _glitchAmp(t);
-    final split = glitch * 2.2;
-
-    final head = TextPainter(
+    // Fallback: drawn mincho wordmark (never a Text widget).
+    final tp = TextPainter(
       text: TextSpan(
-        text: 'MATRIX',
+        text: 'Yazzoki',
         style: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 56,
-          fontWeight: FontWeight.w900,
+          fontFamily: 'ZenOldMincho',
+          fontSize: 54,
+          fontWeight: FontWeight.w700,
           letterSpacing: 6,
-          height: 1.0,
           color: Colors.white.withValues(alpha: appear),
           shadows: [
-            Shadow(color: AppColors.electricBlue, blurRadius: 30),
-            Shadow(color: AppColors.primaryBlue, blurRadius: 14),
-            Shadow(color: const Color(0xFF9D4EFF), blurRadius: 6),
+            Shadow(color: AppColors.electricBlue, blurRadius: 26),
+            Shadow(color: AppColors.primaryBlue, blurRadius: 12),
           ],
         ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    final startX = size.width / 2 - head.width / 2;
-    final topY = size.height * 0.46 - head.height / 2;
-    final base = Offset(startX, topY);
-
-    // RGB chromatic split (only during glitches).
-    if (split > 0.02) {
-      final r = TextPainter(
-        text: TextSpan(
-          text: 'MATRIX',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 56,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 6,
-            color: const Color(0xFFFF304F).withValues(alpha: split * 0.6),
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      r.paint(canvas, base + Offset(-split, 0));
-      final g = TextPainter(
-        text: TextSpan(
-          text: 'MATRIX',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 56,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 6,
-            color: AppColors.success.withValues(alpha: split * 0.6),
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      g.paint(canvas, base + Offset(split, 0));
-    }
-
-    head.paint(canvas, base);
-
-    // Per-letter pulse (each letter glows individually in sequence).
-    for (var i = 0; i < _letterRects.length; i++) {
-      final pulse = (math.sin(t * 6 - i * 0.9) + 1) * 0.5;
-      if (pulse < 0.12) continue;
-      final r = _letterRects[i];
-      final glyph = TextPainter(
-        text: TextSpan(
-          text: 'MATRIX'[i],
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 56,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 6,
-            color: Colors.white.withValues(alpha: 0.22 * pulse),
-            shadows: [
-              Shadow(color: _accentColor(i, 0.95 * pulse), blurRadius: 18),
-            ],
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      glyph.paint(canvas, Offset(r.left, r.top));
-    }
+    tp.paint(
+      canvas,
+      Offset(size.width / 2 - tp.width / 2, size.height * 0.46 - tp.height / 2),
+    );
   }
 
   // ── digital fragments (square/rect data chunks) ───────────
@@ -988,9 +853,10 @@ class _MatrixSplashPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _MatrixSplashPainter oldDelegate) =>
+  bool shouldRepaint(covariant _YazzokiSplashPainter oldDelegate) =>
       oldDelegate.progress != progress ||
       oldDelegate.columns != columns ||
       oldDelegate.particles != particles ||
-      oldDelegate.network != network;
+      oldDelegate.network != network ||
+      oldDelegate.logo != logo;
 }
