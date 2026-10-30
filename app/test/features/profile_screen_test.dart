@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yazzoki/core/services/app_state.dart';
+import 'package:yazzoki/core/widgets/grid_icon.dart';
+import 'package:yazzoki/core/widgets/repost_icon.dart';
 import 'package:yazzoki/core/utils/profile_navigation.dart';
 import 'package:yazzoki/core/widgets/yazzoki_card.dart';
 import 'package:yazzoki/core/widgets/user_avatar.dart';
@@ -20,8 +22,9 @@ void main() {
 
     expect(find.text('PERFIL'), findsOneWidget);
     expect(find.textContaining('leonardo', findRichText: true), findsOneWidget);
-    expect(find.textContaining('POSTS'), findsWidgets);
-    expect(find.textContaining('REPOSTS'), findsWidgets);
+    // The two tabs are DRAWN marks (grid + arrows), never text/emoji.
+    expect(find.byType(GridIcon), findsOneWidget);
+    expect(find.byType(RepostIcon), findsOneWidget);
     expect(find.text('EDITAR PERFIL'), findsOneWidget);
     // Own profile has the floating "+" and no friendship button.
     expect(find.byIcon(Icons.add_rounded), findsOneWidget);
@@ -111,8 +114,9 @@ void main() {
       expect(find.text('Seguindo'), findsOneWidget);
       expect(find.text('Curtidas'), findsOneWidget);
       expect(find.text('Posts'), findsOneWidget);
-      // Leonardo: 1 follower + 1 following + 1 post all read "1".
-      expect(find.text('1'), findsNWidgets(3));
+      // Leonardo: 1 follower + 1 following + 1 post + 1 post-count on the
+      // tab all read "1".
+      expect(find.text('1'), findsNWidgets(4));
     });
 
     testWidgets('viewed profile shows THAT user counters, not the session',

@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yazzoki/core/widgets/grid_icon.dart';
+import 'package:yazzoki/core/widgets/repost_icon.dart';
 import 'package:yazzoki/features/home/home_screen.dart';
 
 import '../helpers/test_app.dart';
@@ -50,7 +52,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('PERFIL'), findsOneWidget);
-    expect(find.textContaining('POSTS'), findsWidgets);
-    expect(find.textContaining('REPOSTS'), findsWidgets);
+    expect(find.byType(GridIcon), findsOneWidget);
+    expect(find.byType(RepostIcon), findsOneWidget);
   });
 }

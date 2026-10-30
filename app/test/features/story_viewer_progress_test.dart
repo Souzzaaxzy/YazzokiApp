@@ -49,6 +49,55 @@ Future<AppState> seededStories() async {
 }
 
 void main() {
+  group('StoryViewer — hold-to-pause', () {
+    testWidgets('segurar congela e soltar retoma (sem sair do story)',
+        (tester) async {
+      tester.view.physicalSize = const Size(1080, 2340);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.reset);
+
+      final state = await seededStories();
+      await pumpYazzokiApp(
+        tester,
+        Builder(
+          builder: (ctx) => ElevatedButton(
+            onPressed: () => StoryViewer.open(ctx, state, startGroup: 0),
+            child: const Text('abrir'),
+          ),
+        ),
+        state: state,
+      );
+      await tester.tap(find.text('abrir'));
+      // O viewer usa uma animação contínua (progresso), então pumpAndSettle
+      // NUNCA terminaria — bombeamos alguns frames como os demais testes.
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(find.byType(StoryViewer), findsOneWidget);
+
+      // Segura a tela por bem mais que os 5s do Story: SEM o hold o viewer
+      // teria avançado; com o hold ele permanece no MESMO Story.
+      final center = tester.getCenter(find.byType(StoryViewer));
+      final gesture = await tester.startGesture(center);
+      await tester.pump(const Duration(milliseconds: 700)); // vira long press
+      for (var i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+
+      // Nada quebrou e o viewer continua aberto (o Story NÃO auto-avançou).
+      expect(find.byType(StoryViewer), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      // Soltar retoma normalmente, de onde parou.
+      await gesture.up();
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(find.byType(StoryViewer), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('StoryViewer — progresso, identidade e durações', () {
     testWidgets('mostra FOTO acima do NOME (identidade do autor)',
         (tester) async {

@@ -14,7 +14,9 @@ import '../../core/utils/profile_navigation.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/glow_container.dart';
+import '../../core/widgets/grid_icon.dart';
 import '../../core/widgets/hud_label.dart';
+import '../../core/widgets/repost_icon.dart';
 import '../../core/widgets/yazzoki_button.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../data/api_config.dart';
@@ -962,9 +964,51 @@ class _ProfileTabs extends StatelessWidget {
           fontWeight: FontWeight.w700,
         ),
         unselectedLabelStyle: AppTextStyles.hud.copyWith(fontSize: 12),
+        // DRAWN marks (never an emoji/glyph): a grid for Posts and the
+        // chasing arrows for Reposts. The count rides next to each mark.
         tabs: [
-          Tab(text: 'POSTS $postsCount'),
-          Tab(text: 'REPOSTS $repostsCount'),
+          _ProfileTab(
+            icon: (c) => GridIcon(color: c, size: 18),
+            count: postsCount,
+            label: 'POSTS',
+          ),
+          _ProfileTab(
+            icon: (c) => RepostIcon(color: c, size: 18, strokeWidth: 1.7),
+            count: repostsCount,
+            label: 'REPOSTS',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One profile tab: a DRAWN mark + the item count (and a discreet label for
+/// accessibility). The mark takes the active/inactive colour from the TabBar.
+class _ProfileTab extends StatelessWidget {
+  const _ProfileTab({
+    required this.icon,
+    required this.count,
+    required this.label,
+  });
+
+  final Widget Function(Color color) icon;
+  final int count;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    // TabBarTheme resolves the active/inactive colour for us.
+    final color = DefaultTextStyle.of(context).style.color ??
+        AppColors.holographicBlue;
+    return Semantics(
+      label: label,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          icon(color),
+          const SizedBox(width: AppDimensions.spaceSm),
+          Text('$count', style: AppTextStyles.hud.copyWith(color: color)),
         ],
       ),
     );

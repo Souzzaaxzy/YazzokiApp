@@ -85,6 +85,27 @@ class _StoryViewerState extends State<StoryViewer>
   /// fechado). Congelar no foco é o comportamento esperado de stories.
   bool get _replyFrozen => _replyFocus.hasFocus;
 
+  /// True enquanto o dedo está PRESSIONANDO a tela (hold-to-pause, como no
+  /// Instagram): o Story congela e volta ao soltar, de onde parou.
+  bool _holding = false;
+
+  /// True quando o Story está congelado por QUALQUER motivo (campo de
+  /// resposta focado ou dedo pressionando a tela).
+  bool get _frozen => _replyFrozen || _holding;
+
+  /// Segurar a tela: congela. Soltar: retoma DE ONDE PAROU (nunca reinicia).
+  void _setHolding(bool value) {
+    if (_holding == value) return;
+    _holding = value;
+    if (_holding) {
+      _progress.stop();
+      _video?.pause();
+    } else if (!_replyFrozen) {
+      _progress.forward();
+      _video?.play();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -117,7 +138,7 @@ class _StoryViewerState extends State<StoryViewer>
   /// Story nunca ficar congelado para sempre.
   void _onReplyFocusChanged() {
     if (!mounted) return;
-    if (_replyFrozen) {
+    if (_frozen) {
       _progress.stop();
       _video?.pause();
       return;
@@ -150,9 +171,9 @@ class _StoryViewerState extends State<StoryViewer>
       if (d > Duration.zero) target = d;
     }
     _progress.duration = target;
-    // Com o campo de resposta focado o Story fica PARADO — a barra espera o
-    // usuário (o foco é quem retoma, ver _onReplyFocusChanged).
-    if (_replyFrozen) {
+    // Com o campo de resposta focado OU o dedo pressionando a tela o Story
+    // fica PARADO — a barra espera o usuário (quem retoma é o unfocus/soltar).
+    if (_frozen) {
       _progress.value = 0;
       return;
     }
@@ -193,7 +214,7 @@ class _StoryViewerState extends State<StoryViewer>
       controller.setVolume(0); // stories começam mudos
       // Congelado: o vídeo é preparado mas fica PAUSADO (o Story não anda
       // enquanto o usuário escreve a resposta).
-      if (!_replyFrozen) await controller.play();
+      if (!_frozen) await controller.play();
       if (!mounted) {
         await controller.dispose();
         return;
@@ -438,12 +459,21 @@ class _StoryViewerState extends State<StoryViewer>
                     child: GestureDetector(
                       behavior: HitTestBehavior.translucent,
                       onTap: _previous,
+                      // Segurar congela o Story; soltar retoma de onde parou.
+                      // Sem onTapDown/onTapCancel o toque curto continua
+                      // navegando (o hold é um gesto separado).
+                      onLongPressStart: (_) => _setHolding(true),
+                      onLongPressEnd: (_) => _setHolding(false),
+                      onLongPressCancel: () => _setHolding(false),
                     ),
                   ),
                   Expanded(
                     child: GestureDetector(
                       behavior: HitTestBehavior.translucent,
                       onTap: _next,
+                      onLongPressStart: (_) => _setHolding(true),
+                      onLongPressEnd: (_) => _setHolding(false),
+                      onLongPressCancel: () => _setHolding(false),
                     ),
                   ),
                 ],
@@ -638,7 +668,8 @@ class _StoryInteractionBar extends StatelessWidget {
                 padding: const EdgeInsets.all(AppDimensions.spaceXs),
                 child: RepostIcon(
                   color: AppColors.techWhite,
-                  size: 26,
+                  // MESMO tamanho em px do coração (28) — pedido explícito.
+                  size: 28,
                   strokeWidth: 2.0,
                 ),
               ),
