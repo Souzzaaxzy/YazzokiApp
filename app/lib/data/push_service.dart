@@ -13,7 +13,7 @@ import 'api_config.dart';
 import 'token_store.dart';
 
 /// Yazzoki push service — native Android notifications driven by the
-/// ServidorMtx realtime channel (WebSocket) plus a device-token registry
+/// ServidorYazzoki realtime channel (WebSocket) plus a device-token registry
 /// on the server. No Google/Firebase services involved.
 ///
 /// Lifecycle:

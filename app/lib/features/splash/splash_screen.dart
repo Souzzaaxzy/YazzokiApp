@@ -12,25 +12,19 @@ import '../../core/widgets/app_state_scope.dart';
 /// Splash total duration in ms — the animation HARD cap (spec: max 9s).
 const int splashDurationMs = 8500;
 
-/// Cyberpunk Yazzoki splash screen — V2 (cinemática).
+/// Yazzoki splash screen — V2 (cinemática).
 ///
 /// Fully native (CustomPaint + one AnimationController, no video/assets/deps).
-/// The composition is built in true LAYERS so effects pass literally
-/// behind, BETWEEN, OVER and THROUGH the individual letters of "Yazzoki" —
-/// there is NO box/panel/card behind the logo:
+/// The scene is built in true LAYERS around the brush-stroke emblem:
 ///
 ///   background (deep gradient + vignette + transient grid + far digital rain)
-///   → mid rain / particles / light beams / HUD brackets (behind the letters)
-///   → inner-letter effects painted INSIDE a saveLayer masked by the word,
-///     so they appear to live behind/between/through the letter shapes
-///   → per-letter neon glow + chromatic RGB split (individual letters)
+///   → mid rain / particles / light beams / HUD brackets (behind the emblem)
+///   → the emblem image itself (with a soft ice-blue halo)
 ///   → front particles / sparks / glitch slices / HUD markers in front
 ///   → scanline crossing the logo + final cinematic center flash
 ///
-/// The letters are reconstructed progressively (fragment scan bands →
-/// per-letter glow → form), receive individual glows and glitch
-/// displacement, and the whole scene stays GPU-friendly (bounded counts,
-/// cached glyph painters, repaint isolated by the route).
+/// The emblem fades/scales in while the network expands, and the whole scene
+/// stays GPU-friendly (bounded counts, repaint isolated by the route).
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 

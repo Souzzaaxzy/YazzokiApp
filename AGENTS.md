@@ -4,10 +4,10 @@
 Yazzoki — social platform with a Japanese old-age aesthetic. Split across two repos:
 - **This repo (`YazzokiApp`)** — Flutter app (presentation layer; calls backend API).
   Only `app/` (Flutter) + `.github/`. The server was moved out.
-- **`Souzzaaxzy/ServidorMtx`** — Node/TypeScript backend (Fastify + Prisma +
+- **`Souzzaaxzy/ServidorYazzoki`** — Node/TypeScript backend (Fastify + Prisma +
   **SQLite** `data/yazzoki.db`). Hospedado na Bronxys/Pterodactyl via
   `npm start` (self-provisions). Container-ready: `docker compose up -d --build`.
-  See https://github.com/Souzzaaxzy/ServidorMtx
+  See https://github.com/Souzzaaxzy/ServidorYazzoki
 
 ## Environment
 - Flutter: 3.27.x (stable). SDK at `$HOME/flutter/bin`.
@@ -27,7 +27,7 @@ Yazzoki — social platform with a Japanese old-age aesthetic. Split across two 
   `build/app/outputs/flutter-apk/app-release.apk` (~70MB)
 
 ### Server
-The server is in `Souzzaaxzy/ServidorMtx`. Commands there:
+The server is in `Souzzaaxzy/ServidorYazzoki`. Commands there:
 `npm install`, `npx prisma generate`, `npx prisma migrate deploy`,
 `npm run db:seed`, `npm test` (64 tests, vitest), `npm run dev`.
 Or just `docker compose up -d --build`.
@@ -386,7 +386,7 @@ Or just `docker compose up -d --build`.
   `borderRadius`, só a moldura.
 
 ## Architecture — Server
-The backend lives in the separate repo `Souzzaaxzy/ServidorMtx`. Key points
+The backend lives in the separate repo `Souzzaaxzy/ServidorYazzoki`. Key points
 for reference when working on the app's data layer:
 - All routes under `/api` prefix. Base URL resolved in `lib/data/api_config.dart`.
 - Auth: username-only, Argon2id, recovery code (hash only), JWT sessions.

@@ -10,7 +10,7 @@ import '../../core/widgets/glow_container.dart';
 import '../../core/widgets/hud_label.dart';
 import '../../core/widgets/neon_icon_button.dart';
 
-/// Futuristic Akame chat interface.
+/// Akame chat interface.
 ///
 /// Messages are mocked in Phase 1. The send path is isolated so a real
 /// AI API can replace the mock later without UI changes.

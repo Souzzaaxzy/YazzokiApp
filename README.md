@@ -3,7 +3,7 @@
 Social platform with a Japanese old-age aesthetic — **app (cliente Flutter)**.
 
 > **Backend separado**: o servidor agora está em
-> [Souzzaaxzy/ServidorMtx](https://github.com/Souzzaaxzy/ServidorMtx).
+> [Souzzaaxzy/ServidorYazzoki](https://github.com/Souzzaaxzy/ServidorYazzoki).
 > Para rodar o backend localmente em container, clone aquele repositório
 > e execute `docker compose up -d --build`.
 
@@ -23,7 +23,7 @@ backend Yazzoki e **não** contém código de servidor.
 
 ## Configurar o endereço do backend
 
-O app fala com **UMA única API**: o ServidorMtx hospedado na
+O app fala com **UMA única API**: o ServidorYazzoki hospedado na
 Bronxys/Pterodactyl. A URL oficial é resolvida em
 `app/lib/data/api_config.dart`:
 
@@ -37,7 +37,7 @@ painel da Bronxys — IP/host do node + porta alocada (ex.:
 `http://123.45.67.89:4316`). HTTPS somente se o painel fornecer um
 domínio com SSL válido. **Nunca** localhost, 127.0.0.1, 0.0.0.0 ou URLs de
 túneis/serviços externos. Passos completos:
-[CONEXAO_APP.md no ServidorMtx](https://github.com/Souzzaaxzy/ServidorMtx/blob/main/CONEXAO_APP.md).
+[CONEXAO_APP.md no ServidorYazzoki](https://github.com/Souzzaaxzy/ServidorYazzoki/blob/main/CONEXAO_APP.md).
 
 Para apontar para um servidor diferente (dev):
 ```bash

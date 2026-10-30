@@ -22,9 +22,9 @@ class YazzokiNavDestination {
   final int badgeCount;
 }
 
-/// Persistent futuristic bottom navigation bar.
+/// Persistent bottom navigation bar.
 ///
-/// Highlights the active item with neon blue and a glow.
+/// Highlights the active item with the ice-blue accent and a glow.
 class YazzokiBottomBar extends StatelessWidget {
   const YazzokiBottomBar({
     super.key,

@@ -21,7 +21,7 @@ class Validators {
     return null;
   }
 
-  // Mirrors the server rule (ServidorMtx src/utils/normalize.ts): full
+  // Mirrors the server rule (ServidorYazzoki src/utils/normalize.ts): full
   // Unicode — letters (any case/accents), numbers, emojis, symbols and
   // punctuation are all allowed. Blocked: '@' (identity prefix, never part
   // of a nickname), HTML brackets/quotes (injection guard), control/format
@@ -82,7 +82,7 @@ class Validators {
     return null;
   }
 
-  // Must mirror the server rule (ServidorMtx auth.schema.ts): mínimo de 8
+  // Must mirror the server rule (ServidorYazzoki auth.schema.ts): mínimo de 8
   // caracteres, com letras e números. If they diverge, the form passes
   // locally and the API rejects with 400.
   static String? password(String? value) {

@@ -12,7 +12,7 @@ class ApiConfig {
 
   /// URL oficial da API em produção — a ÚNICA API do app.
   ///
-  /// É o endereço público REAL do ServidorMtx hospedado na
+  /// É o endereço público REAL do ServidorYazzoki hospedado na
   /// Bronxys/Pterodactyl: o IP/host público do node + a porta alocada,
   /// visível na página do servidor no painel (seção de alocação/network),
   /// ex.: `http://123.45.67.89:4316`. Use HTTPS somente se o painel
@@ -23,7 +23,7 @@ class ApiConfig {
   /// Prioridade: `--dart-define=API_BASE_URL=...` (o CI injeta a partir do
   /// secret API_BASE_URL) → este default (URL real do servidor atual). Sem barra final.
   ///
-  /// URL atual do ServidorMtx (Bronxys/Pterodactyl): `http://189.121.200.99:3000`
+  /// URL atual do ServidorYazzoki (Bronxys/Pterodactyl): `http://189.121.200.99:3000`
   /// (confirmada pelo log do servidor em 08/09/2026). Se o painel mudar
   /// o IP/porta, atualize a URL aqui e no secret API_BASE_URL do CI.
   static const String _productionUrl = String.fromEnvironment(
