@@ -32,14 +32,32 @@ class YazzokiLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final emblem = Image.asset(
-      'assets/brand/logo_ink.png',
+    // Two aligned layers: the brush strokes take the active text colour, the
+    // hanko seal keeps its own red — so the mark reads correctly on both the
+    // light (ink) and dark (paper) themes.
+    final emblem = SizedBox(
       height: height,
-      fit: BoxFit.contain,
-      color: AppColors.techWhite,
-      colorBlendMode: BlendMode.srcIn,
-      filterQuality: FilterQuality.medium,
-      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Image.asset(
+            'assets/brand/logo_strokes.png',
+            height: height,
+            fit: BoxFit.contain,
+            color: AppColors.techWhite,
+            colorBlendMode: BlendMode.srcIn,
+            filterQuality: FilterQuality.medium,
+            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          ),
+          Image.asset(
+            'assets/brand/logo_seal.png',
+            height: height,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.medium,
+            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          ),
+        ],
+      ),
     );
 
     if (!showWordmark) return emblem;

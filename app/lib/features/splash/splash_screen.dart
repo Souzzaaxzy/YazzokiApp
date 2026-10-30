@@ -135,6 +135,7 @@ class _YazzokiSplashSceneState extends State<_YazzokiSplashScene> {
   late final List<_Spark> _sparks;
   bool _readySent = false;
   ui.Image? _logo;
+  ui.Image? _seal;
 
   @override
   void initState() {
@@ -153,18 +154,28 @@ class _YazzokiSplashSceneState extends State<_YazzokiSplashScene> {
 
   /// Loads the Yazzoki emblem once. If decoding fails (or is still pending
   /// in a test environment) the painter falls back to the drawn wordmark.
+  ///
+  /// The emblem ships as TWO aligned layers so the splash can reveal them in
+  /// sequence: the brush strokes (the Japanese characters) first, then the
+  /// red hanko seal — exactly the order the brand mark is "written".
   Future<void> _loadLogo() async {
+    final strokes = await _decode('assets/brand/logo_strokes.png');
+    final seal = await _decode('assets/brand/logo_seal.png');
+    if (!mounted) return;
+    setState(() {
+      _logo = strokes;
+      _seal = seal;
+    });
+  }
+
+  Future<ui.Image?> _decode(String asset) async {
     try {
-      final data = await rootBundle.load('assets/brand/logo_paper.png');
+      final data = await rootBundle.load(asset);
       final completer = Completer<ui.Image>();
-      ui.decodeImageFromList(
-        data.buffer.asUint8List(),
-        completer.complete,
-      );
-      final img = await completer.future;
-      if (mounted) setState(() => _logo = img);
+      ui.decodeImageFromList(data.buffer.asUint8List(), completer.complete);
+      return await completer.future;
     } catch (_) {
-      // No image: the painted wordmark keeps the splash usable.
+      return null;
     }
   }
 
@@ -185,7 +196,10 @@ class _YazzokiSplashSceneState extends State<_YazzokiSplashScene> {
 
   void _onTick() {
     if (!mounted) return;
-    if (!_readySent && widget.animation.value >= 0.5) {
+    // The scene is "ready" only once the emblem is fully written AND the red
+    // seal has been stamped — navigation then fires as soon as the session
+    // restore finishes, so the user always sees the complete mark.
+    if (!_readySent && widget.animation.value >= 0.72) {
       _readySent = true;
       widget.onReady();
     }
@@ -206,6 +220,7 @@ class _YazzokiSplashSceneState extends State<_YazzokiSplashScene> {
           hud: _hud,
           sparks: _sparks,
           logo: _logo,
+          seal: _seal,
         ),
         size: Size.infinite,
       ),
@@ -387,6 +402,7 @@ class _YazzokiSplashPainter extends CustomPainter {
     required this.hud,
     required this.sparks,
     this.logo,
+    this.seal,
   });
 
   final double progress;
@@ -398,6 +414,7 @@ class _YazzokiSplashPainter extends CustomPainter {
   final List<_HudMarker> hud;
   final List<_Spark> sparks;
   final ui.Image? logo;
+  final ui.Image? seal;
 
   static const _glyphBase = TextStyle(
     fontFamily: 'JetBrainsMono',
@@ -441,7 +458,7 @@ class _YazzokiSplashPainter extends CustomPainter {
       ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF03060B), Color(0xFF000103), Color(0xFF001209)],
+        colors: [Color(0xFF050505), Color(0xFF000000), Color(0xFF0B0906)],
       ).createShader(rect);
     canvas.drawRect(rect, bg);
 
@@ -638,31 +655,53 @@ class _YazzokiSplashPainter extends CustomPainter {
   // than rebuilt from glyphs. When the image is unavailable (decode pending
   // or failed) a mincho wordmark is drawn instead, keeping the scene intact.
   void _paintLogo(Canvas canvas, Size size, double t) {
-    final appear = _easeOutBack(_fade(t, 0.2, 0.55));
+    final appear = _easeOutBack(_fade(t, 0.12, 0.5));
     if (appear <= 0.004) return;
 
     final image = logo;
+    final sealImage = seal;
+    final targetH = size.height * 0.32;
+    final center = Offset(size.width / 2, size.height * 0.46);
+
     if (image != null) {
-      final targetH = size.height * 0.30;
       final targetW = targetH * image.width / image.height;
       final dst = Rect.fromCenter(
-        center: Offset(size.width / 2, size.height * 0.46),
+        center: center,
         width: targetW,
         height: targetH,
       );
 
       // Soft ice-blue halo behind the emblem.
       final halo = Paint()
-        ..color = AppColors.electricBlue.withValues(alpha: 0.18 * appear)
+        ..color = AppColors.electricBlue.withValues(alpha: 0.16 * appear)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 42);
       canvas.drawRRect(
         RRect.fromRectAndRadius(dst.inflate(14), const Radius.circular(24)),
         halo,
       );
 
+      final src = Rect.fromLTWH(
+        0,
+        0,
+        image.width.toDouble(),
+        image.height.toDouble(),
+      );
+
+      // The characters are WRITTEN from top to bottom: reveal the strokes
+      // through a clip whose bottom edge travels down the emblem.
+      final write = Curves.easeInOut.transform(_fade(t, 0.12, 0.52));
+      canvas.save();
+      canvas.clipRect(
+        Rect.fromLTRB(
+          dst.left,
+          dst.top,
+          dst.right,
+          dst.top + dst.height * write,
+        ),
+      );
       canvas.drawImageRect(
         image,
-        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
+        src,
         dst,
         Paint()
           ..colorFilter = ColorFilter.mode(
@@ -670,17 +709,55 @@ class _YazzokiSplashPainter extends CustomPainter {
             BlendMode.modulate,
           ),
       );
+      // A bright edge rides the writing front so the reveal reads as ink.
+      if (write > 0.01 && write < 0.995) {
+        final edgeY = dst.top + dst.height * write;
+        canvas.drawLine(
+          Offset(dst.left, edgeY),
+          Offset(dst.right, edgeY),
+          Paint()
+            ..color = AppColors.electricBlue.withValues(alpha: 0.7 * appear)
+            ..strokeWidth = 2
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+        );
+      }
+      canvas.restore();
 
-      // Scanline crossing the emblem (kept from the previous composition).
-      final y = dst.top + dst.height * ((t * 3.1) % 1.0);
-      canvas.drawLine(
-        Offset(dst.left, y),
-        Offset(dst.right, y),
-        Paint()
-          ..color = AppColors.electricBlue.withValues(alpha: 0.35 * appear)
-          ..strokeWidth = 1.4
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
-      );
+      // The red hanko seal is stamped LAST with a small pop. It ships as a
+      // full-canvas layer aligned with the strokes, so it is drawn into the
+      // SAME dst rect; the pop scales about the seal's own centre (bottom-left
+      // of the mark) so it lands exactly on the stamp.
+      if (sealImage != null) {
+        final stamp = _easeOutBack(_fade(t, 0.5, 0.66));
+        if (stamp > 0.004) {
+          final sealSrc = Rect.fromLTWH(
+            0,
+            0,
+            sealImage.width.toDouble(),
+            sealImage.height.toDouble(),
+          );
+          final anchor = Offset(
+            dst.left + dst.width * 0.123,
+            dst.top + dst.height * 0.880,
+          );
+          final scale = 0.85 + 0.15 * stamp;
+          canvas.save();
+          canvas.translate(anchor.dx, anchor.dy);
+          canvas.scale(scale);
+          canvas.translate(-anchor.dx, -anchor.dy);
+          canvas.drawImageRect(
+            sealImage,
+            sealSrc,
+            dst,
+            Paint()
+              ..colorFilter = ColorFilter.mode(
+                Colors.white.withValues(alpha: stamp),
+                BlendMode.modulate,
+              ),
+          );
+          canvas.restore();
+        }
+      }
       return;
     }
 
@@ -852,5 +929,6 @@ class _YazzokiSplashPainter extends CustomPainter {
       oldDelegate.columns != columns ||
       oldDelegate.particles != particles ||
       oldDelegate.network != network ||
-      oldDelegate.logo != logo;
+      oldDelegate.logo != logo ||
+      oldDelegate.seal != seal;
 }

@@ -44,23 +44,23 @@ class YazzokiPalette {
   final double glowAlpha;
 
   static const dark = YazzokiPalette(
-    scaffold: Color(0xFF12100C),
-    surface: Color(0xFF1B1813),
-    surfaceDeep: Color(0xFF241F18),
-    border: Color(0xFF3A3226),
-    text: Color(0xFFF4EFE6),
-    textMuted: Color(0xFFC9B48C),
-    navBar: Color(0xF21B1813),
+    scaffold: Color(0xFF000000),
+    surface: Color(0xFF0C0B09),
+    surfaceDeep: Color(0xFF17140F),
+    border: Color(0xFF3E362A),
+    text: Color(0xFFFBF8F1),
+    textMuted: Color(0xFFCDB68D),
+    navBar: Color(0xF20A0908),
     glowAlpha: 1.0,
   );
 
   static const light = YazzokiPalette(
-    scaffold: Color(0xFFF5F1E8),
+    scaffold: Color(0xFFFFFFFF),
     surface: Color(0xFFFFFFFF),
-    surfaceDeep: Color(0xFFEAE3D5),
-    border: Color(0xFFD8C6A6),
-    text: Color(0xFF14120E),
-    textMuted: Color(0xFF6B6152),
+    surfaceDeep: Color(0xFFF1ECE0),
+    border: Color(0xFFD3BF9C),
+    text: Color(0xFF0A0908),
+    textMuted: Color(0xFF554D3D),
     navBar: Color(0xF2FFFFFF),
     glowAlpha: 0.2,
   );

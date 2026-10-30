@@ -24,14 +24,16 @@ class AppColors {
 
   // Brand accents — same across themes.
   /// Ice blue ("azul cor de gelo") — the signature Yazzoki accent.
-  static const Color primaryBlue = Color(0xFF7FA9CE);
-  static const Color electricBlue = Color(0xFF9DC4E4);
+  static const Color primaryBlue = Color(0xFF5B8FC7);
+  static const Color electricBlue = Color(0xFF8FBCE4);
   /// Muted moss/jade for success states.
-  static const Color success = Color(0xFF7C9A6D);
+  static const Color success = Color(0xFF6E9159);
   /// Shu-iro vermillion for errors and destructive actions.
-  static const Color error = Color(0xFFB4553F);
+  static const Color error = Color(0xFFC0392B);
   /// Warm beige, used for borders, dividers and secondary accents.
   static const Color beige = Color(0xFFD8C6A6);
+  /// Hanko seal red — the emblem's stamp; used for small brand accents.
+  static const Color sealRed = Color(0xFFB42D24);
 
   // Theme-dependent tokens.
   static Color get absoluteBlack => _active.scaffold;
@@ -45,15 +47,15 @@ class AppColors {
   static Color get navBarBackground => _active.navBar;
 
   // Glow presets. Translucent ice blue; softer on the light theme.
-  static Color get glowSmall => primaryBlue.withValues(alpha: 0.45 * _active.glowAlpha);
-  static Color get glowMedium => primaryBlue.withValues(alpha: 0.55 * _active.glowAlpha);
-  static Color get glowStrong => electricBlue.withValues(alpha: 0.75 * _active.glowAlpha);
+  static Color get glowSmall => primaryBlue.withValues(alpha: 0.40 * _active.glowAlpha);
+  static Color get glowMedium => primaryBlue.withValues(alpha: 0.50 * _active.glowAlpha);
+  static Color get glowStrong => electricBlue.withValues(alpha: 0.70 * _active.glowAlpha);
 
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [primaryBlue, Color(0xFF4E7BA6)],
+    colors: [primaryBlue, Color(0xFF3A6797)],
   );
 
   static LinearGradient get deepGradient => LinearGradient(

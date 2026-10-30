@@ -29,16 +29,17 @@ void main() {
   });
 
   test('AppColors palette matches the official Yazzoki tokens', () {
-    expect(AppColors.primaryBlue, const Color(0xFF7FA9CE));
-    expect(AppColors.electricBlue, const Color(0xFF9DC4E4));
-    expect(AppColors.deepBlue, const Color(0xFF3A3226));
-    expect(AppColors.nightBlue, const Color(0xFF241F18));
-    expect(AppColors.absoluteBlack, const Color(0xFF12100C));
-    expect(AppColors.bluishBlack, const Color(0xFF1B1813));
-    expect(AppColors.techWhite, const Color(0xFFF4EFE6));
-    expect(AppColors.holographicBlue, const Color(0xFFC9B48C));
-    expect(AppColors.success, const Color(0xFF7C9A6D));
-    expect(AppColors.error, const Color(0xFFB4553F));
+    expect(AppColors.primaryBlue, const Color(0xFF5B8FC7));
+    expect(AppColors.electricBlue, const Color(0xFF8FBCE4));
+    expect(AppColors.deepBlue, const Color(0xFF3E362A));
+    expect(AppColors.nightBlue, const Color(0xFF17140F));
+    expect(AppColors.absoluteBlack, const Color(0xFF000000));
+    expect(AppColors.bluishBlack, const Color(0xFF0C0B09));
+    expect(AppColors.techWhite, const Color(0xFFFBF8F1));
+    expect(AppColors.holographicBlue, const Color(0xFFCDB68D));
+    expect(AppColors.success, const Color(0xFF6E9159));
+    expect(AppColors.error, const Color(0xFFC0392B));
     expect(AppColors.beige, const Color(0xFFD8C6A6));
+    expect(AppColors.sealRed, const Color(0xFFB42D24));
   });
 }
