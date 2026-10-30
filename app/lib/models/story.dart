@@ -22,6 +22,7 @@ class Story {
     this.mine = false,
     this.liked = false,
     this.likeCount = 0,
+    this.repostedFrom,
   });
 
   final String id;
@@ -76,6 +77,10 @@ class Story {
   final bool liked;
   final int likeCount;
 
+  /// Set when this story is a REPOST: the ORIGINAL author's nickname, so the
+  /// viewer shows "Repostado de @autor". Null for an original story.
+  final String? repostedFrom;
+
   /// Copies this story with a few fields replaced.
   ///
   /// Exists because rebuilding a [Story] field-by-field is error-prone: a
@@ -100,6 +105,7 @@ class Story {
     bool? mine,
     bool? liked,
     int? likeCount,
+    String? repostedFrom,
     // Nullable resolvers so these can be explicitly CLEARED too.
     String? Function()? mediaUrl,
     String? Function()? thumbnailUrl,
@@ -121,6 +127,7 @@ class Story {
         mine: mine ?? this.mine,
         liked: liked ?? this.liked,
         likeCount: likeCount ?? this.likeCount,
+        repostedFrom: repostedFrom ?? this.repostedFrom,
       );
 }
 

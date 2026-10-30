@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -52,9 +53,14 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   bool _requested = false;
   String? _error;
+
+  /// Posts | Reposts. The TabBarView gives the horizontal SWIPE between the
+  /// two tabs for free; the header/stats stay above, shared by both.
+  late final TabController _tabs = TabController(length: 2, vsync: this);
 
   /// Acesso ao player da música do perfil para pará-lo quando a aba sai de
   /// vista (o `IndexedStack` mantém a tela viva, então o dispose NÃO roda).
@@ -107,6 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final id = _shownUserId;
       if (id != null) closeProfile(id);
     }
+    _tabs.dispose();
     super.dispose();
   }
 
@@ -118,6 +125,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       await state.loadProfile(nickname);
       if (!mounted) return;
+      // The Reposts tab data (own or another user's) loads alongside the
+      // profile so switching tabs never shows a blank frame.
+      final uid = state.profileFor(widget.nickname)?.user.id;
+      if (uid != null) {
+        unawaited(state.loadReposts(uid));
+      }
       // Register the profile by its REAL id once it resolves. Called both on
       // the first load and on refresh — re-adding the same id is a no-op.
       final loaded = state.profileFor(widget.nickname)?.user;
@@ -258,50 +271,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SliverToBoxAdapter(
                 child: Divider(color: AppColors.deepBlue, height: 1),
               ),
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding:
-                      EdgeInsets.symmetric(vertical: AppDimensions.spaceMd),
-                  child: Center(child: HudLabel(text: 'PUBLICAÇÕES')),
+              // Two equal halves (2/4 and 3/4 of the width): Posts | Reposts.
+              // Swiping horizontally moves between them.
+              SliverToBoxAdapter(
+                child: _ProfileTabs(
+                  controller: _tabs,
+                  postsCount: posts.length,
+                  repostsCount: state.repostsFor(user.id).length,
                 ),
               ),
-              if (posts.isEmpty)
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: EmptyState(
-                    icon: Icons.grid_view_rounded,
-                    title: 'NO POSTS YET',
-                    hud: 'SYSTEM WAITING...',
-                    subtitle: isOwn
-                        ? 'Você ainda não publicou nada.'
-                        : 'Este usuário ainda não publicou nada.',
-                  ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.spaceLg,
-                  ),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: AppDimensions.spaceMd,
-                      crossAxisSpacing: AppDimensions.spaceMd,
-                      childAspectRatio: 0.9,
+              SliverFillRemaining(
+                hasScrollBody: true,
+                child: TabBarView(
+                  controller: _tabs,
+                  children: [
+                    _ProfileGrid(
+                      posts: posts,
+                      emptyTitle: 'NO POSTS YET',
+                      emptySubtitle: isOwn
+                          ? 'Você ainda não publicou nada.'
+                          : 'Este usuário ainda não publicou nada.',
+                      onOpen: _openPost,
                     ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) {
-                        final post = posts[i];
-                        return _ProfilePostTile(
-                          post: post,
-                          onTap: () => _openPost(post),
-                        );
-                      },
-                      childCount: posts.length,
+                    _ProfileGrid(
+                      posts: state.repostsFor(user.id),
+                      emptyTitle: 'NO REPOSTS YET',
+                      emptySubtitle: isOwn
+                          ? 'Você ainda não repostou nada.'
+                          : 'Este usuário ainda não repostou nada.',
+                      onOpen: _openPost,
                     ),
-                  ),
+                  ],
                 ),
+              ),
             ],
             // Room for the floating "+" so it never covers the last tile.
             const SliverToBoxAdapter(
@@ -926,6 +928,100 @@ class _ChooserItem extends StatelessWidget {
 }
 
 /// A tappable grid tile for a profile post. Opens the post detail screen.
+/// The two profile tabs — Posts (left half) and Reposts (right half), each
+/// taking exactly 2/4 and 3/4 of the width as equal halves. The controller
+/// comes from the screen so the TabBarView below stays in sync (swiping the
+/// grid also moves the underline).
+class _ProfileTabs extends StatelessWidget {
+  const _ProfileTabs({
+    required this.controller,
+    required this.postsCount,
+    required this.repostsCount,
+  });
+
+  final TabController controller;
+  final int postsCount;
+  final int repostsCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.deepBlue, width: 1),
+        ),
+      ),
+      child: TabBar(
+        controller: controller,
+        indicatorColor: AppColors.electricBlue,
+        indicatorWeight: 2,
+        labelColor: AppColors.techWhite,
+        unselectedLabelColor: AppColors.holographicBlue,
+        labelStyle: AppTextStyles.hud.copyWith(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelStyle: AppTextStyles.hud.copyWith(fontSize: 12),
+        tabs: [
+          Tab(text: 'POSTS $postsCount'),
+          Tab(text: 'REPOSTS $repostsCount'),
+        ],
+      ),
+    );
+  }
+}
+
+/// The scrollable grid of ONE tab (posts or reposts). Kept as a separate
+/// widget so the two tabs share the exact layout and empty state.
+class _ProfileGrid extends StatelessWidget {
+  const _ProfileGrid({
+    required this.posts,
+    required this.emptyTitle,
+    required this.emptySubtitle,
+    required this.onOpen,
+  });
+
+  final List<Post> posts;
+  final String emptyTitle;
+  final String emptySubtitle;
+  final void Function(Post) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    if (posts.isEmpty) {
+      return SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.only(top: AppDimensions.spaceHuge),
+          child: EmptyState(
+            icon: Icons.grid_view_rounded,
+            title: emptyTitle,
+            hud: 'SYSTEM WAITING...',
+            subtitle: emptySubtitle,
+          ),
+        ),
+      );
+    }
+    return GridView.builder(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.spaceLg,
+        vertical: AppDimensions.spaceMd,
+      ),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: AppDimensions.spaceMd,
+        crossAxisSpacing: AppDimensions.spaceMd,
+        childAspectRatio: 0.9,
+      ),
+      itemCount: posts.length,
+      itemBuilder: (context, i) {
+        final post = posts[i];
+        return _ProfilePostTile(post: post, onTap: () => onOpen(post));
+      },
+    );
+  }
+}
+
 class _ProfilePostTile extends StatelessWidget {
   const _ProfilePostTile({required this.post, required this.onTap});
 

@@ -7,6 +7,7 @@ import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../core/services/app_state.dart';
 import '../../core/widgets/hud_label.dart';
+import '../../core/widgets/repost_icon.dart';
 import '../../core/widgets/user_avatar.dart';
 import '../../data/api_config.dart';
 import '../../models/story.dart';
@@ -324,6 +325,22 @@ class _StoryViewerState extends State<StoryViewer>
     }
   }
 
+  /// Repostar o Story: o servidor COPIA o Story para o meu strip (expira
+  /// junto com o original) e notifica o autor. O botão é um TOGGLE.
+  Future<void> _toggleRepost() async {
+    final story = _story;
+    if (story == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await widget.state.toggleStoryRepost(story.id);
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Não foi possível repostar o Story.')),
+      );
+    }
+  }
+
   /// Envia a resposta: o SERVIDOR cria uma MENSAGEM REAL no chat entre quem
   /// respondeu e o autor do Story (mesma infraestrutura de conversas).
   Future<void> _sendReply() async {
@@ -448,6 +465,7 @@ class _StoryViewerState extends State<StoryViewer>
                   // os MESMOS componentes usados em grupos/DM.
                   _StoryIdentity(
                     group: group,
+                    repostedFrom: story?.repostedFrom,
                     onDelete: (story?.mine ?? false) ? _confirmDelete : null,
                     onClose: () => Navigator.of(context).maybePop(),
                   ),
@@ -475,6 +493,7 @@ class _StoryViewerState extends State<StoryViewer>
                       likeCount: story.likeCount,
                       onSend: _sendReply,
                       onToggleLike: _toggleLike,
+                      onToggleRepost: _toggleRepost,
                     ),
                 ],
               ),
@@ -502,6 +521,7 @@ class _StoryInteractionBar extends StatelessWidget {
     required this.likeCount,
     required this.onSend,
     required this.onToggleLike,
+    required this.onToggleRepost,
   });
 
   final TextEditingController controller;
@@ -511,6 +531,7 @@ class _StoryInteractionBar extends StatelessWidget {
   final int likeCount;
   final VoidCallback onSend;
   final VoidCallback onToggleLike;
+  final VoidCallback onToggleRepost;
 
   @override
   Widget build(BuildContext context) {
@@ -601,6 +622,24 @@ class _StoryInteractionBar extends StatelessWidget {
                       ),
                     ],
                   ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppDimensions.spaceSm),
+          // Repostar o Story: marca DESENHADA (setas), ao lado do coração.
+          Semantics(
+            label: 'Repostar Story',
+            button: true,
+            child: GestureDetector(
+              onTap: onToggleRepost,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.all(AppDimensions.spaceXs),
+                child: RepostIcon(
+                  color: AppColors.techWhite,
+                  size: 26,
+                  strokeWidth: 2.0,
                 ),
               ),
             ),
@@ -762,11 +801,15 @@ class _StoryIdentity extends StatelessWidget {
     required this.group,
     required this.onDelete,
     required this.onClose,
+    this.repostedFrom,
   });
 
   final StoryGroup? group;
   final VoidCallback? onDelete;
   final VoidCallback onClose;
+
+  /// Set when the CURRENT story is a repost: the ORIGINAL author's nickname.
+  final String? repostedFrom;
 
   @override
   Widget build(BuildContext context) {
@@ -799,6 +842,14 @@ class _StoryIdentity extends StatelessWidget {
                 const SizedBox(height: AppDimensions.spaceXs),
                 if (g != null)
                   Text(g.authorNickname, style: AppTextStyles.h3.copyWith(fontSize: 16)),
+                // Story REPOSTADO: mostra a origem acima do autor atual.
+                if (repostedFrom != null)
+                  Text(
+                    'Repostado de $repostedFrom',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.holographicBlue,
+                    ),
+                  ),
               ],
             ),
           ),

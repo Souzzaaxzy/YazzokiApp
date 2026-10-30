@@ -31,6 +31,7 @@ class FakeRepositories extends Repositories {
     required super.comments,
     required super.users,
     required super.follows,
+    required super.reposts,
     required super.notifications,
     required super.uploads,
     required super.chat,
@@ -71,6 +72,7 @@ class FakeRepositories extends Repositories {
       comments: _FakeCommentRepository(store),
       users: _FakeUserRepository(store),
       follows: _FakeFollowRepository(store),
+      reposts: _FakeRepostRepository(store),
       notifications: _FakeNotificationRepository(store),
       uploads: const _FakeUploadRepository(),
       chat: _FakeChatRepository(store),
@@ -252,6 +254,12 @@ class FakeStore {
   /// Follow edges stored as `followerId>followingId` — one row per directed
   /// follow, mirroring the SQLite `follows` table.
   late final Set<String> follows;
+
+  /// Repost edges `userId>postId` (one per user+post, like the SQLite table).
+  final Set<String> reposts = {};
+
+  /// Story reposts `userId>originalStoryId` (the toggle's source of truth).
+  final Set<String> storyReposts = {};
 
   /// Private chat messages by conversation (pair key `a|b`), in order.
   late final Map<String, List<ChatMessage>> chatMessagesByPair;
@@ -652,6 +660,46 @@ class _FakeFollowRepository implements FollowRepository {
         ? <YazzokiUser>[]
         : all.sublist(start, (start + pageSize).clamp(0, all.length));
     return (users: slice, total: all.length, page: page, pageSize: pageSize);
+  }
+}
+
+class _FakeRepostRepository implements RepostRepository {
+  _FakeRepostRepository(this._store);
+
+  final FakeStore _store;
+
+  @override
+  Future<({bool reposted, int repostCount})> toggle(String postId) async {
+    final me = _store.currentUserId;
+    if (me == null) return (reposted: false, repostCount: 0);
+    final key = '$me>$postId';
+    final has = _store.reposts.contains(key);
+    if (has) {
+      _store.reposts.remove(key);
+    } else {
+      _store.reposts.add(key);
+    }
+    final count =
+        _store.reposts.where((e) => e.endsWith('>$postId')).length;
+    return (reposted: !has, repostCount: count);
+  }
+
+  @override
+  Future<({List<Post> posts, int total, int page, int pageSize})> ofUser(
+    String userId, {
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final ids = _store.reposts
+        .where((e) => e.startsWith('$userId>'))
+        .map((e) => e.split('>').last)
+        .toList();
+    final all = ids
+        .map((id) => _store.posts.where((p) => p.id == id).firstOrNull)
+        .whereType<Post>()
+        .map((p) => p.copyWith(reposted: true))
+        .toList();
+    return (posts: all, total: all.length, page: page, pageSize: pageSize);
   }
 }
 
@@ -1823,6 +1871,21 @@ class _FakeStoryRepository implements StoryRepository {
       ),
     );
     return (message: msg, conversationId: 'story_conv');
+  }
+
+  @override
+  @override
+  Future<bool> toggleRepost(String storyId) async {
+    final me = _store.currentUserId;
+    if (me == null) return false;
+    final key = '$me>$storyId';
+    final has = _store.storyReposts.contains(key);
+    if (has) {
+      _store.storyReposts.remove(key);
+    } else {
+      _store.storyReposts.add(key);
+    }
+    return !has;
   }
 
   @override

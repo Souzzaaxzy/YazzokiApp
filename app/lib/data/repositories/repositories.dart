@@ -292,6 +292,44 @@ class UserRepository {
 
 /// Friends repository — friend request lifecycle (send / list / accept /
 /// reject). All authorization is enforced by the server.
+/// Reposts — "share to profile" (Instagram/TikTok style). A repost is a
+/// REFERENCE to the original post; the toggle creates/removes it server-side.
+class RepostRepository {
+  RepostRepository(this._api);
+
+  final ApiClient _api;
+
+  /// Toggles the session user's repost of [postId]. Returns the resulting
+  /// state and the updated count. The server throttles rapid RE-reposts.
+  Future<({bool reposted, int repostCount})> toggle(String postId) async {
+    final json = await _api
+        .post<Map<String, dynamic>>('/api/posts/$postId/repost');
+    return (
+      reposted: (json['reposted'] as bool?) ?? false,
+      repostCount: (json['repostCount'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  /// The reposts of [userId] (profile "Reposts" tab), newest first.
+  Future<({List<Post> posts, int total, int page, int pageSize})> ofUser(
+    String userId, {
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final json = await _api.get<Map<String, dynamic>>(
+      '/api/users/$userId/reposts',
+      queryParameters: {'page': page, 'pageSize': pageSize},
+    );
+    final list = (json['posts'] as List).cast<Map<String, dynamic>>();
+    return (
+      posts: list.map(FeedPostDto.fromJson).map((d) => d.toModel()).toList(),
+      total: (json['total'] as num?)?.toInt() ?? 0,
+      page: (json['page'] as num?)?.toInt() ?? page,
+      pageSize: (json['pageSize'] as num?)?.toInt() ?? pageSize,
+    );
+  }
+}
+
 /// Follow repository — the Instagram-style directed follow graph
 /// (instant follow / unfollow, followers and following lists).
 class FollowRepository {
@@ -1007,6 +1045,7 @@ class Repositories {
     required this.comments,
     required this.users,
     required this.follows,
+    required this.reposts,
     required this.notifications,
     required this.uploads,
     required this.chat,
@@ -1021,6 +1060,7 @@ class Repositories {
   final CommentRepository comments;
   final UserRepository users;
   final FollowRepository follows;
+  final RepostRepository reposts;
   final NotificationRepository notifications;
   final UploadRepository uploads;
   final ChatRepository chat;

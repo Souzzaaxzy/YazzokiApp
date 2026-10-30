@@ -86,6 +86,8 @@ class FeedPostDto {
   final int likeCount;
   final bool liked;
   final int commentCount;
+  final int repostCount;
+  final bool reposted;
 
   const FeedPostDto({
     required this.id,
@@ -100,6 +102,8 @@ class FeedPostDto {
     required this.likeCount,
     required this.liked,
     required this.commentCount,
+    this.repostCount = 0,
+    this.reposted = false,
   });
 
   Post toModel() => Post(
@@ -116,6 +120,8 @@ class FeedPostDto {
         likes: likeCount,
         liked: liked,
         commentCount: commentCount,
+        repostCount: repostCount,
+        reposted: reposted,
       );
 
   factory FeedPostDto.fromJson(Map<String, dynamic> json) {
@@ -133,6 +139,8 @@ class FeedPostDto {
       likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
       liked: (json['liked'] as bool?) ?? false,
       commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
+      repostCount: (json['repostCount'] as num?)?.toInt() ?? 0,
+      reposted: (json['reposted'] as bool?) ?? false,
     );
   }
 }
@@ -263,6 +271,7 @@ class NotificationDto {
   final PublicUserDto actor;
   final String? postId;
   final String? commentId;
+  final String? storyId;
 
   const NotificationDto({
     required this.id,
@@ -272,6 +281,7 @@ class NotificationDto {
     required this.actor,
     this.postId,
     this.commentId,
+    this.storyId,
   });
 
   // The actor's own nickname cosmetics ride inside `actor` (PublicUserDto).
@@ -286,6 +296,7 @@ class NotificationDto {
         actorAvatarUrl: actor.avatarUrl,
         postId: postId,
         commentId: commentId,
+        storyId: storyId,
       );
 
   factory NotificationDto.fromJson(Map<String, dynamic> json) {
@@ -298,6 +309,7 @@ class NotificationDto {
       actor: PublicUserDto.fromJson(actorJson),
       postId: json['postId'] as String?,
       commentId: json['commentId'] as String?,
+      storyId: json['storyId'] as String?,
     );
   }
 }
@@ -966,6 +978,7 @@ class StoryDto {
   final bool mine;
   final bool liked;
   final int likeCount;
+  final String? repostedFrom;
   final String authorId;
   final String authorNickname;
   final String? authorAvatarUrl;
@@ -984,6 +997,7 @@ class StoryDto {
     required this.mine,
     this.liked = false,
     this.likeCount = 0,
+    this.repostedFrom,
     required this.authorId,
     required this.authorNickname,
     this.authorAvatarUrl,
@@ -1006,6 +1020,7 @@ class StoryDto {
         mine: mine,
         liked: liked,
         likeCount: likeCount,
+        repostedFrom: repostedFrom,
       );
 
   factory StoryDto.fromJson(Map<String, dynamic> json) {
@@ -1028,6 +1043,7 @@ class StoryDto {
           DateTime.now(),
       viewed: (json['viewed'] as bool?) ?? false,
       mine: (json['mine'] as bool?) ?? false,
+      repostedFrom: json['repostedFrom'] as String?,
       authorId: (author['id'] as String?) ?? '',
       authorNickname: (author['nickname'] as String?) ?? '',
       authorAvatarUrl: author['avatarUrl'] as String?,

@@ -371,10 +371,17 @@ class _YazzokiAppState extends State<YazzokiApp> with WidgetsBindingObserver {
           navigator.pushNamed(AppRoutes.postDetail, arguments: postId);
         }
       case 'FOLLOW':
-        // A new follower → open their profile.
+      case 'STORY_REPOST':
+        // A new follower / a story repost → open the actor's profile.
         final nickname = data['actorNickname'] as String?;
         if (nickname != null && nickname.isNotEmpty) {
           navigator.pushNamed(AppRoutes.profile, arguments: nickname);
+        }
+      case 'REPOST':
+        // A repost of MY post → open that post.
+        final postId = data['postId'] as String?;
+        if (postId != null && postId.isNotEmpty) {
+          navigator.pushNamed(AppRoutes.postDetail, arguments: postId);
         }
     }
   }

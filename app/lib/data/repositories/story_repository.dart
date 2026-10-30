@@ -77,6 +77,15 @@ class StoryRepository {
     );
   }
 
+  /// Toggles the session user's REPOST of a story: it is copied into their
+  /// own strip (and expires with the original). Returns the resulting state.
+  Future<bool> toggleRepost(String storyId) async {
+    final json = await _api.post<Map<String, dynamic>>(
+      '/api/stories/$storyId/repost',
+    );
+    return (json['reposted'] as bool?) ?? false;
+  }
+
   /// Marks the story as seen by the session user (idempotent).
   Future<void> markViewed(String storyId) async {
     await _api.post('/api/stories/$storyId/view');

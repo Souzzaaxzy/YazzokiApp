@@ -20,7 +20,8 @@ void main() {
 
     expect(find.text('PERFIL'), findsOneWidget);
     expect(find.textContaining('leonardo', findRichText: true), findsOneWidget);
-    expect(find.text('PUBLICAÇÕES'), findsOneWidget);
+    expect(find.textContaining('POSTS'), findsWidgets);
+    expect(find.textContaining('REPOSTS'), findsWidgets);
     expect(find.text('EDITAR PERFIL'), findsOneWidget);
     // Own profile has the floating "+" and no friendship button.
     expect(find.byIcon(Icons.add_rounded), findsOneWidget);

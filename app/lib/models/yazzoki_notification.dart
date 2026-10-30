@@ -1,8 +1,8 @@
-/// A Yazzoki notification (like, comment, friend request, friend accepted).
+/// A Yazzoki notification (like, comment, follow, repost, story repost).
 ///
 /// The server owns notification creation; the APK only renders them. Every
 /// notification embeds the acting user (actor) so no second lookup is
-/// needed, and may reference a post / comment / friend request.
+/// needed, and may reference a post / comment / story.
 class YazzokiNotification {
   const YazzokiNotification({
     required this.id,
@@ -17,13 +17,12 @@ class YazzokiNotification {
     this.actorFrameAsset,
     this.postId,
     this.commentId,
-    this.friendRequestId,
-    this.friendRequestStatus,
+    this.storyId,
   });
 
   final String id;
 
-  /// LIKE | COMMENT | FOLLOW — extensible on the
+  /// LIKE | COMMENT | FOLLOW | REPOST | STORY_REPOST — extensible on the
   /// server, so we keep it as a plain string.
   final String type;
   final bool read;
@@ -46,11 +45,9 @@ class YazzokiNotification {
 
   final String? postId;
   final String? commentId;
-  final String? friendRequestId;
 
-  /// Current status of the referenced friend request (e.g. PENDING). Null
-  /// for non-request types. Used to decide if the actionable card shows.
-  final String? friendRequestStatus;
+  /// Set for STORY_REPOST: the story the notification refers to.
+  final String? storyId;
 
   YazzokiNotification copyWith({bool? read}) => YazzokiNotification(
         id: id,
@@ -65,7 +62,6 @@ class YazzokiNotification {
         actorFrameAsset: actorFrameAsset,
         postId: postId,
         commentId: commentId,
-        friendRequestId: friendRequestId,
-        friendRequestStatus: friendRequestStatus,
+        storyId: storyId,
       );
 }

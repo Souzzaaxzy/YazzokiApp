@@ -362,6 +362,7 @@ class AppState extends ChangeNotifier {
       _repos?.comments ?? Services.instance.comments;
   UserRepository get _users => _repos?.users ?? Services.instance.users;
   FollowRepository get _follows => _repos?.follows ?? Services.instance.follows;
+  RepostRepository get _repostsRepo => _repos?.reposts ?? Services.instance.reposts;
   NotificationRepository get _notificationRepo =>
       _repos?.notifications ?? Services.instance.notifications;
   ChatRepository get _chat => _repos?.chat ?? Services.instance.chat;
@@ -649,6 +650,15 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  /// Toggles the session user's REPOST of a story. The server copies it into
+  /// the user's own strip (expiring with the original) and notifies the
+  /// original author. Reloads the strip so the copy appears immediately.
+  Future<bool> toggleStoryRepost(String storyId) async {
+    final ok = await _storiesRepo.toggleRepost(storyId);
+    await loadStories();
+    return ok;
+  }
+
   ({bool liked, int likeCount}) _storiesRepoLikeState(String storyId) {
     for (final g in _storyGroups) {
       for (final st in g.stories) {
@@ -912,6 +922,60 @@ class AppState extends ChangeNotifier {
       return true;
     } catch (_) {
       return false;
+    }
+  }
+
+  /// Toggles the session user's REPOST of [postId] ("share to profile").
+  /// Optimistic like the like button; on failure the change is rolled back
+  /// and false is returned so the UI can surface the server error (e.g. the
+  /// anti-spam 429).
+  Future<bool> toggleRepost(String postId) async {
+    final post = _findPost(postId);
+    if (post == null) return false;
+    final wasReposted = post.reposted;
+    final wasCount = post.repostCount;
+    post.reposted = !wasReposted;
+    post.repostCount += wasReposted ? -1 : 1;
+    notifyListeners();
+    try {
+      final result = await _repostsRepo.toggle(postId);
+      post.reposted = result.reposted;
+      post.repostCount = result.repostCount;
+      _syncPost(post, skip: post);
+      // A fresh repost must appear in the profile tab without a manual
+      // reload; drop the cached list so it refetches.
+      _repostsByUser.remove(_currentUser?.id);
+      notifyListeners();
+      return true;
+    } catch (_) {
+      post.reposted = wasReposted;
+      post.repostCount = wasCount;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Cached reposts per profile id (the "Reposts" tab), newest first.
+  final Map<String, List<Post>> _repostsByUser = {};
+  final Map<String, int> _repostsTotal = {};
+  bool _loadingReposts = false;
+
+  List<Post> repostsFor(String userId) => _repostsByUser[userId] ?? const [];
+  int repostsTotalFor(String userId) => _repostsTotal[userId] ?? 0;
+  bool get isLoadingReposts => _loadingReposts;
+
+  /// Loads the REPOSTS of [userId] into the cache (profile "Reposts" tab).
+  Future<void> loadReposts(String userId) async {
+    if (_loadingReposts) return;
+    _loadingReposts = true;
+    notifyListeners();
+    try {
+      final result = await _repostsRepo.ofUser(userId, page: 1, pageSize: 50);
+      _repostsByUser[userId] = result.posts;
+      _repostsTotal[userId] = result.total;
+    } finally {
+      _loadingReposts = false;
+      notifyListeners();
     }
   }
 

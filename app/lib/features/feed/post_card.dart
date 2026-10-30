@@ -10,6 +10,7 @@ import '../../data/api_config.dart';
 import '../../models/post.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/yazzoki_card.dart';
+import '../../core/widgets/repost_icon.dart';
 import '../../core/widgets/user_avatar.dart';
 import 'post_video_preview.dart';
 import 'responsive_post_image.dart';
@@ -72,6 +73,22 @@ class _PostCardState extends State<PostCard>
         const SnackBar(
           content:
               Text('Não foi possível atualizar a curtida. Tente novamente.'),
+        ),
+      );
+    }
+  }
+
+  /// Toggles the repost ("share to profile"). The server throttles rapid
+  /// RE-reposts; a 429 surfaces as a discreet message, the local state is
+  /// rolled back by AppState.
+  Future<void> _toggleRepost() async {
+    final ok = await AppStateScope.of(context).toggleRepost(widget.post.id);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível repostar agora. Aguarde um instante e tente de novo.',
+          ),
         ),
       );
     }
@@ -184,6 +201,26 @@ class _PostCardState extends State<PostCard>
                   ),
                 ),
                 const SizedBox(width: AppDimensions.spaceXl),
+                // Repost sits BETWEEN the like and the comment, with the
+                // DRAWN mark (never a Material glyph).
+                _ActionButton(
+                  label: post.repostCount.toString(),
+                  color: post.reposted
+                      ? AppColors.success
+                      : AppColors.holographicBlue,
+                  onTap: _toggleRepost,
+                  semanticLabel: post.reposted
+                      ? 'Remover repost'
+                      : 'Repostar publicação',
+                  child: RepostIcon(
+                    color: post.reposted
+                        ? AppColors.success
+                        : AppColors.holographicBlue,
+                    active: post.reposted,
+                    size: 19,
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.spaceXl),
                 _ActionButton(
                   icon: Icons.chat_bubble_outline_rounded,
                   label: post.commentCount.toString(),
@@ -202,14 +239,20 @@ class _PostCardState extends State<PostCard>
 
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
-    required this.icon,
+    this.icon,
+    this.child,
     required this.label,
     required this.color,
     required this.onTap,
     required this.semanticLabel,
-  });
+  }) : assert(icon != null || child != null,
+            'Informe um icon ou um child desenhado.');
 
-  final IconData icon;
+  /// A Material icon; ignored when [child] is provided.
+  final IconData? icon;
+
+  /// A custom DRAWN mark (e.g. [RepostIcon]) rendered instead of an icon.
+  final Widget? child;
   final String label;
   final Color color;
   final VoidCallback onTap;
@@ -231,7 +274,7 @@ class _ActionButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 18, color: color),
+              child ?? Icon(icon, size: 18, color: color),
               const SizedBox(width: AppDimensions.spaceSm),
               Text(
                 label,

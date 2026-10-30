@@ -187,6 +187,10 @@ class _NotificationTile extends StatelessWidget {
         return 'comentou na sua publicação.';
       case 'FOLLOW':
         return 'começou a seguir você.';
+      case 'REPOST':
+        return 'repostou o seu post.';
+      case 'STORY_REPOST':
+        return 'repostou o seu stories.';
       default:
         return 'interagiu com você.';
     }

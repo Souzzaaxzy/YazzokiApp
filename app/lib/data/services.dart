@@ -33,6 +33,7 @@ class Services {
   CommentRepository get comments => repositories.comments;
   UserRepository get users => repositories.users;
   FollowRepository get follows => repositories.follows;
+  RepostRepository get reposts => repositories.reposts;
   NotificationRepository get notifications => repositories.notifications;
   UploadRepository get uploads => repositories.uploads;
   ChatRepository get chat => repositories.chat;
@@ -50,6 +51,7 @@ class Services {
     final comments = CommentRepository(apiClient);
     final users = UserRepository(apiClient);
     final follows = FollowRepository(apiClient);
+    final reposts = RepostRepository(apiClient);
     final notifications = NotificationRepository(apiClient);
     final uploads = UploadRepository(apiClient);
     final chat = ChatRepository(apiClient);
@@ -66,6 +68,7 @@ class Services {
         comments: comments,
         users: users,
         follows: follows,
+        reposts: reposts,
         notifications: notifications,
         uploads: uploads,
         chat: chat,

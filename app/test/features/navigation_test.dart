@@ -50,6 +50,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('PERFIL'), findsOneWidget);
-    expect(find.text('PUBLICAÇÕES'), findsOneWidget);
+    expect(find.textContaining('POSTS'), findsWidgets);
+    expect(find.textContaining('REPOSTS'), findsWidgets);
   });
 }

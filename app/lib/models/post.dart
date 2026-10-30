@@ -17,6 +17,8 @@ class Post {
     this.liked = false,
     this.commentCount = 0,
     this.comments = const [],
+    this.repostCount = 0,
+    this.reposted = false,
   });
 
   /// Unique server-side id. ALL operations (like, comment, detail, delete)
@@ -63,6 +65,12 @@ class Post {
   int commentCount;
   List<Comment> comments;
 
+  /// How many users reposted this post (share to profile).
+  int repostCount;
+
+  /// Whether the SESSION user reposted this post (drives the active button).
+  bool reposted;
+
   Post copyWith({
     String? text,
     String? imageUrl,
@@ -72,6 +80,8 @@ class Post {
     bool? liked,
     int? commentCount,
     List<Comment>? comments,
+    int? repostCount,
+    bool? reposted,
   }) =>
       Post(
         id: id,
@@ -88,5 +98,7 @@ class Post {
         liked: liked ?? this.liked,
         commentCount: commentCount ?? this.commentCount,
         comments: comments ?? this.comments,
+        repostCount: repostCount ?? this.repostCount,
+        reposted: reposted ?? this.reposted,
       );
 }
