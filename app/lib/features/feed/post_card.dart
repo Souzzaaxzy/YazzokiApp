@@ -13,6 +13,7 @@ import '../../core/widgets/yazzoki_card.dart';
 import '../../core/widgets/repost_icon.dart';
 import '../../core/widgets/user_avatar.dart';
 import 'post_video_preview.dart';
+import 'reposters_sheet.dart';
 import 'responsive_post_image.dart';
 import '../post/video_player_screen.dart';
 
@@ -297,7 +298,8 @@ class _ActionButton extends StatelessWidget {
 
 /// The TikTok-style repost chip shown ABOVE the post's action buttons: the
 /// DRAWN repost mark + who reposted ("joao repostou" or "+3 usuarios
-/// repostaram"). Tapping it opens the FIRST reposter's profile.
+/// repostaram"). Tapping it opens the FULL list of reposters (each row leads
+/// to that user's profile).
 class _RepostBadge extends StatelessWidget {
   const _RepostBadge({required this.post});
 
@@ -316,13 +318,9 @@ class _RepostBadge extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: GestureDetector(
-        onTap: first == null
-            ? null
-            : () => openProfileById(
-                  context,
-                  id: first.id,
-                  nickname: first.nickname,
-                ),
+        // Abre a lista COMPLETA de quem repostou (o cartão só mostra os 3
+        // mais recentes). Cada linha da lista leva ao perfil do usuário.
+        onTap: () => RepostersSheet.open(context, post.id),
         behavior: HitTestBehavior.opaque,
         child: Container(
           padding: const EdgeInsets.symmetric(

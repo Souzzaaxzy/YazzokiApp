@@ -5,6 +5,7 @@ import 'package:yazzoki/core/widgets/grid_icon.dart';
 import 'package:yazzoki/core/widgets/repost_icon.dart';
 import 'package:yazzoki/features/feed/feed_screen.dart';
 import 'package:yazzoki/features/feed/post_card.dart';
+import 'package:yazzoki/features/feed/reposters_sheet.dart';
 import 'package:yazzoki/features/profile/profile_screen.dart';
 
 import '../helpers/fake_repositories.dart';
@@ -92,6 +93,31 @@ void main() {
       ),
     );
     expect(badge.dy, lessThan(action.dy));
+  });
+
+  testWidgets('tapping the badge opens the FULL reposters list', (tester) async {
+    final repos = FakeRepositories();
+    final target = repos.store.posts.first;
+    // Three people reposted the same post (more than the badge shows).
+    repos.store.reposts.add('u1>${target.id}');
+    repos.store.reposts.add('u2>${target.id}');
+    repos.store.reposts.add('u3>${target.id}');
+    final state = AppState(repositories: repos);
+    await state.restoreSession();
+    await state.loadFeed();
+    addTearDown(state.dispose);
+
+    await pumpYazzokiApp(tester, const FeedScreen(), state: state);
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // Tap the badge chip (it carries the repost text).
+    await tester.tap(find.textContaining('repostaram').first);
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    // The sheet lists every reposter (u1..u3 have seeded nicknames).
+    expect(find.byType(RepostersSheet), findsOneWidget);
+    expect(find.textContaining('QUEM REPOSTOU'), findsOneWidget);
   });
 
   testWidgets('profile shows the Posts/Reposts tabs and the reposts grid',

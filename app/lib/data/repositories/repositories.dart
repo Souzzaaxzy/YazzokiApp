@@ -310,6 +310,25 @@ class RepostRepository {
     );
   }
 
+  /// EVERY user who reposted [postId] (the badge's "see all" sheet).
+  Future<({List<ReposterUser> users, int total, int page, int pageSize})>
+      repostersOf(String postId, {int page = 1, int pageSize = 20}) async {
+    final json = await _api.get<Map<String, dynamic>>(
+      '/api/posts/$postId/reposters',
+      queryParameters: {'page': page, 'pageSize': pageSize},
+    );
+    final list = (json['users'] as List?) ?? const [];
+    return (
+      users: list
+          .map(ReposterUser.fromJson)
+          .whereType<ReposterUser>()
+          .toList(),
+      total: (json['total'] as num?)?.toInt() ?? 0,
+      page: (json['page'] as num?)?.toInt() ?? page,
+      pageSize: (json['pageSize'] as num?)?.toInt() ?? pageSize,
+    );
+  }
+
   /// The reposts of [userId] (profile "Reposts" tab), newest first.
   Future<({List<Post> posts, int total, int page, int pageSize})> ofUser(
     String userId, {

@@ -705,6 +705,18 @@ class _FakeRepostRepository implements RepostRepository {
   }
 
   @override
+  Future<({List<ReposterUser> users, int total, int page, int pageSize})>
+      repostersOf(String postId, {int page = 1, int pageSize = 20}) async {
+    final users = _store.reposts
+        .where((e) => e.endsWith('>$postId'))
+        .map((e) => _store.users[e.split('>').first])
+        .whereType<YazzokiUser>()
+        .map((u) => ReposterUser(id: u.id, nickname: u.nickname))
+        .toList();
+    return (users: users, total: users.length, page: page, pageSize: pageSize);
+  }
+
+  @override
   Future<({List<Post> posts, int total, int page, int pageSize})> ofUser(
     String userId, {
     int page = 1,

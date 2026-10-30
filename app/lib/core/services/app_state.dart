@@ -971,6 +971,13 @@ class AppState extends ChangeNotifier {
   int repostsTotalFor(String userId) => _repostsTotal[userId] ?? 0;
   bool get isLoadingReposts => _loadingReposts;
 
+  /// Every user who reposted [postId] (the badge's "see all" sheet). Not
+  /// cached: the sheet owns its own pagination and the list is small.
+  Future<({List<ReposterUser> users, int total, int page, int pageSize})>
+      loadReposters(String postId, {int page = 1, int pageSize = 20}) {
+    return _repostsRepo.repostersOf(postId, page: page, pageSize: pageSize);
+  }
+
   /// Loads the REPOSTS of [userId] into the cache (profile "Reposts" tab).
   Future<void> loadReposts(String userId) async {
     if (_loadingReposts) return;
