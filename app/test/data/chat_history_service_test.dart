@@ -203,6 +203,31 @@ void main() {
     });
   });
 
+  group('última mensagem por chat (preview da lista)', () {
+    test('devolve a mais recente de CADA chat em uma única consulta', () async {
+      // Dois chats com várias mensagens; a mais nova de cada um deve vencer.
+      await svc.recordConfirmed(
+          m('c1_old', conv: 'c1', at: DateTime(2026, 1, 1, 10)));
+      await svc.recordConfirmed(
+          m('c1_new', conv: 'c1', at: DateTime(2026, 1, 1, 12)));
+      await svc.recordConfirmed(
+          m('c2_new', conv: 'c2', at: DateTime(2026, 1, 1, 11)));
+      await svc.recordConfirmed(
+          m('g1_new', group: 'g1', at: DateTime(2026, 1, 1, 13)));
+
+      final dm = await svc.lastMessagesFor(isGroup: false, ids: ['c1', 'c2']);
+      expect(dm['c1']!.id, 'c1_new');
+      expect(dm['c2']!.id, 'c2_new');
+
+      final grp = await svc.lastMessagesFor(isGroup: true, ids: ['g1']);
+      expect(grp['g1']!.id, 'g1_new');
+
+      // Chats sem histórico simplesmente não aparecem no mapa.
+      final none = await svc.lastMessagesFor(isGroup: false, ids: ['c9']);
+      expect(none, isEmpty);
+    });
+  });
+
   group('confirmação de entrega (delivery ack)', () {
     test('mensagem RECEBIDA confirma entrega ao servidor', () async {
       await svc.recordConfirmed(m('in1', conv: 'c1'));

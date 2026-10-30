@@ -181,6 +181,37 @@ class LocalChatStore {
     return ChatMessageCodec.decode(rows.first['body'] as String);
   }
 
+  /// The newest stored message PER chat, for the given ids, in ONE query.
+  ///
+  /// Powers the conversation list preview without a per-chat round-trip: the
+  /// server DROPS delivered messages (retention), so its `lastMessage` is
+  /// often missing/stale — the phone's copy is authoritative.
+  Future<Map<String, ChatMessage>> lastMessagesFor({
+    required bool isGroup,
+    required Iterable<String> ids,
+  }) async {
+    final idList = ids.toList(growable: false);
+    if (idList.isEmpty) return const {};
+    final col = isGroup ? 'groupId' : 'conversationId';
+    final placeholders = List.filled(idList.length, '?').join(',');
+    // Rows are ordered newest-first, so the FIRST row seen per chat is its
+    // newest message; later rows for the same chat are skipped.
+    final rows = await _db.query(
+      'messages',
+      columns: ['body', col],
+      where: '$col IN ($placeholders)',
+      whereArgs: idList,
+      orderBy: 'createdAt DESC',
+    );
+    final out = <String, ChatMessage>{};
+    for (final row in rows) {
+      final key = row[col] as String?;
+      if (key == null || out.containsKey(key)) continue;
+      out[key] = ChatMessageCodec.decode(row['body'] as String);
+    }
+    return out;
+  }
+
   /// The stored timestamp of one message, or null when it is not in the local
   /// database. Lets a caller turn a message-id cursor into a date cursor.
   Future<DateTime?> messageCreatedAt(String messageId) async {

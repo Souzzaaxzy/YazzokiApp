@@ -200,6 +200,15 @@ class ChatHistoryService {
   }) =>
       _store.lastMessage(isGroup: isGroup, id: id);
 
+  /// The newest stored message PER chat (conversation-list previews) in one
+  /// query — the phone is the source of truth, so this beats the server's
+  /// (which drops delivered messages).
+  Future<Map<String, ChatMessage>> lastMessagesFor({
+    required bool isGroup,
+    required Iterable<String> ids,
+  }) =>
+      _store.lastMessagesFor(isGroup: isGroup, ids: ids);
+
   /// Messages still waiting for the server (used to retry after reconnect).
   Future<List<ChatMessage>> pending() => _store.pending();
 }

@@ -1333,10 +1333,71 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     try {
       final list = await _chat.conversations();
+      final groupList = await _chat.groups();
+      // The server DROPS delivered messages (retention) and may be a beat
+      // behind, so its preview can be missing/stale. The PHONE is the source
+      // of truth for history: overlay the newest LOCAL message per chat
+      // whenever it is newer than the server's. One batched query, no N+1.
+      final history = chatHistory;
+      if (history != null) {
+        final dmLast = await history.lastMessagesFor(
+          isGroup: false,
+          ids: list.map((c) => c.id),
+        );
+        for (var i = 0; i < list.length; i++) {
+          final local = dmLast[list[i].id];
+          if (local == null) continue;
+          final server = list[i].lastMessage;
+          if (server != null &&
+              !local.createdAt.isAfter(server.createdAt)) {
+            continue;
+          }
+          list[i] = list[i].copyWith(
+            lastMessage: ConversationLastMessage(
+              id: local.id,
+              content: local.content,
+              senderId: local.senderId,
+              createdAt: local.createdAt,
+            ),
+            lastMine: local.mine,
+            updatedAt: local.createdAt.isAfter(list[i].updatedAt)
+                ? local.createdAt
+                : list[i].updatedAt,
+          );
+        }
+        final groupLast = await history.lastMessagesFor(
+          isGroup: true,
+          ids: groupList.map((g) => g.id),
+        );
+        for (var i = 0; i < groupList.length; i++) {
+          final local = groupLast[groupList[i].id];
+          if (local == null) continue;
+          final server = groupList[i].lastMessage;
+          if (server != null &&
+              !local.createdAt.isAfter(server.createdAt)) {
+            continue;
+          }
+          groupList[i] = groupList[i].copyWith(
+            lastMessage: ConversationLastMessage(
+              id: local.id,
+              content: local.content,
+              senderId: local.senderId,
+              createdAt: local.createdAt,
+              senderNickname: local.sender?.nickname,
+            ),
+            lastMine: local.mine,
+            updatedAt: local.createdAt.isAfter(groupList[i].updatedAt)
+                ? local.createdAt
+                : groupList[i].updatedAt,
+          );
+        }
+        // Keep the list ordered by most recent activity after the overlay.
+        list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        groupList.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      }
       _conversations
         ..clear()
         ..addAll(list);
-      final groupList = await _chat.groups();
       _groups
         ..clear()
         ..addAll(groupList);
