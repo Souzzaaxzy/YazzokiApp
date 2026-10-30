@@ -47,25 +47,31 @@ void main() {
     final post = state.posts.first;
     expect(post.reposted, isFalse);
 
-    // Tap the ACTION button by its semantic label (the badge above also
-    // contains a RepostIcon, so find.byType would be ambiguous).
+    // The media makes the card tall: scroll the action row into view first.
+    await tester.ensureVisible(actionIcon.first);
+    await tester.pump();
     await tester.tap(actionIcon.first);
     await tester.pump(const Duration(milliseconds: 400));
     expect(state.posts.firstWhere((p) => p.id == post.id).reposted, isTrue);
     expect(repos.store.reposts.contains('u0>${post.id}'), isTrue);
 
     // Tapping again removes it (the toggle loops).
+    await tester.ensureVisible(actionIcon.first);
+    await tester.pump();
     await tester.tap(actionIcon.first);
     await tester.pump(const Duration(milliseconds: 400));
     expect(state.posts.firstWhere((p) => p.id == post.id).reposted, isFalse);
     expect(repos.store.reposts.contains('u0>${post.id}'), isFalse);
   });
 
-  testWidgets('repost badge appears ABOVE the actions when reposted',
+  testWidgets('repost badge appears INSIDE the media when reposted',
       (tester) async {
     final repos = FakeRepositories();
-    final target = repos.store.posts.first;
-    // Somebody (u2) reposted the first post → the badge must show.
+    // A post WITH media: the chip sits inside the picture/video.
+    final target = repos.store.posts
+        .firstWhere((p) => p.imageUrl != null || p.videoUrl != null,
+            orElse: () => repos.store.posts.first);
+    // Somebody (u2) reposted it → the badge must show.
     repos.store.reposts.add('u2>${target.id}');
     final state = AppState(repositories: repos);
     await state.restoreSession();
@@ -78,12 +84,11 @@ void main() {
     // The badge text names the reposter.
     expect(find.textContaining('repostou'), findsWidgets);
 
-    // …and, inside the SAME post card, it sits ABOVE the action row
-    // (smaller y = higher on screen).
-    final card = find.byType(PostCard).first;
-    final badge = tester.getCenter(
-      find.descendant(of: card, matching: find.textContaining('repostou')),
-    );
+    // …and it sits INSIDE the media of ITS OWN card: above the action row
+    // (smaller y). The card is the one that actually holds the chip.
+    final badgeFinder = find.textContaining('repostou').first;
+    final card = find.ancestor(of: badgeFinder, matching: find.byType(PostCard));
+    final badge = tester.getCenter(badgeFinder);
     final action = tester.getCenter(
       find.descendant(
         of: card,
@@ -97,7 +102,9 @@ void main() {
 
   testWidgets('tapping the badge opens the FULL reposters list', (tester) async {
     final repos = FakeRepositories();
-    final target = repos.store.posts.first;
+    final target = repos.store.posts
+        .firstWhere((p) => p.imageUrl != null || p.videoUrl != null,
+            orElse: () => repos.store.posts.first);
     // Three people reposted the same post (more than the badge shows).
     repos.store.reposts.add('u1>${target.id}');
     repos.store.reposts.add('u2>${target.id}');
@@ -110,7 +117,9 @@ void main() {
     await pumpYazzokiApp(tester, const FeedScreen(), state: state);
     await tester.pump(const Duration(milliseconds: 400));
 
-    // Tap the badge chip (it carries the repost text).
+    // The chip lives inside the media; scroll it into view, then tap.
+    await tester.ensureVisible(find.textContaining('repostaram').first);
+    await tester.pump();
     await tester.tap(find.textContaining('repostaram').first);
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump(const Duration(milliseconds: 600));

@@ -14,6 +14,8 @@ import '../../data/api_config.dart';
 import '../../models/post.dart';
 import '../feed/responsive_post_image.dart';
 import '../feed/comments_sheet.dart';
+import '../feed/reposters_sheet.dart';
+import '../../core/widgets/repost_icon.dart';
 import '../feed/post_video_preview.dart';
 import 'video_player_screen.dart';
 
@@ -245,14 +247,27 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: AppDimensions.spaceLg),
-          if (post.isVideo)
-            _detailVideo(post)
-          else if (post.imageUrl != null)
-            ResponsivePostImage(
-              imageUrl: ApiConfig.resolveUrl(post.imageUrl!),
-              borderRadius: AppDimensions.radiusLg,
-              // The detail screen can show taller photos comfortably.
-              maxHeightFraction: 0.85,
+          // The repost chip rides INSIDE the media (bottom-left), for BOTH
+          // video and photo — same place, always readable.
+          if (post.isVideo || post.imageUrl != null)
+            Stack(
+              children: [
+                if (post.isVideo)
+                  _detailVideo(post)
+                else
+                  ResponsivePostImage(
+                    imageUrl: ApiConfig.resolveUrl(post.imageUrl!),
+                    borderRadius: AppDimensions.radiusLg,
+                    // The detail screen can show taller photos comfortably.
+                    maxHeightFraction: 0.85,
+                  ),
+                if (post.repostCount > 0)
+                  Positioned(
+                    left: AppDimensions.spaceSm,
+                    bottom: AppDimensions.spaceSm,
+                    child: _DetailRepostChip(post: post),
+                  ),
+              ],
             ),
           const SizedBox(height: AppDimensions.spaceLg),
           GestureDetector(
@@ -358,6 +373,62 @@ class _DetailAction extends StatelessWidget {
               Text(label, style: AppTextStyles.body.copyWith(color: color)),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The repost chip shown INSIDE the media on the detail screen (same visual
+/// as the feed card): the DRAWN repost mark + who reposted. Tapping opens the
+/// full reposters list.
+class _DetailRepostChip extends StatelessWidget {
+  const _DetailRepostChip({required this.post});
+
+  final Post post;
+
+  @override
+  Widget build(BuildContext context) {
+    final first = post.reposters.isNotEmpty ? post.reposters.first : null;
+    final others = post.repostCount - 1;
+    final label = others > 0
+        ? (first != null
+            ? '${first.nickname} e +$others repostaram'
+            : '+$others repostaram')
+        : (first != null ? '${first.nickname} repostou' : 'Repostado');
+
+    return GestureDetector(
+      onTap: () => RepostersSheet.open(context, post.id),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.spaceSm,
+          vertical: 3,
+        ),
+        decoration: BoxDecoration(
+          // Dark chip so it always reads on top of the picture/video.
+          color: Colors.black.withValues(alpha: 0.66),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+          border: Border.all(color: AppColors.deepBlue.withValues(alpha: 0.7)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RepostIcon(
+              color: AppColors.holographicBlue,
+              size: 13,
+              strokeWidth: 1.5,
+            ),
+            const SizedBox(width: AppDimensions.spaceXs),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.holographicBlue,
+              ),
+            ),
+          ],
         ),
       ),
     );

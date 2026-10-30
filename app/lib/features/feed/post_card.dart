@@ -164,32 +164,45 @@ class _PostCardState extends State<PostCard>
               const SizedBox(height: AppDimensions.spaceLg),
               Text(post.text, style: AppTextStyles.body),
             ],
-            if (post.isVideo) ...[
+            if (post.isVideo || post.imageUrl != null) ...[
               const SizedBox(height: AppDimensions.spaceMd),
-              KeyedSubtree(
-                key: widget.videoKey,
-                child: PostVideoPreview(
-                  videoUrl: ApiConfig.resolveUrl(post.videoUrl!),
-                  thumbnailUrl: post.thumbnailUrl != null
-                      ? ApiConfig.resolveUrl(post.thumbnailUrl!)
-                      : null,
-                  active: widget.videoActive,
-                  onTap: _openVideo,
-                ),
+              // The repost badge lives INSIDE the media (bottom-left), like
+              // TikTok — so it never pushes the actions and always reads on
+              // top of the picture/video.
+              Stack(
+                children: [
+                  if (post.isVideo)
+                    KeyedSubtree(
+                      key: widget.videoKey,
+                      child: PostVideoPreview(
+                        videoUrl: ApiConfig.resolveUrl(post.videoUrl!),
+                        thumbnailUrl: post.thumbnailUrl != null
+                            ? ApiConfig.resolveUrl(post.thumbnailUrl!)
+                            : null,
+                        active: widget.videoActive,
+                        onTap: _openVideo,
+                      ),
+                    )
+                  else
+                    ResponsivePostImage(
+                        imageUrl: ApiConfig.resolveUrl(post.imageUrl!)),
+                  if (post.repostCount > 0)
+                    Positioned(
+                      left: AppDimensions.spaceSm,
+                      bottom: AppDimensions.spaceSm,
+                      child: _RepostBadge(post: post),
+                    ),
+                ],
               ),
-            ] else if (post.imageUrl != null) ...[
+            ],
+            // Text-only posts have no media to hold the chip, so it sits
+            // ABOVE the actions (same chip, same behaviour).
+            if (!post.isVideo && post.imageUrl == null &&
+                post.repostCount > 0) ...[
               const SizedBox(height: AppDimensions.spaceMd),
-              ResponsivePostImage(
-                  imageUrl: ApiConfig.resolveUrl(post.imageUrl!)),
+              _RepostBadge(post: post),
             ],
             const SizedBox(height: AppDimensions.spaceLg),
-            // Repost badge (TikTok-style): a small chip on the LEFT with the
-            // repost mark + "usuario repostou" (or "+N usuarios repostaram").
-            // Sits ABOVE the action buttons.
-            if (post.repostCount > 0) ...[
-              _RepostBadge(post: post),
-              const SizedBox(height: AppDimensions.spaceMd),
-            ],
             Row(
               children: [
                 ScaleTransition(

@@ -225,6 +225,19 @@ class FakeStore {
         liked: false,
         comments: const [],
       ),
+      // A post WITH an image — the media-inside repost chip needs a surface.
+      Post(
+        id: 'p3img',
+        authorId: 'u2',
+        authorNickname: 'joao',
+        text: 'Post com imagem',
+        createdAt: DateTime(2024, 1, 3),
+        avatarSeed: 'joao',
+        imageUrl: 'https://fake.yazzoki.app/p/p3img.png',
+        likes: 1,
+        liked: false,
+        comments: const [],
+      ),
     ];
     likedPostIds = <String>{};
     // Authoritative like counts, independent of AppState's optimistic writes.

@@ -295,9 +295,40 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 400));
 
+      // The grid lives below the (tall) header: scroll it into view first.
+      // (The profile uses a NestedScrollView, so target the outer Scrollable.)
+      await tester.drag(
+        find.byType(Scrollable).first,
+        const Offset(0, -400),
+        warnIfMissed: false,
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
       // The heart the viewer liked is filled; the unliked one is empty.
       expect(find.byIcon(Icons.favorite_rounded), findsWidgets);
       expect(find.byIcon(Icons.favorite_border_rounded), findsWidgets);
+    });
+  });
+
+  group('profile scroll (tela inteira)', () {
+    testWidgets('rola para baixo e para CIMA sem prender no cabeçalho',
+        (tester) async {
+      await pumpYazzokiApp(tester, const ProfileScreen());
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final scrollable = find.byType(Scrollable).first;
+
+      // Down…
+      await tester.drag(scrollable, const Offset(0, -260));
+      await tester.pump(const Duration(milliseconds: 400));
+      // …and back UP: with two nested scrollables this used to "stick"
+      // (the gesture stayed on the grid and the header would not return).
+      await tester.drag(scrollable, const Offset(0, 260));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // The header is reachable again (the screen scrolled as one).
+      expect(find.text('PERFIL'), findsWidgets);
+      expect(tester.takeException(), isNull);
     });
   });
 

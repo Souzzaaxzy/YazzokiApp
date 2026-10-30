@@ -64,6 +64,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   /// two tabs for free; the header/stats stay above, shared by both.
   late final TabController _tabs = TabController(length: 2, vsync: this);
 
+  /// Inner controller of the NestedScrollView's body, shared by both grids so
+  /// the header collapses together with whichever tab is visible.
+  late final ScrollController _nestedController = ScrollController();
+
   /// Acesso ao player da música do perfil para pará-lo quando a aba sai de
   /// vista (o `IndexedStack` mantém a tela viva, então o dispose NÃO roda).
   final GlobalKey<ProfileMusicBarState> _musicKey =
@@ -116,6 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       if (id != null) closeProfile(id);
     }
     _tabs.dispose();
+    _nestedController.dispose();
     super.dispose();
   }
 
@@ -203,6 +208,61 @@ class _ProfileScreenState extends State<ProfileScreen>
     final follow = profile?.follow;
     final loading = state.isLoadingProfile && profile == null;
 
+    // Loading / error are FULL-SCREEN states (no scroll needed): returning
+    // early keeps the loaded branch a single, clean NestedScrollView.
+    if (_error != null && profile == null) {
+      return Scaffold(
+        backgroundColor: AppColors.absoluteBlack,
+        appBar: AppBar(
+          backgroundColor: AppColors.absoluteBlack,
+          surfaceTintColor: Colors.transparent,
+          automaticallyImplyLeading: false,
+          title: Text('PERFIL',
+              style: AppTextStyles.title.copyWith(fontSize: 18)),
+        ),
+        body: EmptyState(
+          icon: Icons.cloud_off_rounded,
+          title: 'CONNECTION ERROR',
+          hud: 'OFFLINE',
+          subtitle: _error!,
+          action: YazzokiButton(
+            label: 'Tentar novamente',
+            icon: Icons.refresh_rounded,
+            onPressed: _load,
+          ),
+        ),
+      );
+    }
+
+
+    // Nothing to render yet (still loading, or the slot has no user): show
+    // the loader. Guarded AFTER the error branch so a failed load keeps its
+    // own screen.
+    if (loading || user == null) {
+      return Scaffold(
+        backgroundColor: AppColors.absoluteBlack,
+        appBar: AppBar(
+          backgroundColor: AppColors.absoluteBlack,
+          surfaceTintColor: Colors.transparent,
+          automaticallyImplyLeading: false,
+          title: Text('PERFIL',
+              style: AppTextStyles.title.copyWith(fontSize: 18)),
+        ),
+        body: const Center(
+          child: HudLabel(text: 'LOADING PROFILE...', dot: true),
+        ),
+      );
+    }
+
+    // Non-null here: the guards above cover loading and the missing slot.
+    final shownUser = user;
+
+    // A single scroll for the WHOLE screen (header + grid) via
+    // NestedScrollView: the header scrolls away and the grid takes over, so
+    // scrolling up works from anywhere (two nested scrollables used to
+    // "catch" the gesture). TabBarView keeps the horizontal Posts/Reposts
+    // swipe; each tab's grid gets the shared controller so the header
+    // collapses as one.
     return Scaffold(
       backgroundColor: AppColors.absoluteBlack,
       floatingActionButton: isOwn ? const CreatePostFab() : null,
@@ -210,16 +270,14 @@ class _ProfileScreenState extends State<ProfileScreen>
         color: AppColors.electricBlue,
         backgroundColor: AppColors.nightBlue,
         onRefresh: _load,
-        child: CustomScrollView(
+        child: NestedScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
+          headerSliverBuilder: (context, _) => <Widget>[
             SliverAppBar(
               pinned: true,
               automaticallyImplyLeading: false,
               backgroundColor: AppColors.absoluteBlack,
               surfaceTintColor: Colors.transparent,
-              // The ☰ settings menu exists ONLY on the own profile — on
-              // another user's profile there is no logout/delete entry.
               leading: isOwn
                   ? IconButton(
                       tooltip: 'Configurações',
@@ -231,87 +289,61 @@ class _ProfileScreenState extends State<ProfileScreen>
               title: Text('PERFIL',
                   style: AppTextStyles.title.copyWith(fontSize: 18)),
             ),
-            if (loading)
-              const SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: HudLabel(text: 'LOADING PROFILE...', dot: true),
-                ),
-              )
-            else if (_error != null && profile == null)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: EmptyState(
-                  icon: Icons.cloud_off_rounded,
-                  title: 'CONNECTION ERROR',
-                  hud: 'OFFLINE',
-                  subtitle: _error!,
-                  action: YazzokiButton(
-                    label: 'Tentar novamente',
-                    icon: Icons.refresh_rounded,
-                    onPressed: _load,
-                  ),
-                ),
-              )
-            else if (user != null) ...[
-              SliverToBoxAdapter(
-                child: _ProfileHeader(
-                  user: user,
-                  isOwn: isOwn,
-                  follow: follow,
-                  hasUnseenStory: state.hasUnseenStory(user.id),
-                  onOpenStory: () => _openUserStory(state, user),
-                  onEdit: _openEditProfile,
-                  onFollowersTap: () => FollowListSheet.open(
-                      context, user, FollowListKind.followers),
-                  onFollowingTap: () => FollowListSheet.open(
-                      context, user, FollowListKind.following),
-                  onMessage: () => openChatWithUser(context, user),
-                  musicKey: _musicKey,
-                ),
+            SliverToBoxAdapter(
+              child: _ProfileHeader(
+                user: shownUser,
+                isOwn: isOwn,
+                follow: follow,
+                hasUnseenStory: state.hasUnseenStory(shownUser.id),
+                onOpenStory: () => _openUserStory(state, shownUser),
+                onEdit: _openEditProfile,
+                onFollowersTap: () =>
+                    FollowListSheet.open(context, shownUser, FollowListKind.followers),
+                onFollowingTap: () =>
+                    FollowListSheet.open(context, shownUser, FollowListKind.following),
+                onMessage: () => openChatWithUser(context, shownUser),
+                musicKey: _musicKey,
               ),
-              SliverToBoxAdapter(
-                child: Divider(color: AppColors.deepBlue, height: 1),
-              ),
-              // Two equal halves (2/4 and 3/4 of the width): Posts | Reposts.
-              // Swiping horizontally moves between them.
-              SliverToBoxAdapter(
-                child: _ProfileTabs(
+            ),
+            SliverToBoxAdapter(
+              child: Divider(color: AppColors.deepBlue, height: 1),
+            ),
+            // Two equal halves: Posts | Reposts. Stays pinned right below the
+            // app bar area while the grids scroll under it.
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _PinnedTabsDelegate(
+                _ProfileTabs(
                   controller: _tabs,
                   postsCount: posts.length,
-                  repostsCount: state.repostsFor(user.id).length,
+                  repostsCount: state.repostsFor(shownUser.id).length,
                 ),
               ),
-              SliverFillRemaining(
-                hasScrollBody: true,
-                child: TabBarView(
-                  controller: _tabs,
-                  children: [
-                    _ProfileGrid(
-                      posts: posts,
-                      emptyTitle: 'NO POSTS YET',
-                      emptySubtitle: isOwn
-                          ? 'Você ainda não publicou nada.'
-                          : 'Este usuário ainda não publicou nada.',
-                      onOpen: _openPost,
-                    ),
-                    _ProfileGrid(
-                      posts: state.repostsFor(user.id),
-                      emptyTitle: 'NO REPOSTS YET',
-                      emptySubtitle: isOwn
-                          ? 'Você ainda não repostou nada.'
-                          : 'Este usuário ainda não repostou nada.',
-                      onOpen: _openPost,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            // Room for the floating "+" so it never covers the last tile.
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppDimensions.spaceHuge * 2),
             ),
           ],
+          body: TabBarView(
+            controller: _tabs,
+            children: [
+              _ProfileGrid(
+                controller: _nestedController,
+                posts: posts,
+                emptyTitle: 'NO POSTS YET',
+                emptySubtitle: isOwn
+                    ? 'Você ainda não publicou nada.'
+                    : 'Este usuário ainda não publicou nada.',
+                onOpen: _openPost,
+              ),
+              _ProfileGrid(
+                controller: _nestedController,
+                posts: state.repostsFor(shownUser.id),
+                emptyTitle: 'NO REPOSTS YET',
+                emptySubtitle: isOwn
+                    ? 'Você ainda não repostou nada.'
+                    : 'Este usuário ainda não repostou nada.',
+                onOpen: _openPost,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -930,6 +962,36 @@ class _ChooserItem extends StatelessWidget {
 }
 
 /// A tappable grid tile for a profile post. Opens the post detail screen.
+/// Pins the Posts/Reposts tabs right below the profile header while the grid
+/// scrolls under it (SliverPersistentHeader needs a fixed extent).
+class _PinnedTabsDelegate extends SliverPersistentHeaderDelegate {
+  _PinnedTabsDelegate(this.child);
+
+  final Widget child;
+
+  /// The tab strip is 56px tall plus its own top margin.
+  static const double _height = 64;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) =>
+      // Solid background: the grid scrolls UNDER it, so it must not bleed.
+      ColoredBox(color: AppColors.absoluteBlack, child: child);
+
+  @override
+  bool shouldRebuild(covariant _PinnedTabsDelegate old) =>
+      old.child != child;
+}
+
 /// The two profile tabs — Posts (left half) and Reposts (right half), each
 /// taking exactly 2/4 and 3/4 of the width as equal halves. The controller
 /// comes from the screen so the TabBarView below stays in sync (swiping the
@@ -1033,12 +1095,17 @@ class _ProfileGrid extends StatelessWidget {
     required this.emptyTitle,
     required this.emptySubtitle,
     required this.onOpen,
+    this.controller,
   });
 
   final List<Post> posts;
   final String emptyTitle;
   final String emptySubtitle;
   final void Function(Post) onOpen;
+
+  /// The NestedScrollView's inner controller (so the header collapses as one
+  /// with the grid). Null in tests that pump the grid standalone.
+  final ScrollController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -1057,6 +1124,7 @@ class _ProfileGrid extends StatelessWidget {
       );
     }
     return GridView.builder(
+      controller: controller,
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.spaceLg,
         vertical: AppDimensions.spaceMd,
@@ -1119,13 +1187,9 @@ class _ProfilePostTile extends StatelessWidget {
                       horizontal: AppDimensions.spaceSm,
                       vertical: AppDimensions.spaceXs,
                     ),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.black87, Colors.transparent],
-                      ),
-                    ),
+                    // Barra PRETA SÓLIDA (não um gradiente): o texto fica
+                    // 100% legível sobre a mídia, que era o problema.
+                    decoration: const BoxDecoration(color: Colors.black),
                     child: Row(
                       children: [
                         RepostIcon(
