@@ -8,18 +8,20 @@ import '../../app/theme/app_text_styles.dart';
 import '../../core/utils/gallery_picker.dart';
 import '../../data/api_config.dart';
 import '../../data/services.dart';
+import '../../models/conversation.dart';
+import 'media_picker_sheet.dart';
 
 /// 📎 attach button inside the chat composer (private + group).
 ///
-/// Opens a compact pop-up above the composer with two actions:
-///  * "Galeria" → then choose Foto ou Vídeo → pick from the device;
-///  * "Câmera" → then choose Foto ou Vídeo → capture right now.
+/// Opens Yazzoki's OWN media picker ([MediaPickerSheet]) — an in-app gallery
+/// grid, not the OS picker, so the selection UI wears the app's identity. The
+/// sheet also carries the caption field and the VIEW-ONCE switch.
 ///
-/// The picked file is uploaded (image → /api/uploads, video →
-/// /api/uploads/video) and sent as a MEDIA message through [onSendMedia],
-/// preserving the active reply reference the composer already holds. The
-/// upload/send runs inside this widget (with error feedback) so the chat
-/// composer never breaks.
+/// The picked files are uploaded (image → /api/uploads, video →
+/// /api/uploads/video) and sent as a MEDIA (or ALBUM) message through
+/// [onSendMedia], preserving the active reply reference the composer already
+/// holds. The upload/send runs inside this widget (with error feedback) so the
+/// chat composer never breaks.
 class ChatAttachButton extends StatelessWidget {
   const ChatAttachButton({
     super.key,
@@ -30,8 +32,15 @@ class ChatAttachButton extends StatelessWidget {
   final Color iconColor;
 
   /// Called after upload with the real media URL; [kind] is 'image'|'video'.
-  /// The composer supplies the current replyToMessageId.
-  final Future<void> Function(String kind, String url) onSendMedia;
+  /// The composer supplies the current replyToMessageId, plus the caption /
+  /// view-once / album the user chose in the picker.
+  final Future<void> Function(
+    String kind,
+    String url, {
+    String? caption,
+    bool viewOnce,
+    List<AlbumItem>? album,
+  }) onSendMedia;
 
   Future<void> _openMenu(BuildContext context) async {
     final action = await showModalBottomSheet<_AttachAction>(
@@ -44,29 +53,84 @@ class ChatAttachButton extends StatelessWidget {
     if (action == null || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
 
-    // Pick media DIRECTLY from the gallery (photo OR video in the same
-    // native picker — no extra Foto/Vídeo step). The type is detected from
-    // the file.
-    final result = await (action == _AttachAction.gallery
-        ? pickGalleryMedia()
-        : _captureCameraMedia(context));
-    if (!context.mounted) return;
-    if (!result.isSuccess || result.file == null) return;
-    final file = File(result.file!.path);
-    final kind = _isVideoPath(file.path) ? 'video' : 'image';
+    if (action == _AttachAction.camera) {
+      // The camera still uses the OS capture (there is no in-app camera), and
+      // it stays a SINGLE file — the sheet's caption/view-once do not apply.
+      final result = await _captureCameraMedia(context);
+      if (!context.mounted) return;
+      if (!result.isSuccess || result.file == null) return;
+      await _uploadAndSend(
+        messenger,
+        files: [File(result.file!.path)],
+      );
+      return;
+    }
 
-    // Size guard (server re-validates) + upload + send.
+    // Gallery: Yazzoki's own picker (grid + caption + view-once + album).
+    final selection = await showModalBottomSheet<MediaSelection>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (_) => const MediaPickerSheet(),
+    );
+    if (selection == null || selection.assets.isEmpty) return;
+    if (!context.mounted) return;
+
+    // Materialise the picked assets into files (the picker works with
+    // AssetEntity; the uploader wants bytes on disk).
+    final files = <File>[];
+    for (final asset in selection.assets) {
+      final f = await asset.file;
+      if (f != null) files.add(f);
+    }
+    if (files.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Não foi possível ler as mídias.')),
+      );
+      return;
+    }
+    await _uploadAndSend(
+      messenger,
+      files: files,
+      caption: selection.caption,
+      viewOnce: selection.viewOnce,
+    );
+  }
+
+  /// Uploads every file and sends ONE message: a single media, or an ALBUM
+  /// when more than one was picked. The first file becomes the message's
+  /// primary media; the whole set travels as `album`.
+  Future<void> _uploadAndSend(
+    ScaffoldMessengerState messenger, {
+    required List<File> files,
+    String? caption,
+    bool viewOnce = false,
+  }) async {
     try {
-      if (kind == 'video' && file.lengthSync() > 100 * 1024 * 1024) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('O vídeo excede o limite de 100 MB.')),
-        );
-        return;
+      final items = <AlbumItem>[];
+      for (final file in files) {
+        final kind = _isVideoPath(file.path) ? 'video' : 'image';
+        if (kind == 'video' && file.lengthSync() > 100 * 1024 * 1024) {
+          messenger.showSnackBar(
+            const SnackBar(content: Text('O vídeo excede o limite de 100 MB.')),
+          );
+          return;
+        }
+        final url = kind == 'video'
+            ? await Services.instance.uploads.uploadVideo(file)
+            : await Services.instance.uploads.upload(file);
+        items.add(AlbumItem(kind: kind, url: url));
       }
-      final url = kind == 'video'
-          ? await Services.instance.uploads.uploadVideo(file)
-          : await Services.instance.uploads.upload(file);
-      await onSendMedia(kind, url);
+      final first = items.first;
+      await onSendMedia(
+        first.kind,
+        first.url,
+        caption: caption,
+        viewOnce: viewOnce,
+        album: items.length > 1 ? items : null,
+      );
     } on ApiException catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {

@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimensions.dart';
+import '../../app/theme/app_text_styles.dart';
 import '../../data/api_config.dart';
 import '../feed/post_video_preview.dart';
 import '../post/video_player_screen.dart';
 import '../../models/conversation.dart';
+import '../../core/widgets/view_once_icon.dart';
+import 'album_bubble.dart';
 
 /// Compact chat media bubble — used by BOTH private conversations and groups.
 ///
@@ -21,10 +24,24 @@ class ChatMediaBubble extends StatelessWidget {
     required this.message,
     this.maxWidth = 260,
     this.onStickerTap,
+    this.onViewOnceTap,
+    this.onAlbumTap,
+    this.onCaptionTap,
   });
 
   final ChatMessage message;
   final double maxWidth;
+
+  /// Opens a VIEW-ONCE media (full screen, protected). The chat screen owns
+  /// the opening because it also has to declare the view to the server and
+  /// put up the screenshot shield.
+  final VoidCallback? onViewOnceTap;
+
+  /// Opens an ALBUM at the tapped index.
+  final void Function(int index)? onAlbumTap;
+
+  /// Tapping the caption (it may be long) opens the full text.
+  final VoidCallback? onCaptionTap;
 
   /// Called when a STICKER message is TAPPED. Favoriting a sticker in the
   /// chat is a simple tap on the sticker itself — never a long press (the
@@ -41,6 +58,34 @@ class ChatMediaBubble extends StatelessWidget {
   }
 
   Widget _content(BuildContext context) {
+    // VIEW-ONCE that THIS viewer already consumed: the media is gone (the
+    // server withheld the URL), so the bubble states that instead of showing
+    // a broken image.
+    if (message.viewOnce && message.isViewOnceConsumed) {
+      return _ConsumedViewOnce(width: maxWidth);
+    }
+    // A VIEW-ONCE still available: a sealed card. Tapping opens it, which is
+    // what consumes it.
+    if (message.viewOnce) {
+      return _SealedViewOnce(
+        width: maxWidth,
+        kind: message.isVideo ? 'video' : 'image',
+        onTap: onViewOnceTap,
+      );
+    }
+    if (message.isAlbum && (message.album?.isNotEmpty ?? false)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AlbumBubble(
+            items: message.album!,
+            maxWidth: maxWidth,
+            onTapItem: onAlbumTap,
+          ),
+          if (message.caption != null) _Caption(text: message.caption!, onTap: onCaptionTap),
+        ],
+      );
+    }
     if (message.isSticker && message.stickerUrl != null) {
       return GestureDetector(
         // Toque na própria figurinha = favoritar (sem long press).
@@ -50,17 +95,24 @@ class ChatMediaBubble extends StatelessWidget {
       );
     }
     if (message.isImage && message.imageUrl != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        child: GestureDetector(
-          onTap: () => _openImageViewer(context),
-          child: _ResponsiveChatImage(
-              url: ApiConfig.resolveUrl(message.imageUrl!)),
-        ),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            child: GestureDetector(
+              onTap: () => _openImageViewer(context),
+              child: _ResponsiveChatImage(
+                  url: ApiConfig.resolveUrl(message.imageUrl!)),
+            ),
+          ),
+          if (message.caption != null)
+            _Caption(text: message.caption!, onTap: onCaptionTap),
+        ],
       );
     }
     if (message.isVideo && message.videoUrl != null) {
-      return PostVideoPreview(
+      final preview = PostVideoPreview(
         videoUrl: ApiConfig.resolveUrl(message.videoUrl!),
         active: true,
         onTap: () => Navigator.of(context).push(
@@ -71,6 +123,14 @@ class ChatMediaBubble extends StatelessWidget {
           ),
         ),
         maxHeightFraction: 0.5,
+      );
+      if (message.caption == null) return preview;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          preview,
+          _Caption(text: message.caption!, onTap: onCaptionTap),
+        ],
       );
     }
     return const SizedBox.shrink();
@@ -260,6 +320,108 @@ class _ImageViewer extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A VIEW-ONCE media that is still sealed: a card that says "abrir" without
+/// revealing anything (there is no thumbnail — the whole point is that the
+/// media is only seen once, on open).
+class _SealedViewOnce extends StatelessWidget {
+  const _SealedViewOnce({
+    required this.width,
+    required this.kind,
+    required this.onTap,
+  });
+
+  final double width;
+  final String kind;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: width,
+        height: width * 0.62,
+        decoration: BoxDecoration(
+          color: AppColors.bluishBlack,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          border: Border.all(color: AppColors.deepBlue),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ViewOnceIcon(color: AppColors.accentInk, size: 34, on: true),
+            const SizedBox(height: AppDimensions.spaceSm),
+            Text(
+              kind == 'video' ? 'Vídeo de 1 visualização' : 'Foto de 1 visualização',
+              style: AppTextStyles.body,
+            ),
+            const SizedBox(height: 2),
+            Text('Toque para abrir', style: AppTextStyles.caption),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A VIEW-ONCE the viewer already opened. The server no longer serves the
+/// media, so the bubble says so plainly instead of showing a broken tile.
+class _ConsumedViewOnce extends StatelessWidget {
+  const _ConsumedViewOnce({required this.width});
+
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.all(AppDimensions.spaceLg),
+      decoration: BoxDecoration(
+        color: AppColors.bluishBlack,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        border: Border.all(color: AppColors.deepBlue),
+      ),
+      child: Row(
+        children: [
+          ViewOnceIcon(color: AppColors.holographicBlue, size: 20, on: false),
+          const SizedBox(width: AppDimensions.spaceSm),
+          Expanded(
+            child: Text('Visualização única já aberta',
+                style: AppTextStyles.caption),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The caption under a media message. Tapping opens it in full (a caption can
+/// be long, and the bubble must not grow to fit it).
+class _Caption extends StatelessWidget {
+  const _Caption({required this.text, this.onTap});
+
+  final String text;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.only(top: AppDimensions.spaceSm),
+        child: Text(
+          text,
+          maxLines: 4,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyles.body,
         ),
       ),
     );

@@ -22,7 +22,10 @@ import '../../models/conversation.dart';
 import '../../models/sticker.dart';
 import '../../app/routes.dart';
 import 'chat_attach_button.dart';
+import '../post/video_player_screen.dart';
+import 'album_image_viewer.dart';
 import 'chat_media_bubble.dart';
+import 'view_once_viewer.dart';
 import 'story_reply_reference.dart';
 import 'chat_navigation.dart';
 import 'reply_swipe.dart';
@@ -586,7 +589,49 @@ class _GroupConversationScreenState extends State<GroupConversationScreen>
   }
 
   /// Sends a GROUP media message (image/video), preserving the active reply.
-  Future<void> _sendGroupMedia(String kind, String url) async {
+
+  /// Opens a VIEW-ONCE media with the protections on (see the DM screen).
+  Future<void> _openViewOnce(ChatMessage message) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ViewOnceViewer(
+          message: message,
+          onViewed: () => _declareViewOnce(message.id),
+        ),
+      ),
+    );
+  }
+
+  /// Opens an ALBUM at the tapped tile.
+  void _openAlbumItem(ChatMessage message, int index) {
+    final items = message.album;
+    if (items == null || index < 0 || index >= items.length) return;
+    final item = items[index];
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => item.isVideo
+            ? VideoPlayerScreen(videoUrl: ApiConfig.resolveUrl(item.url))
+            : AlbumImageViewer(
+                items: items,
+                initialIndex: index,
+                caption: message.caption,
+              ),
+      ),
+    );
+  }
+
+  Future<void> _declareViewOnce(String messageId) async {
+    final state = AppStateScope.maybeOf(context);
+    await state?.markViewOnceOpened(messageId);
+  }
+
+  Future<void> _sendGroupMedia(
+    String kind,
+    String url, {
+    String? caption,
+    bool viewOnce = false,
+    List<AlbumItem>? album,
+  }) async {
     final state = _state;
     if (state == null) return;
     final reply = _replyTarget;
@@ -596,6 +641,9 @@ class _GroupConversationScreenState extends State<GroupConversationScreen>
         kind: kind,
         url: url,
         replyToMessageId: reply?.id,
+        caption: caption,
+        viewOnce: viewOnce,
+        album: album,
       );
       if (!mounted) return;
       setState(() {
@@ -1566,6 +1614,8 @@ class _GroupConversationScreenState extends State<GroupConversationScreen>
         mine: m.senderId == _state?.currentUser?.id,
         onLongPress: () => _showMessageMenu(i),
         onStickerTap: m.isSticker ? () => _toggleStickerFavorite(m) : null,
+        onViewOnceTap: () => _openViewOnce(m),
+        onAlbumTap: (i) => _openAlbumItem(m, i),
         onStartReply: () => _startReply(i),
         replySelected: _replyTarget?.id == m.id,
         replyingTo: (_replyTarget?.id == m.id) ? _replyTarget : null,
@@ -1764,6 +1814,8 @@ class _GroupMessageBubble extends StatelessWidget {
     required this.mine,
     this.onLongPress,
     this.onStickerTap,
+    this.onViewOnceTap,
+    this.onAlbumTap,
     this.replyingTo,
     this.onOpenReplyTarget,
     this.onStartReply,
@@ -1777,6 +1829,12 @@ class _GroupMessageBubble extends StatelessWidget {
   /// Toque na própria FIGURINHA = favoritar (o long press continua sendo o
   /// menu normal da mensagem).
   final VoidCallback? onStickerTap;
+
+  /// Abre a mídia de VISUALIZAÇÃO ÚNICA (tela cheia protegida).
+  final VoidCallback? onViewOnceTap;
+
+  /// Abre o ÁLBUM no índice tocado.
+  final void Function(int index)? onAlbumTap;
   final ChatMessage? replyingTo;
 
   /// Tapping a reply quote scrolls to the ORIGINAL message (when loaded).
@@ -1925,7 +1983,12 @@ class _GroupMessageBubble extends StatelessWidget {
                 ),
               ),
             ),
-          _MessageContent(message: message, onStickerTap: onStickerTap),
+          _MessageContent(
+            message: message,
+            onStickerTap: onStickerTap,
+            onViewOnceTap: onViewOnceTap,
+            onAlbumTap: onAlbumTap,
+          ),
           if (!mine) ...[
             const SizedBox(height: 4),
             Text(
@@ -2004,10 +2067,21 @@ class _ReplyQuote extends StatelessWidget {
 }
 
 class _MessageContent extends StatelessWidget {
-  const _MessageContent({required this.message, this.onStickerTap});
+  const _MessageContent({
+    required this.message,
+    this.onStickerTap,
+    this.onViewOnceTap,
+    this.onAlbumTap,
+  });
 
   final ChatMessage message;
   final VoidCallback? onStickerTap;
+
+  /// Abre a mídia de VISUALIZAÇÃO ÚNICA (tela cheia protegida).
+  final VoidCallback? onViewOnceTap;
+
+  /// Abre o ÁLBUM no índice tocado.
+  final void Function(int index)? onAlbumTap;
 
   @override
   Widget build(BuildContext context) {
@@ -2036,7 +2110,12 @@ class _MessageContent extends StatelessWidget {
       );
     }
     if (message.isMedia || message.isSticker) {
-      return ChatMediaBubble(message: message, onStickerTap: onStickerTap);
+      return ChatMediaBubble(
+        message: message,
+        onStickerTap: onStickerTap,
+        onViewOnceTap: onViewOnceTap,
+        onAlbumTap: onAlbumTap,
+      );
     }
     final selfId = AppStateScope.maybeOf(context)?.currentUser?.id;
     final content = message.content;

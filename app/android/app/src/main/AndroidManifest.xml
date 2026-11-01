@@ -7,6 +7,9 @@
          (never auto-granted); the recorder asks before the first capture. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <!-- The in-app media picker lists photos AND videos, so the video grant is
+         needed too (Android 13+ splits them). -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
     <!--

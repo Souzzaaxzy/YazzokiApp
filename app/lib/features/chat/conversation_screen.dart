@@ -24,6 +24,9 @@ import '../../models/conversation.dart';
 import '../../models/sticker.dart';
 import 'chat_attach_button.dart';
 import 'chat_media_bubble.dart';
+import '../post/video_player_screen.dart';
+import 'album_image_viewer.dart';
+import 'view_once_viewer.dart';
 import 'story_reply_reference.dart';
 import 'chat_navigation.dart';
 import 'reply_swipe.dart';
@@ -351,7 +354,52 @@ class _ConversationScreenState extends State<ConversationScreen>
 
   /// Sends a MEDIA message (image/video) to the current private
   /// conversation, preserving the active reply reference.
-  Future<void> _sendMedia(String kind, String url) async {
+
+  /// Opens a VIEW-ONCE media with the protections on. The view is declared to
+  /// the server the moment the media is actually shown (the viewer does that
+  /// through [ViewOnceViewer.onViewed]); the server then withholds the URL, so
+  /// re-opening finds nothing.
+  Future<void> _openViewOnce(ChatMessage message) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ViewOnceViewer(
+          message: message,
+          onViewed: () => _declareViewOnce(message.id),
+        ),
+      ),
+    );
+  }
+
+  /// Opens an ALBUM at the tapped tile, in the app's full-screen viewer.
+  void _openAlbumItem(ChatMessage message, int index) {
+    final items = message.album;
+    if (items == null || index < 0 || index >= items.length) return;
+    final item = items[index];
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => item.isVideo
+            ? VideoPlayerScreen(videoUrl: ApiConfig.resolveUrl(item.url))
+            : AlbumImageViewer(
+                items: items,
+                initialIndex: index,
+                caption: message.caption,
+              ),
+      ),
+    );
+  }
+
+  Future<void> _declareViewOnce(String messageId) async {
+    final state = AppStateScope.maybeOf(context);
+    await state?.markViewOnceOpened(messageId);
+  }
+
+  Future<void> _sendMedia(
+    String kind,
+    String url, {
+    String? caption,
+    bool viewOnce = false,
+    List<AlbumItem>? album,
+  }) async {
     final conversationId = _conversationId;
     final state = AppStateScope.maybeOf(context);
     if (conversationId.isEmpty || state == null) return;
@@ -363,6 +411,9 @@ class _ConversationScreenState extends State<ConversationScreen>
         url: url,
         replyToMessageId: reply?.id,
         otherUser: _conversation?.otherUser ?? widget.args.otherUser,
+        caption: caption,
+        viewOnce: viewOnce,
+        album: album,
       );
       if (!mounted) return;
       setState(() => _replyTarget = null);
@@ -1038,7 +1089,10 @@ class _ConversationScreenState extends State<ConversationScreen>
               enabled: conversation != null,
               onChanged: _onInputChanged,
               onSend: _send,
-              onAttachMedia: (kind, url) => _sendMedia(kind, url),
+              onAttachMedia: (kind, url,
+                      {caption, viewOnce = false, album}) =>
+                  _sendMedia(kind, url,
+                      caption: caption, viewOnce: viewOnce, album: album),
               onPointerDown: _onMicPointerDown,
               onPointerUp: _onMicPointerUp,
               onMicDragUpdate: _onMicDrag,
@@ -1392,6 +1446,8 @@ class _ConversationScreenState extends State<ConversationScreen>
         onStartReply: _startReply,
         onLongPress: () => _showMessageMenu(i),
         onStickerTap: m.isSticker ? () => _toggleStickerFavorite(m) : null,
+        onViewOnceTap: () => _openViewOnce(m),
+        onAlbumTap: (i) => _openAlbumItem(m, i),
         replySelected: _replyTargetIndex == i,
         onOpenReplyTarget: _openReplyTarget,
       );
@@ -1602,6 +1658,8 @@ class _MessageBubble extends StatelessWidget {
     required this.onStartReply,
     required this.onLongPress,
     this.onStickerTap,
+    this.onViewOnceTap,
+    this.onAlbumTap,
     this.replySelected = false,
     this.onOpenReplyTarget,
   });
@@ -1625,6 +1683,12 @@ class _MessageBubble extends StatelessWidget {
   /// Toque na própria FIGURINHA = favoritar (o long press continua sendo o
   /// menu normal da mensagem).
   final VoidCallback? onStickerTap;
+
+  /// Abre a mídia de VISUALIZAÇÃO ÚNICA (a tela cheia protegida).
+  final VoidCallback? onViewOnceTap;
+
+  /// Abre o ÁLBUM no índice tocado.
+  final void Function(int index)? onAlbumTap;
   final bool replySelected;
 
   /// Tapping a reply quote scrolls to the ORIGINAL message (when loaded).
@@ -1730,7 +1794,12 @@ class _MessageBubble extends StatelessWidget {
           if (message.isVoice)
             VoicePlayerBubble(message: message, mine: mine)
           else if (message.isMedia || message.isSticker)
-            ChatMediaBubble(message: message, onStickerTap: onStickerTap)
+            ChatMediaBubble(
+              message: message,
+              onStickerTap: onStickerTap,
+              onViewOnceTap: onViewOnceTap,
+              onAlbumTap: onAlbumTap,
+            )
           else
             Text(
               message.content,
@@ -1840,7 +1909,13 @@ class _Composer extends StatefulWidget {
   final VoidCallback onSend;
 
   /// Called after a media file is uploaded; [kind] is 'image'|'video'.
-  final Future<void> Function(String kind, String url)? onAttachMedia;
+  final Future<void> Function(
+    String kind,
+    String url, {
+    String? caption,
+    bool viewOnce,
+    List<AlbumItem>? album,
+  })? onAttachMedia;
 
   /// Pointer-down starts recording immediately; pointer-up sends (or cancels on quick tap..
   final VoidCallback onPointerDown;

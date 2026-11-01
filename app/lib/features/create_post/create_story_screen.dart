@@ -8,7 +8,7 @@ import 'package:video_thumbnail/video_thumbnail.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
-import '../../core/utils/gallery_picker.dart';
+import '../chat/media_picker_sheet.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/hud_label.dart';
 import '../../core/widgets/yazzoki_button.dart';
@@ -61,18 +61,28 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
   }
 
   Future<void> _pickMedia() async {
-    final result = await pickGalleryMedia();
+    // O seletor é o MESMO do chat (a galeria em grade do app), aberto no modo
+    // STORY: só mídia — sem legenda e sem visualização única, porque um story
+    // é uma publicação simples.
+    final selection = await showModalBottomSheet<MediaSelection>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (_) => const MediaPickerSheet(forStory: true),
+    );
     if (!mounted) return;
-    if (!result.isSuccess) {
-      if (!result.cancelled &&
-          result.error != null &&
-          result.error!.isNotEmpty) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(result.error!)));
-      }
+    if (selection == null || selection.assets.isEmpty) return;
+    final picked = await selection.assets.first.file;
+    if (!mounted) return;
+    if (picked == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível ler a mídia.')),
+      );
       return;
     }
-    final file = result.file!;
+    final file = File(picked.path);
     final isVideo = _isVideoPath(file.path);
     if (isVideo) {
       // Limite de 2 MINUTOS para vídeos de Story: bloqueia ANTES do upload e

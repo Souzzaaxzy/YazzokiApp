@@ -44,6 +44,16 @@ import java.util.concurrent.Executors
 class MainActivity : FlutterActivity() {
     companion object {
         private const val CHANNEL = "yazzoki.share/stickers"
+
+        /**
+         * Canal do ESCUDO DE CAPTURA (visualização única).
+         *
+         * FLAG_SECURE diz ao sistema para NÃO incluir a janela em capturas de
+         * tela nem em gravações, e (no Android recente) também escurece a
+         * prévia no seletor de apps. É o sistema que bloqueia, não a UI: uma
+         * proteção só de tela seria contornável.
+         */
+        private const val SECURE_CHANNEL = "yazzoki.secure/screen"
         private const val TAG = "YazzokiShare"
 
         // Limites de segurança (espelham/antecedem o servidor).
@@ -65,6 +75,9 @@ class MainActivity : FlutterActivity() {
     }
 
     private var channel: MethodChannel? = null
+
+    /** Estado atual do FLAG_SECURE (para a consulta "isEnabled"). */
+    private var isSecure = false
 
     /** Lote pronto aguardando o Flutter (processo frio) ou o push. */
     private var pendingBatch: Map<String, Any?>? = null
@@ -129,6 +142,45 @@ class MainActivity : FlutterActivity() {
         }
         // Se um share já foi processado antes do canal existir (processo
         // frio), a consulta "initialSharedBatch" o buscará. Nada a fazer.
+
+        // Escudo de captura: o app liga/desliga o FLAG_SECURE enquanto uma
+        // mídia de visualização única está aberta.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SECURE_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "enable" -> {
+                        setSecure(true)
+                        result.success(null)
+                    }
+                    "disable" -> {
+                        setSecure(false)
+                        result.success(null)
+                    }
+                    "isEnabled" -> result.success(isSecure)
+                    else -> result.notImplemented()
+                }
+            }
+    }
+
+    /**
+     * Liga/desliga o FLAG_SECURE da janela. Idempotente: ligar duas vezes é
+     * inofensivo, e desligar sem estar ligado também — o Flutter pode repetir
+     * a chamada ao reconstruir a tela.
+     */
+    private fun setSecure(enabled: Boolean) {
+        isSecure = enabled
+        runOnUiThread {
+            if (enabled) {
+                window.setFlags(
+                    android.view.WindowManager.LayoutParams.FLAG_SECURE,
+                    android.view.WindowManager.LayoutParams.FLAG_SECURE,
+                )
+            } else {
+                window.clearFlags(
+                    android.view.WindowManager.LayoutParams.FLAG_SECURE,
+                )
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
