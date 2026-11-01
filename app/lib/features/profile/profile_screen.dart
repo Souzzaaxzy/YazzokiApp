@@ -16,6 +16,7 @@ import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/glow_container.dart';
 import '../../core/widgets/grid_icon.dart';
 import '../../core/widgets/hud_label.dart';
+import '../../core/widgets/profile_views_icon.dart';
 import '../../core/widgets/repost_icon.dart';
 import '../../core/widgets/yazzoki_button.dart';
 import '../../core/widgets/user_avatar.dart';
@@ -27,6 +28,7 @@ import '../chat/chat_navigation.dart';
 import '../feed/story_viewer.dart';
 import 'follow_button.dart';
 import 'follow_list_sheet.dart';
+import 'profile_views_sheet.dart';
 import 'profile_music_bar.dart';
 import 'settings_sheet.dart';
 
@@ -60,13 +62,18 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _requested = false;
   String? _error;
 
-  /// Posts | Reposts. The TabBarView gives the horizontal SWIPE between the
-  /// two tabs for free; the header/stats stay above, shared by both.
-  late final TabController _tabs = TabController(length: 2, vsync: this);
+  /// Posts | Reposts. There is NO TabBarView: the profile is a single scroll
+  /// (header + tabs + grid), so switching tabs only swaps which grid sliver is
+  /// rendered — driven by [_tabs] (tap on the TabBar or a horizontal swipe).
+  late final TabController _tabs = TabController(length: 2, vsync: this)
+    ..addListener(_onTabChanged);
 
-  /// Inner controller of the NestedScrollView's body, shared by both grids so
-  /// the header collapses together with whichever tab is visible.
-  late final ScrollController _nestedController = ScrollController();
+  /// The grid is rendered by `build` based on `_tabs.index`, so a tab change
+  /// must rebuild this State (there is no TabBarView to do it for us).
+  void _onTabChanged() {
+    if (mounted) setState(() {});
+  }
+
 
   /// Acesso ao player da música do perfil para pará-lo quando a aba sai de
   /// vista (o `IndexedStack` mantém a tela viva, então o dispose NÃO roda).
@@ -119,8 +126,8 @@ class _ProfileScreenState extends State<ProfileScreen>
       final id = _shownUserId;
       if (id != null) closeProfile(id);
     }
+    _tabs.removeListener(_onTabChanged);
     _tabs.dispose();
-    _nestedController.dispose();
     super.dispose();
   }
 
@@ -148,6 +155,9 @@ class _ProfileScreenState extends State<ProfileScreen>
         // "Pesquisas recentes" history (never the session user's own).
         if (!_isOwn) {
           state.recordProfileVisit(loaded);
+          // Registra a VISITA no servidor (o dono verá no "quem viu seu
+          // perfil"). Best-effort: nunca bloqueia o render.
+          unawaited(state.recordProfileView(loaded.id));
         }
       }
     } on ApiException catch (e) {
@@ -257,12 +267,30 @@ class _ProfileScreenState extends State<ProfileScreen>
     // Non-null here: the guards above cover loading and the missing slot.
     final shownUser = user;
 
-    // A single scroll for the WHOLE screen (header + grid) via
-    // NestedScrollView: the header scrolls away and the grid takes over, so
-    // scrolling up works from anywhere (two nested scrollables used to
-    // "catch" the gesture). TabBarView keeps the horizontal Posts/Reposts
-    // swipe; each tab's grid gets the shared controller so the header
-    // collapses as one.
+    // UM ÚNICO scroll para a tela inteira: o cabeçalho, as abas e a grade
+    // vivem no MESMO CustomScrollView (nenhum scrollable aninhado). Era o
+    // aninhamento que fazia o gesto "prender" ao subir. A troca de aba é por
+    // toque E por swipe horizontal (o GestureDetector usa o `_tabs`).
+    final reposts = state.repostsFor(shownUser.id);
+    final isPostsTab = _tabs.index == 0;
+    final Widget grid = isPostsTab
+        ? _ProfileGrid(
+            posts: posts,
+            emptyTitle: 'NO POSTS YET',
+            emptySubtitle: isOwn
+                ? 'Você ainda não publicou nada.'
+                : 'Este usuário ainda não publicou nada.',
+            onOpen: _openPost,
+          )
+        : _ProfileGrid(
+            posts: reposts,
+            emptyTitle: 'NO REPOSTS YET',
+            emptySubtitle: isOwn
+                ? 'Você ainda não repostou nada.'
+                : 'Este usuário ainda não repostou nada.',
+            onOpen: _openPost,
+          );
+
     return Scaffold(
       backgroundColor: AppColors.absoluteBlack,
       floatingActionButton: isOwn ? const CreatePostFab() : null,
@@ -270,77 +298,88 @@ class _ProfileScreenState extends State<ProfileScreen>
         color: AppColors.electricBlue,
         backgroundColor: AppColors.nightBlue,
         onRefresh: _load,
-        child: NestedScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          headerSliverBuilder: (context, _) => <Widget>[
-            SliverAppBar(
-              pinned: true,
-              automaticallyImplyLeading: false,
-              backgroundColor: AppColors.absoluteBlack,
-              surfaceTintColor: Colors.transparent,
-              leading: isOwn
-                  ? IconButton(
-                      tooltip: 'Configurações',
-                      icon: Icon(Icons.menu_rounded,
-                          color: AppColors.holographicBlue),
-                      onPressed: () => SettingsSheet.open(context),
-                    )
-                  : null,
-              title: Text('PERFIL',
-                  style: AppTextStyles.title.copyWith(fontSize: 18)),
-            ),
-            SliverToBoxAdapter(
-              child: _ProfileHeader(
-                user: shownUser,
-                isOwn: isOwn,
-                follow: follow,
-                hasUnseenStory: state.hasUnseenStory(shownUser.id),
-                onOpenStory: () => _openUserStory(state, shownUser),
-                onEdit: _openEditProfile,
-                onFollowersTap: () =>
-                    FollowListSheet.open(context, shownUser, FollowListKind.followers),
-                onFollowingTap: () =>
-                    FollowListSheet.open(context, shownUser, FollowListKind.following),
-                onMessage: () => openChatWithUser(context, shownUser),
-                musicKey: _musicKey,
+        child: GestureDetector(
+          // Swipe horizontal troca de aba (Posts ↔ Reposts) sem criar um
+          // scrollable horizontal: o scroll vertical continua único.
+          onHorizontalDragEnd: (details) {
+            final v = details.primaryVelocity ?? 0;
+            if (v.abs() < 120) return;
+            final next = v < 0 ? 1 : 0;
+            if (_tabs.index != next) _tabs.animateTo(next);
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                pinned: true,
+                automaticallyImplyLeading: false,
+                backgroundColor: AppColors.absoluteBlack,
+                surfaceTintColor: Colors.transparent,
+                // ESQUERDA: no perfil PRÓPRIO fica o menu (☰); em perfis de
+                // OUTROS usuários fica só a setinha de voltar.
+                leading: isOwn
+                    ? IconButton(
+                        tooltip: 'Configurações',
+                        icon: Icon(Icons.menu_rounded,
+                            color: AppColors.holographicBlue),
+                        onPressed: () => SettingsSheet.open(context),
+                      )
+                    : IconButton(
+                        tooltip: 'Voltar',
+                        icon: Icon(Icons.arrow_back_rounded,
+                            color: AppColors.techWhite),
+                        onPressed: () => Navigator.of(context).maybePop(),
+                      ),
+                // DIREITA: o botão de "quem viu seu perfil" aparece APENAS
+                // para o próprio usuário — ninguém vê os visitantes alheios.
+                actions: isOwn
+                    ? [
+                        IconButton(
+                          tooltip: 'Quem viu seu perfil',
+                          icon: ProfileViewsIcon(
+                            color: AppColors.holographicBlue,
+                            size: 22,
+                          ),
+                          onPressed: () =>
+                              ProfileViewsSheet.open(context, shownUser.id),
+                        ),
+                      ]
+                    : null,
+                title: Text('PERFIL',
+                    style: AppTextStyles.title.copyWith(fontSize: 18)),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: Divider(color: AppColors.deepBlue, height: 1),
-            ),
-            // Two equal halves: Posts | Reposts. Stays pinned right below the
-            // app bar area while the grids scroll under it.
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _PinnedTabsDelegate(
-                _ProfileTabs(
-                  controller: _tabs,
-                  postsCount: posts.length,
-                  repostsCount: state.repostsFor(shownUser.id).length,
+              SliverToBoxAdapter(
+                child: _ProfileHeader(
+                  user: shownUser,
+                  isOwn: isOwn,
+                  follow: follow,
+                  hasUnseenStory: state.hasUnseenStory(shownUser.id),
+                  onOpenStory: () => _openUserStory(state, shownUser),
+                  onEdit: _openEditProfile,
+                  onFollowersTap: () => FollowListSheet.open(
+                      context, shownUser, FollowListKind.followers),
+                  onFollowingTap: () => FollowListSheet.open(
+                      context, shownUser, FollowListKind.following),
+                  onMessage: () => openChatWithUser(context, shownUser),
+                  musicKey: _musicKey,
                 ),
               ),
-            ),
-          ],
-          body: TabBarView(
-            controller: _tabs,
-            children: [
-              _ProfileGrid(
-                controller: _nestedController,
-                posts: posts,
-                emptyTitle: 'NO POSTS YET',
-                emptySubtitle: isOwn
-                    ? 'Você ainda não publicou nada.'
-                    : 'Este usuário ainda não publicou nada.',
-                onOpen: _openPost,
+              SliverToBoxAdapter(
+                child: Divider(color: AppColors.deepBlue, height: 1),
               ),
-              _ProfileGrid(
-                controller: _nestedController,
-                posts: state.repostsFor(shownUser.id),
-                emptyTitle: 'NO REPOSTS YET',
-                emptySubtitle: isOwn
-                    ? 'Você ainda não repostou nada.'
-                    : 'Este usuário ainda não repostou nada.',
-                onOpen: _openPost,
+              // As abas rolam junto com o resto (uma tela só). `_tabs` mantém
+              // o estado selecionado; o toque e o swipe atualizam a grade.
+              SliverToBoxAdapter(
+                child: _ProfileTabs(
+                  controller: _tabs,
+                  postsCount: posts.length,
+                  repostsCount: reposts.length,
+                ),
+              ),
+              // A grade JÁ É um sliver: entra no mesmo scroll do perfil.
+              grid,
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppDimensions.spaceHuge * 2),
               ),
             ],
           ),
@@ -962,36 +1001,6 @@ class _ChooserItem extends StatelessWidget {
 }
 
 /// A tappable grid tile for a profile post. Opens the post detail screen.
-/// Pins the Posts/Reposts tabs right below the profile header while the grid
-/// scrolls under it (SliverPersistentHeader needs a fixed extent).
-class _PinnedTabsDelegate extends SliverPersistentHeaderDelegate {
-  _PinnedTabsDelegate(this.child);
-
-  final Widget child;
-
-  /// The tab strip is 56px tall plus its own top margin.
-  static const double _height = 64;
-
-  @override
-  double get minExtent => _height;
-
-  @override
-  double get maxExtent => _height;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) =>
-      // Solid background: the grid scrolls UNDER it, so it must not bleed.
-      ColoredBox(color: AppColors.absoluteBlack, child: child);
-
-  @override
-  bool shouldRebuild(covariant _PinnedTabsDelegate old) =>
-      old.child != child;
-}
-
 /// The two profile tabs — Posts (left half) and Reposts (right half), each
 /// taking exactly 2/4 and 3/4 of the width as equal halves. The controller
 /// comes from the screen so the TabBarView below stays in sync (swiping the
@@ -1087,15 +1096,15 @@ class _ProfileTab extends StatelessWidget {
   }
 }
 
-/// The scrollable grid of ONE tab (posts or reposts). Kept as a separate
-/// widget so the two tabs share the exact layout and empty state.
+/// The grid of ONE tab (posts or reposts) as a SLIVER — it participates in
+/// the profile's single CustomScrollView instead of owning a scrollable, so
+/// there is no nested-scroll "sticking".
 class _ProfileGrid extends StatelessWidget {
   const _ProfileGrid({
     required this.posts,
     required this.emptyTitle,
     required this.emptySubtitle,
     required this.onOpen,
-    this.controller,
   });
 
   final List<Post> posts;
@@ -1103,15 +1112,10 @@ class _ProfileGrid extends StatelessWidget {
   final String emptySubtitle;
   final void Function(Post) onOpen;
 
-  /// The NestedScrollView's inner controller (so the header collapses as one
-  /// with the grid). Null in tests that pump the grid standalone.
-  final ScrollController? controller;
-
   @override
   Widget build(BuildContext context) {
     if (posts.isEmpty) {
-      return SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+      return SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.only(top: AppDimensions.spaceHuge),
           child: EmptyState(
@@ -1123,23 +1127,26 @@ class _ProfileGrid extends StatelessWidget {
         ),
       );
     }
-    return GridView.builder(
-      controller: controller,
+    return SliverPadding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.spaceLg,
         vertical: AppDimensions.spaceMd,
       ),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: AppDimensions.spaceMd,
-        crossAxisSpacing: AppDimensions.spaceMd,
-        childAspectRatio: 0.9,
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: AppDimensions.spaceMd,
+          crossAxisSpacing: AppDimensions.spaceMd,
+          childAspectRatio: 0.9,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, i) {
+            final post = posts[i];
+            return _ProfilePostTile(post: post, onTap: () => onOpen(post));
+          },
+          childCount: posts.length,
+        ),
       ),
-      itemCount: posts.length,
-      itemBuilder: (context, i) {
-        final post = posts[i];
-        return _ProfilePostTile(post: post, onTap: () => onOpen(post));
-      },
     );
   }
 }

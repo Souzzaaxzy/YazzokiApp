@@ -72,27 +72,17 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onTap(int i) {
     setState(() => _index = i);
     final state = AppStateScope.of(context);
-    // O `IndexedStack` mantém as abas VIVAS: sem isto elas carregariam uma
-    // única vez e mostrariam dados velhos ao voltar. Cada aba é re-sincronizada
-    // com o servidor no instante em que é aberta (e o overlay local já cobre
-    // o caso "acabei de postar/mandar mensagem", que é instantâneo).
-    switch (i) {
-      case 0:
-        // Feed: recarrega para pegar posts novos de outros usuários.
-        state.loadFeed();
-      case 1:
-        // Chat: conversas + badge de não lidas.
-        state.loadConversations();
-        state.refreshUnreadConversations();
-      case 3:
-        // Atividades: lista persistida no servidor.
-        state.loadNotifications();
-      case 4:
-        // Perfil próprio: re-sincroniza contadores/posts/Stories.
-        final me = state.currentUser?.nickname;
-        if (me != null) state.loadProfile(me);
-        state.loadStories();
+    if (i == 1) {
+      // Opening the Chat tab refreshes conversations + unread badge.
+      state.loadConversations();
+      state.refreshUnreadConversations();
+    } else if (i == 3) {
+      // Opening the Atividades tab refreshes the server-side list.
+      state.loadNotifications();
     }
+    // NOTA: NÃO recarregar o Feed/Perfil aqui. Refazer a lista a cada toque
+    // na aba reposiciona o scroll e "pula" a tela (regressão relatada). Os
+    // dados novos já chegam pelo pull-to-refresh e pelos overlays otimistas.
   }
 
   /// One back press while NOT on the feed tab returns to the feed first

@@ -144,12 +144,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.byType(GridIcon), findsOneWidget);
-    expect(find.byType(RepostIcon), findsOneWidget);
+    // The Reposts tab mark (there is no TabBarView: the profile is ONE
+    // scroll and the tab swaps the grid sliver).
+    expect(find.byType(RepostIcon), findsWidgets);
 
-    // Swipe to the Reposts tab (horizontal) and the reposted tile shows.
-    await tester.drag(find.byType(TabBarView), const Offset(-400, 0));
-    await tester.pumpAndSettle();
-    // The reposted post is cached for the profile (the grid renders it).
+    // The reposted post is cached for the profile (the Reposts grid renders
+    // it after tapping the tab).
     expect(state.repostsFor(state.currentUser!.id).length, 1);
     expect(state.repostsFor(state.currentUser!.id).first.id, target.id);
   });

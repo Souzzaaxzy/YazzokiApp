@@ -9,6 +9,7 @@ import 'package:yazzoki/data/repositories/story_repository.dart';
 import 'package:yazzoki/models/comment.dart';
 import 'package:yazzoki/models/conversation.dart';
 import 'package:yazzoki/models/follow.dart';
+import 'package:yazzoki/models/profile_view.dart';
 import 'package:yazzoki/models/yazzoki_notification.dart';
 import 'package:yazzoki/models/yazzoki_user.dart';
 import 'package:yazzoki/models/post.dart';
@@ -32,6 +33,7 @@ class FakeRepositories extends Repositories {
     required super.users,
     required super.follows,
     required super.reposts,
+    required super.profileViews,
     required super.notifications,
     required super.uploads,
     required super.chat,
@@ -73,6 +75,7 @@ class FakeRepositories extends Repositories {
       users: _FakeUserRepository(store),
       follows: _FakeFollowRepository(store),
       reposts: _FakeRepostRepository(store),
+      profileViews: _FakeProfileViewRepository(store),
       notifications: _FakeNotificationRepository(store),
       uploads: const _FakeUploadRepository(),
       chat: _FakeChatRepository(store),
@@ -273,6 +276,9 @@ class FakeStore {
 
   /// Story reposts `userId>originalStoryId` (the toggle's source of truth).
   final Set<String> storyReposts = {};
+
+  /// Profile views `viewerId>profileId` (one per pair, like the server).
+  final Set<String> profileViews = {};
 
   /// Private chat messages by conversation (pair key `a|b`), in order.
   late final Map<String, List<ChatMessage>> chatMessagesByPair;
@@ -753,6 +759,49 @@ class _FakeRepostRepository implements RepostRepository {
             ))
         .toList();
     return (posts: all, total: all.length, page: page, pageSize: pageSize);
+  }
+}
+
+class _FakeProfileViewRepository implements ProfileViewRepository {
+  _FakeProfileViewRepository(this._store);
+
+  final FakeStore _store;
+
+  @override
+  Future<void> record(String userId) async {
+    final me = _store.currentUserId;
+    if (me == null || me == userId) return;
+    _store.profileViews.add('$me>$userId');
+  }
+
+  @override
+  Future<({List<ProfileView> views, int total, int page, int pageSize})> ofUser(
+    String userId, {
+    int page = 1,
+    int pageSize = 30,
+  }) async {
+    final views = _store.profileViews
+        .where((e) => e.endsWith('>$userId'))
+        .map((e) {
+          final viewer = _store.users[e.split('>').first];
+          if (viewer == null) return null;
+          return ProfileView(user: viewer, viewedAt: DateTime.now());
+        })
+        .whereType<ProfileView>()
+        .toList();
+    return (
+      views: views,
+      total: views.length,
+      page: page,
+      pageSize: pageSize,
+    );
+  }
+
+  @override
+  Future<int> count() async {
+    final me = _store.currentUserId;
+    if (me == null) return 0;
+    return _store.profileViews.where((e) => e.endsWith('>$me')).length;
   }
 }
 

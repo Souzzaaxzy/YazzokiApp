@@ -17,6 +17,7 @@ import '../../models/search_history_entry.dart';
 import '../../models/comment.dart';
 import '../../models/conversation.dart';
 import '../../models/follow.dart';
+import '../../models/profile_view.dart';
 import '../../models/yazzoki_notification.dart';
 import '../../models/yazzoki_user.dart';
 import '../../models/post.dart';
@@ -363,6 +364,8 @@ class AppState extends ChangeNotifier {
   UserRepository get _users => _repos?.users ?? Services.instance.users;
   FollowRepository get _follows => _repos?.follows ?? Services.instance.follows;
   RepostRepository get _repostsRepo => _repos?.reposts ?? Services.instance.reposts;
+  ProfileViewRepository get _profileViews =>
+      _repos?.profileViews ?? Services.instance.profileViews;
   NotificationRepository get _notificationRepo =>
       _repos?.notifications ?? Services.instance.notifications;
   ChatRepository get _chat => _repos?.chat ?? Services.instance.chat;
@@ -959,6 +962,42 @@ class AppState extends ChangeNotifier {
       post.repostCount = wasCount;
       notifyListeners();
       return false;
+    }
+  }
+
+  // ── Profile views ("quem entrou no meu perfil") ──────────────
+  // Only the OWNER ever loads this (the server 403s anyone else). Cached per
+  // profile id so reopening the sheet is instant.
+  final Map<String, List<ProfileView>> _profileViewsByUser = {};
+  bool _loadingProfileViews = false;
+
+  List<ProfileView> profileViewsFor(String userId) =>
+      _profileViewsByUser[userId] ?? const [];
+  bool get isLoadingProfileViews => _loadingProfileViews;
+
+  /// Records that the session user opened [userId]'s profile. Best-effort:
+  /// a failure must never block the profile from rendering.
+  Future<void> recordProfileView(String userId) async {
+    final me = _currentUser?.id;
+    if (me == null || me == userId) return; // never a self-view
+    try {
+      await _profileViews.record(userId);
+    } catch (_) {
+      // Offline / transient: the next visit records it.
+    }
+  }
+
+  /// Loads WHO visited [userId]'s profile (own profile only).
+  Future<void> loadProfileViews(String userId) async {
+    if (_loadingProfileViews) return;
+    _loadingProfileViews = true;
+    notifyListeners();
+    try {
+      final result = await _profileViews.ofUser(userId);
+      _profileViewsByUser[userId] = result.views;
+    } finally {
+      _loadingProfileViews = false;
+      notifyListeners();
     }
   }
 

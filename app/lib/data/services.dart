@@ -34,6 +34,7 @@ class Services {
   UserRepository get users => repositories.users;
   FollowRepository get follows => repositories.follows;
   RepostRepository get reposts => repositories.reposts;
+  ProfileViewRepository get profileViews => repositories.profileViews;
   NotificationRepository get notifications => repositories.notifications;
   UploadRepository get uploads => repositories.uploads;
   ChatRepository get chat => repositories.chat;
@@ -52,6 +53,7 @@ class Services {
     final users = UserRepository(apiClient);
     final follows = FollowRepository(apiClient);
     final reposts = RepostRepository(apiClient);
+    final profileViews = ProfileViewRepository(apiClient);
     final notifications = NotificationRepository(apiClient);
     final uploads = UploadRepository(apiClient);
     final chat = ChatRepository(apiClient);
@@ -69,6 +71,7 @@ class Services {
         users: users,
         follows: follows,
         reposts: reposts,
+        profileViews: profileViews,
         notifications: notifications,
         uploads: uploads,
         chat: chat,

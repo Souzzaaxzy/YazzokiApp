@@ -7,6 +7,7 @@ import '../../models/comment.dart';
 import '../../models/conversation.dart';
 import '../local/chat_history_service.dart';
 import '../../models/follow.dart';
+import '../../models/profile_view.dart';
 import '../../models/yazzoki_notification.dart';
 import '../../models/yazzoki_user.dart';
 import '../../models/post.dart';
@@ -292,6 +293,55 @@ class UserRepository {
 
 /// Friends repository — friend request lifecycle (send / list / accept /
 /// reject). All authorization is enforced by the server.
+/// Profile views — "quem entrou no meu perfil". The list is ONLY served to
+/// the profile owner (the server returns 403 for anyone else), so there is no
+/// way to read someone else's visitors.
+class ProfileViewRepository {
+  ProfileViewRepository(this._api);
+
+  final ApiClient _api;
+
+  /// Records that the session user opened [userId]'s profile. Idempotent
+  /// server-side (refreshes the timestamp); a self-view is ignored.
+  Future<void> record(String userId) async {
+    await _api.post('/api/users/$userId/profile-view');
+  }
+
+  /// The visitors of [userId] (own profile only), most recent first.
+  Future<({List<ProfileView> views, int total, int page, int pageSize})> ofUser(
+    String userId, {
+    int page = 1,
+    int pageSize = 30,
+  }) async {
+    final json = await _api.get<Map<String, dynamic>>(
+      '/api/users/$userId/profile-views',
+      queryParameters: {'page': page, 'pageSize': pageSize},
+    );
+    final list = (json['views'] as List?) ?? const [];
+    return (
+      views: list
+          .whereType<Map<String, dynamic>>()
+          .map((e) => ProfileView(
+                user: PublicUserDto.fromJson(
+                  (e['user'] as Map<String, dynamic>?) ?? const {},
+                ).toModel(),
+                viewedAt: DateTime.tryParse((e['viewedAt'] as String?) ?? '') ??
+                    DateTime.now(),
+              ))
+          .toList(),
+      total: (json['total'] as num?)?.toInt() ?? 0,
+      page: (json['page'] as num?)?.toInt() ?? page,
+      pageSize: (json['pageSize'] as num?)?.toInt() ?? pageSize,
+    );
+  }
+
+  /// How many people visited the session user's own profile.
+  Future<int> count() async {
+    final json = await _api.get<Map<String, dynamic>>('/api/profile-views/count');
+    return (json['count'] as num?)?.toInt() ?? 0;
+  }
+}
+
 /// Reposts — "share to profile" (Instagram/TikTok style). A repost is a
 /// REFERENCE to the original post; the toggle creates/removes it server-side.
 class RepostRepository {
@@ -1065,6 +1115,7 @@ class Repositories {
     required this.users,
     required this.follows,
     required this.reposts,
+    required this.profileViews,
     required this.notifications,
     required this.uploads,
     required this.chat,
@@ -1080,6 +1131,7 @@ class Repositories {
   final UserRepository users;
   final FollowRepository follows;
   final RepostRepository reposts;
+  final ProfileViewRepository profileViews;
   final NotificationRepository notifications;
   final UploadRepository uploads;
   final ChatRepository chat;
