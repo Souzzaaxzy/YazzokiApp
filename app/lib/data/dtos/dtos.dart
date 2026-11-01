@@ -225,6 +225,7 @@ class PublicUserDto {
   final int likesCount;
   final int postsCount;
   final int repostsCount;
+  final String? profileThemeId;
   final ProfileMusic? music;
 
   const PublicUserDto({
@@ -240,6 +241,7 @@ class PublicUserDto {
     this.likesCount = 0,
     this.postsCount = 0,
     this.repostsCount = 0,
+    this.profileThemeId,
     this.music,
   });
 
@@ -256,6 +258,7 @@ class PublicUserDto {
         likesCount: likesCount,
         postsCount: postsCount,
         repostsCount: repostsCount,
+        profileThemeId: profileThemeId,
         music: music,
       );
 
@@ -272,6 +275,9 @@ class PublicUserDto {
         likesCount: (json['likesCount'] as num?)?.toInt() ?? 0,
         postsCount: (json['postsCount'] as num?)?.toInt() ?? 0,
         repostsCount: (json['repostsCount'] as num?)?.toInt() ?? 0,
+        profileThemeId: (json['profileThemeId'] as String?)?.trim().isEmpty ?? true
+            ? null
+            : (json['profileThemeId'] as String).trim(),
         // The pinned song is optional profile data: a payload without it
         // (feed/search authors) simply has none.
         music: ProfileMusic.fromJson(json['music']),

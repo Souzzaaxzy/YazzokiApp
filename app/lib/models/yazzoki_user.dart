@@ -16,6 +16,7 @@ class YazzokiUser {
     this.followingCount = 0,
     this.likesCount = 0,
     this.repostsCount = 0,
+    this.profileThemeId,
     this.postsCount = 0,
     this.music,
   });
@@ -60,6 +61,9 @@ class YazzokiUser {
   final int followingCount;
   final int likesCount;
   final int repostsCount;
+
+  /// Tema publicado no perfil (id do catálogo). Null/vazio = sem tema.
+  final String? profileThemeId;
   final int postsCount;
 
 
@@ -88,6 +92,7 @@ class YazzokiUser {
     int? followingCount,
     int? likesCount,
     int? repostsCount,
+    String? Function()? profileThemeId,
     int? postsCount,
     String? Function()? bannerUrl,
     int? Function()? publicId,
@@ -104,6 +109,8 @@ class YazzokiUser {
         followingCount: followingCount ?? this.followingCount,
         likesCount: likesCount ?? this.likesCount,
         repostsCount: repostsCount ?? this.repostsCount,
+        profileThemeId:
+            profileThemeId != null ? profileThemeId() : this.profileThemeId,
         postsCount: postsCount ?? this.postsCount,
         // Same nullable-resolver pattern so the banner can be cleared
         // (`bannerUrl: () => null`) as well as replaced.

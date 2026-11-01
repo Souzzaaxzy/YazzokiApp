@@ -825,8 +825,8 @@ class _ProgressBars extends StatelessWidget {
 }
 
 /// Identidade do autor dentro do Story: FOTO centralizada ACIMA do NOME,
-/// reutilizando `UserAvatar`/`FramedAvatar`/`NicknameRenderer` — o mesmo
-/// visual de grupos/DM. O nickname trunca com ellipsis (nunca sai da tela).
+/// reutilizando `UserAvatar` — o mesmo visual de grupos/DM. O nickname
+/// trunca com ellipsis (nunca sai da tela).
 class _StoryIdentity extends StatelessWidget {
   const _StoryIdentity({
     required this.group,

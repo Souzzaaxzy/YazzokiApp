@@ -14,8 +14,8 @@ import 'story_viewer.dart';
 ///
 /// Lista rolável horizontalmente de cards QUADRADOS — avatar do autor
 /// centralizado + nickname abaixo (com ellipsis: nunca estoura o card).
-/// Reutiliza [UserAvatar]/[FramedAvatar]/[NicknameRenderer] (mesmo sistema de
-/// avatar/nickname do feed) e abre o [StoryViewer] ao tocar. Nada disso
+/// Reutiliza [UserAvatar] (mesmo sistema de avatar do feed) e abre o
+/// [StoryViewer] ao tocar. Nada disso
 /// substitui o feed de posts, que continua logo abaixo.
 class StoriesHeader extends StatelessWidget {
   const StoriesHeader({super.key, required this.state});

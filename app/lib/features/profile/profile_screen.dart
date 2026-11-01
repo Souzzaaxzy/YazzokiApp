@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 
 import '../../app/routes.dart';
 import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_palette.dart';
 import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../core/services/app_state.dart';
+import '../../core/services/theme_controller.dart';
 import '../../core/services/video_cover_service.dart';
 import '../../core/utils/profile_navigation.dart';
 import '../../core/widgets/app_state_scope.dart';
@@ -16,6 +18,7 @@ import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/glow_container.dart';
 import '../../core/widgets/grid_icon.dart';
 import '../../core/widgets/hud_label.dart';
+import '../../core/widgets/local_palette.dart';
 import '../../core/widgets/profile_views_icon.dart';
 import '../../core/widgets/repost_icon.dart';
 import '../../core/widgets/yazzoki_button.dart';
@@ -170,6 +173,29 @@ class _ProfileScreenState extends State<ProfileScreen>
             'Verifique sua conexão.',
       );
     }
+  }
+
+  /// Wraps the profile header in the OWNER's published theme, when there is
+  /// one and we are looking at SOMEONE ELSE's profile. The light/dark half is
+  /// always the VIEWER's brightness — showing a light theme to someone using
+  /// dark would flash a light screen at them.
+  Widget _maybeOwnerTheme({
+    required Widget child,
+    required String? ownerThemeId,
+  }) {
+    if (_isOwn || !isValidThemeId(ownerThemeId)) return child;
+    final controller = ThemeController.instance;
+    final platformDark =
+        WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+            Brightness.dark;
+    return LocalPalette(
+      palette: effectivePalette(
+        ownerThemeId!,
+        controller.mode,
+        platformDark ? Brightness.dark : Brightness.light,
+      ),
+      child: child,
+    );
   }
 
   Future<void> _openEditProfile() async {
@@ -349,19 +375,25 @@ class _ProfileScreenState extends State<ProfileScreen>
                     style: AppTextStyles.title.copyWith(fontSize: 18)),
               ),
               SliverToBoxAdapter(
-                child: _ProfileHeader(
-                  user: shownUser,
-                  isOwn: isOwn,
-                  follow: follow,
-                  hasUnseenStory: state.hasUnseenStory(shownUser.id),
-                  onOpenStory: () => _openUserStory(state, shownUser),
-                  onEdit: _openEditProfile,
-                  onFollowersTap: () => FollowListSheet.open(
-                      context, shownUser, FollowListKind.followers),
-                  onFollowingTap: () => FollowListSheet.open(
-                      context, shownUser, FollowListKind.following),
-                  onMessage: () => openChatWithUser(context, shownUser),
-                  musicKey: _musicKey,
+                // O CABEÇALHO de outro usuário veste o tema que ELE publicou
+                // (só o cabeçalho: o resto do app continua no tema de quem
+                // olha). Sem tema publicado, cai no tema do espectador.
+                child: _maybeOwnerTheme(
+                  child: _ProfileHeader(
+                    user: shownUser,
+                    isOwn: isOwn,
+                    follow: follow,
+                    hasUnseenStory: state.hasUnseenStory(shownUser.id),
+                    onOpenStory: () => _openUserStory(state, shownUser),
+                    onEdit: _openEditProfile,
+                    onFollowersTap: () => FollowListSheet.open(
+                        context, shownUser, FollowListKind.followers),
+                    onFollowingTap: () => FollowListSheet.open(
+                        context, shownUser, FollowListKind.following),
+                    onMessage: () => openChatWithUser(context, shownUser),
+                    musicKey: _musicKey,
+                  ),
+                  ownerThemeId: shownUser.profileThemeId,
                 ),
               ),
               SliverToBoxAdapter(
@@ -479,7 +511,7 @@ class _ProfileHeader extends StatelessWidget {
   /// avatar's lower half without colliding with the banner itself.
   static const double _bannerHeight = 157;
 
-  /// Outer box of the avatar (the FramedAvatar frame is drawn inside it).
+  /// Outer box of the avatar (the story ring is drawn inside it).
   /// The photo itself is [_avatarSize].
   static const double _avatarBox = 108;
 

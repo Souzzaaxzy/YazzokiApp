@@ -243,8 +243,7 @@ class _NotificationTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // The actor's nickname keeps its OWN cosmetics (color +
-                // via the shared NicknameRenderer — never the
+                // The actor's nickname uses the shared style — never the
                 // viewer's configuration.
                 RichText(
                   text: TextSpan(
