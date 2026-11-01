@@ -267,7 +267,7 @@ class _ThemeOption extends StatelessWidget {
             const SizedBox(width: AppDimensions.spaceMd),
             Expanded(child: Text(label, style: AppTextStyles.body)),
             if (active)
-              const Icon(Icons.check_rounded,
+              Icon(Icons.check_rounded,
                   color: AppColors.electricBlue, size: 18),
           ],
         ),

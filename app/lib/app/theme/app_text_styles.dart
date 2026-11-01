@@ -95,7 +95,7 @@ class AppTextStyles {
         letterSpacing: 2,
       );
 
-  static TextStyle get hudActive => const TextStyle(
+  static TextStyle get hudActive => TextStyle(
         fontFamily: monoFont,
         fontWeight: FontWeight.w700,
         color: AppColors.electricBlue,

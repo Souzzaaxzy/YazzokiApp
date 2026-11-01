@@ -545,7 +545,7 @@ class _CommentsSheetState extends State<CommentsSheet>
                       ScaleTransition(
                         scale: _popController,
                         child: IconButton(
-                          icon: const Icon(Icons.send_rounded,
+                          icon: Icon(Icons.send_rounded,
                               color: AppColors.electricBlue),
                           onPressed: _send,
                         ),

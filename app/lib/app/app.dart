@@ -401,6 +401,7 @@ class _YazzokiAppState extends State<YazzokiApp> with WidgetsBindingObserver {
               WidgetsBinding.instance.platformDispatcher.platformBrightness ==
                   Brightness.dark;
           AppColors.setActive(effectivePalette(
+            controller.themeId,
             controller.mode,
             platformDark ? Brightness.dark : Brightness.light,
           ));

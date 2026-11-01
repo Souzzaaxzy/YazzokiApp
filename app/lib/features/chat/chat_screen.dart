@@ -634,7 +634,7 @@ class _AkameCard extends StatelessWidget {
                       color: AppColors.primaryBlue.withValues(alpha: 0.7),
                       width: 1.2,
                     ),
-                    child: const SizedBox(
+                    child: SizedBox(
                       width: 52,
                       height: 52,
                       child: Center(
@@ -715,7 +715,7 @@ class _ChatFab extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.add_rounded,
                 color: AppColors.electricBlue,
                 size: 30,

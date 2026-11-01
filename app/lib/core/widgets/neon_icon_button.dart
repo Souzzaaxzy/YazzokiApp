@@ -10,19 +10,23 @@ class NeonIconButton extends StatelessWidget {
     required this.icon,
     required this.onPressed,
     this.size = 44,
-    this.color = AppColors.electricBlue,
+    this.color,
     this.semanticLabel,
   });
 
   final IconData icon;
   final VoidCallback? onPressed;
   final double size;
-  final Color color;
+  /// Accent colour; null resolves to the active theme's accent at build.
+  final Color? color;
   final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final disabled = onPressed == null;
+    // Resolved at BUILD time: the accent is theme-dependent, so it can not be
+    // a const default on the constructor.
+    final tint = color ?? AppColors.electricBlue;
     return Semantics(
       label: semanticLabel,
       button: true,
@@ -40,19 +44,19 @@ class NeonIconButton extends StatelessWidget {
               shape: BoxShape.circle,
               color: AppColors.bluishBlack,
               border: Border.all(
-                color: disabled ? AppColors.deepBlue : color,
+                color: disabled ? AppColors.deepBlue : tint,
                 width: AppDimensions.borderWidthThin,
               ),
               boxShadow: disabled
                   ? null
                   : [
                       BoxShadow(
-                        color: color.withValues(alpha: 0.35),
+                        color: tint.withValues(alpha: 0.35),
                         blurRadius: AppDimensions.glowSmallBlur,
                       ),
                     ],
             ),
-            child: Icon(icon, color: disabled ? AppColors.deepBlue : color, size: size * 0.45),
+            child: Icon(icon, color: disabled ? AppColors.deepBlue : tint, size: size * 0.45),
           ),
         ),
       ),

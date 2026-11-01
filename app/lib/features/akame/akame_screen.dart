@@ -91,7 +91,7 @@ class _AkameScreenState extends State<AkameScreen> {
                           background: AppColors.primaryBlue.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
                           padding: const EdgeInsets.all(AppDimensions.spaceXl),
-                          child: const Icon(Icons.auto_awesome_rounded,
+                          child: Icon(Icons.auto_awesome_rounded,
                               color: AppColors.electricBlue, size: 36),
                         ),
                         const SizedBox(height: AppDimensions.spaceLg),
@@ -156,7 +156,7 @@ class _AkameHeader extends StatelessWidget {
               background: AppColors.nightBlue,
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               padding: const EdgeInsets.all(AppDimensions.spaceSm),
-              child: const Icon(Icons.auto_awesome_rounded,
+              child: Icon(Icons.auto_awesome_rounded,
                   color: AppColors.electricBlue),
             ),
             const SizedBox(width: AppDimensions.spaceMd),
@@ -166,7 +166,7 @@ class _AkameHeader extends StatelessWidget {
                 children: [
                   Text('AKAME', style: AppTextStyles.h3.copyWith(letterSpacing: 2)),
                   const SizedBox(height: 2),
-                  const HudLabel(text: 'ONLINE', color: AppColors.success, dot: true),
+                  HudLabel(text: 'ONLINE', color: AppColors.success, dot: true),
                 ],
               ),
             ),
@@ -290,7 +290,7 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
       child: Container(
         width: 8,
         height: 8,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.electricBlue,
           shape: BoxShape.circle,
         ),

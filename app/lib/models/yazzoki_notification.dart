@@ -12,9 +12,6 @@ class YazzokiNotification {
     required this.actorId,
     required this.actorNickname,
     this.actorAvatarUrl,
-    this.actorNicknameColor,
-    this.actorFrameId,
-    this.actorFrameAsset,
     this.postId,
     this.commentId,
     this.storyId,
@@ -34,15 +31,6 @@ class YazzokiNotification {
   final String actorNickname;
   final String? actorAvatarUrl;
 
-  /// The ACTOR's own nickname color (hex), embedded by the server. Null →
-  /// default color.
-  final String? actorNicknameColor;
-
-  /// The ACTOR's own equipped profile frame (assets key), embedded by the
-  /// server. Null → default. Never the viewer's frame.
-  final String? actorFrameId;
-  final String? actorFrameAsset;
-
   final String? postId;
   final String? commentId;
 
@@ -57,9 +45,6 @@ class YazzokiNotification {
         actorId: actorId,
         actorNickname: actorNickname,
         actorAvatarUrl: actorAvatarUrl,
-        actorNicknameColor: actorNicknameColor,
-        actorFrameId: actorFrameId,
-        actorFrameAsset: actorFrameAsset,
         postId: postId,
         commentId: commentId,
         storyId: storyId,

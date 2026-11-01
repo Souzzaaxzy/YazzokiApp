@@ -109,7 +109,7 @@ class _ProfileViewsSheetState extends State<ProfileViewsSheet> {
                       ),
                       child: Row(
                         children: [
-                          const ProfileViewsIcon(
+                          ProfileViewsIcon(
                             color: AppColors.electricBlue,
                             size: 20,
                           ),
@@ -145,7 +145,7 @@ class _ProfileViewsSheetState extends State<ProfileViewsSheet> {
   Widget _buildList(List<ProfileView> views, bool loading) {
     if (views.isEmpty) {
       if (loading) {
-        return const Padding(
+        return Padding(
           padding: EdgeInsets.all(AppDimensions.spaceXxl),
           child: Center(
             child: CircularProgressIndicator(color: AppColors.electricBlue),

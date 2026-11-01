@@ -50,7 +50,7 @@ class StoriesHeader extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const HudLabel(text: 'STORIES', color: AppColors.electricBlue),
+              HudLabel(text: 'STORIES', color: AppColors.electricBlue),
               const Spacer(),
               if (state.myStories.isEmpty)
                 HudLabel(

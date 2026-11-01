@@ -4,38 +4,33 @@ import 'app_palette.dart';
 
 /// Centralized Yazzoki design tokens.
 ///
-/// Brand colors are theme-independent statics. Mood-dependent tokens
-/// (backgrounds, surfaces, text) resolve through the currently ACTIVE
-/// palette, swapped by [setActive] when the theme resolves (dark/light).
-/// Widgets keep reading `AppColors.x` exactly as before — the palette swap
-/// rebuilds the tree because [ThemeController] notifies the root.
+/// EVERY mood-dependent token resolves through the currently ACTIVE palette,
+/// which is swapped by [setActive] when the theme + brightness resolve. That
+/// is what lets the whole app (and a visitor viewing someone else's profile)
+/// re-skin without touching a single widget.
+///
+/// [error] and [success] are deliberately FIXED across themes: semantic colour
+/// must not change meaning with decoration (a "success" that turns green in
+/// one theme and red in another is a bug, not a feature).
 class AppColors {
   AppColors._();
 
-  // Active palette (theme-dependent). Defaults to dark.
-  static YazzokiPalette _active = YazzokiPalette.dark;
+  // Active palette. Defaults to the catalog's first theme (dark half) so a
+  // widget built before the controller resolves still has sane colours.
+  static YazzokiPalette _active = yazzokiThemes.first.dark;
 
   static void setActive(YazzokiPalette palette) {
-    if (_active != palette) _active = palette;
+    _active = palette;
   }
 
   /// Currently active palette (used by tests to verify theme resolution).
   static YazzokiPalette get activePalette => _active;
 
-  // Brand accents — same across themes.
-  /// Ice blue ("azul cor de gelo") — the signature Yazzoki accent.
-  static const Color primaryBlue = Color(0xFF5B8FC7);
-  static const Color electricBlue = Color(0xFF8FBCE4);
-  /// Muted moss/jade for success states.
-  static const Color success = Color(0xFF6E9159);
-  /// Shu-iro vermillion for errors and destructive actions.
+  // ── Semantic colours: FIXED, never themed. ──
+  static const Color success = Color(0xFF7C9A6D);
   static const Color error = Color(0xFFC0392B);
-  /// Warm beige, used for borders, dividers and secondary accents.
-  static const Color beige = Color(0xFFD8C6A6);
-  /// Hanko seal red — the emblem's stamp; used for small brand accents.
-  static const Color sealRed = Color(0xFFB42D24);
 
-  // Theme-dependent tokens.
+  // ── Theme-dependent tokens ──
   static Color get absoluteBlack => _active.scaffold;
   static Color get bluishBlack => _active.surface;
   static Color get nightBlue => _active.surfaceDeep;
@@ -46,17 +41,35 @@ class AppColors {
   static Color get scaffoldBackground => _active.scaffold;
   static Color get navBarBackground => _active.navBar;
 
-  // Glow presets. Translucent ice blue; softer on the light theme.
-  static Color get glowSmall => primaryBlue.withValues(alpha: 0.40 * _active.glowAlpha);
-  static Color get glowMedium => primaryBlue.withValues(alpha: 0.50 * _active.glowAlpha);
-  static Color get glowStrong => electricBlue.withValues(alpha: 0.70 * _active.glowAlpha);
+  /// Primary accent — used for FILLS (buttons, badges, selected chips).
+  static Color get primaryBlue => _active.accent;
 
-  // Gradients
-  static const LinearGradient primaryGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [primaryBlue, Color(0xFF3A6797)],
-  );
+  /// Secondary accent — the softer/lighter end of the same accent family.
+  static Color get electricBlue => _active.accentInk;
+
+  /// The accent as TEXT/icon over a surface (contrast-safe variant).
+  static Color get accentInk => _active.accentInk;
+
+  /// Fill of the outgoing chat bubble (white text always clears 4.5:1).
+  static Color get bubbleOut => _active.bubble;
+
+  // Glow presets: the theme's own glow colour, so it never fights the accent.
+  static Color get glowSmall =>
+      _active.glow.withValues(alpha: 0.40 * _active.glowAlpha);
+  static Color get glowMedium =>
+      _active.glow.withValues(alpha: 0.50 * _active.glowAlpha);
+  static Color get glowStrong =>
+      _active.glow.withValues(alpha: 0.70 * _active.glowAlpha);
+
+  // Gradients (derived from the active accent so they follow the theme).
+  static LinearGradient get primaryGradient => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          _active.accent,
+          Color.lerp(_active.accent, const Color(0xFF000000), 0.35)!,
+        ],
+      );
 
   static LinearGradient get deepGradient => LinearGradient(
         begin: Alignment.topCenter,
@@ -64,9 +77,12 @@ class AppColors {
         colors: [_active.surfaceDeep, _active.scaffold],
       );
 
-  static const LinearGradient akameGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [electricBlue, Color(0xFFC7DDF0)],
-  );
+  static LinearGradient get akameGradient => LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          _active.accentInk,
+          Color.lerp(_active.accentInk, const Color(0xFFFFFFFF), 0.35)!,
+        ],
+      );
 }

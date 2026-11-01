@@ -1303,7 +1303,7 @@ class _ConversationScreenState extends State<ConversationScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.cloud_off_rounded,
+              Icon(Icons.cloud_off_rounded,
                   color: AppColors.error, size: 40),
               const SizedBox(height: AppDimensions.spaceMd),
               Text(
@@ -1522,7 +1522,7 @@ class _RecordingIndicatorState extends State<_RecordingIndicator>
   @override
   Widget build(BuildContext context) {
     if (widget.typing) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.only(top: 2),
         child: Text(
           'digitando...',
@@ -1542,7 +1542,7 @@ class _RecordingIndicatorState extends State<_RecordingIndicator>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             'gravando áudio',
             style: TextStyle(
               fontSize: 12,
@@ -1562,7 +1562,7 @@ class _RecordingIndicatorState extends State<_RecordingIndicator>
                   final opacity = phase < 0.5 ? phase * 2 : (1 - phase) * 2;
                   return Opacity(
                     opacity: opacity.clamp(0.2, 1.0),
-                    child: const Text(
+                    child: Text(
                       '•',
                       style: TextStyle(
                         fontSize: 12,
@@ -2302,7 +2302,7 @@ class _RecordingBar extends StatelessWidget {
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 160),
                 child: sending
-                    ? const Row(
+                    ? Row(
                         key: ValueKey('sending'),
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -2323,7 +2323,7 @@ class _RecordingBar extends StatelessWidget {
                         ],
                       )
                     : cancelZone
-                        ? const Padding(
+                        ? Padding(
                             key: ValueKey('cancel'),
                             padding: EdgeInsets.zero,
                             child: Text(
@@ -2336,7 +2336,7 @@ class _RecordingBar extends StatelessWidget {
                             ),
                           )
                         : lockHint
-                            ? const Padding(
+                            ? Padding(
                                 key: ValueKey('lock'),
                                 padding: EdgeInsets.zero,
                                 child: Text(
@@ -2410,7 +2410,7 @@ class _ReplyPreviewBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.reply_rounded,
+          Icon(Icons.reply_rounded,
               color: AppColors.electricBlue, size: 18),
           const SizedBox(width: AppDimensions.spaceSm),
           Expanded(

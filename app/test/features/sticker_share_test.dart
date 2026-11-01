@@ -20,7 +20,7 @@ void main() {
 
   // PNG real (fixture) — leitura do assets de frames para decodificar bem.
   Uint8List fixturePng() {
-    final f = File('assets/frames/cometa.png');
+    final f = File('assets/brand/logo_strokes.png');
     return f.readAsBytesSync();
   }
 

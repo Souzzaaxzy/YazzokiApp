@@ -11,10 +11,6 @@ import 'package:yazzoki/features/splash/splash_screen.dart';
 /// no restart, no navigation, no reload. The single source of truth is
 /// [ThemeController.instance]; the root [YazzokiApp] listens to it, swaps the
 /// active palette and rebuilds the MaterialApp in the same frame.
-///
-/// Note: `setMode` is called WITHOUT await — the state change is synchronous
-/// (only the disk write is async, and platform channels never resolve inside
-/// the fake-async widget-test zone).
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -25,32 +21,51 @@ void main() {
       tester.widget<Scaffold>(find.byType(Scaffold).first).backgroundColor ??
       Colors.transparent;
 
-  testWidgets('dark → light → dark applies immediately across the app',
+  testWidgets('trocar o tema troca o acento em TODA a UI, sem reiniciar',
       (tester) async {
     final controller = ThemeController.instance;
+    controller.setThemeId('washi');
+    controller.setMode(YazzokiThemeMode.dark);
+    addTearDown(() {
+      controller.setThemeId(kDefaultThemeId);
+      controller.setMode(YazzokiThemeMode.dark);
+    });
+
+    await tester.pumpWidget(const YazzokiApp());
+    await tester.pump();
+
+    expect(AppColors.activePalette, themeById('washi').dark);
+    expect(scaffoldColor(tester), themeById('washi').dark.scaffold);
+
+    // Change the THEME (same brightness): palette + widgets update now.
+    controller.setThemeId('sakura');
+    await tester.pump();
+    expect(AppColors.activePalette, themeById('sakura').dark);
+    expect(scaffoldColor(tester), themeById('sakura').dark.scaffold);
+
+    // Change the BRIGHTNESS of the same theme.
+    controller.setMode(YazzokiThemeMode.light);
+    await tester.pump();
+    expect(AppColors.activePalette, themeById('sakura').light);
+    expect(scaffoldColor(tester), themeById('sakura').light.scaffold);
+  });
+
+  testWidgets('dark → light → dark aplica na hora', (tester) async {
+    final controller = ThemeController.instance;
+    controller.setThemeId(kDefaultThemeId);
     controller.setMode(YazzokiThemeMode.dark);
     addTearDown(() => controller.setMode(YazzokiThemeMode.dark));
 
     await tester.pumpWidget(const YazzokiApp());
     await tester.pump();
-
     expect(materialApp(tester).themeMode, ThemeMode.dark);
-    expect(AppColors.activePalette, YazzokiPalette.dark);
-    expect(scaffoldColor(tester), YazzokiPalette.dark.scaffold);
+    expect(AppColors.activePalette, themeById(kDefaultThemeId).dark);
 
-    // Tap "Claro": the SAME frame updates state, palette and widgets.
     controller.setMode(YazzokiThemeMode.light);
     await tester.pump();
     expect(materialApp(tester).themeMode, ThemeMode.light);
-    expect(AppColors.activePalette, YazzokiPalette.light);
-    expect(scaffoldColor(tester), YazzokiPalette.light.scaffold);
-
-    // And back to "Escuro" — still without any restart.
-    controller.setMode(YazzokiThemeMode.dark);
-    await tester.pump();
-    expect(materialApp(tester).themeMode, ThemeMode.dark);
-    expect(AppColors.activePalette, YazzokiPalette.dark);
-    expect(scaffoldColor(tester), YazzokiPalette.dark.scaffold);
+    expect(AppColors.activePalette, themeById(kDefaultThemeId).light);
+    expect(scaffoldColor(tester), themeById(kDefaultThemeId).light.scaffold);
   });
 
   testWidgets('system mode follows the phone brightness live', (tester) async {
@@ -65,38 +80,34 @@ void main() {
     await tester.pump();
     expect(materialApp(tester).themeMode, ThemeMode.system);
 
-    // Phone flips to light: Yazzoki follows without touching the settings.
     tester.binding.platformDispatcher.platformBrightnessTestValue =
         Brightness.light;
     await tester.pump();
-    expect(AppColors.activePalette, YazzokiPalette.light);
-    expect(scaffoldColor(tester), YazzokiPalette.light.scaffold);
+    expect(AppColors.activePalette,
+        themeById(controller.themeId).light);
 
-    // Phone flips back to dark.
     tester.binding.platformDispatcher.platformBrightnessTestValue =
         Brightness.dark;
     await tester.pump();
-    expect(AppColors.activePalette, YazzokiPalette.dark);
-    expect(scaffoldColor(tester), YazzokiPalette.dark.scaffold);
+    expect(AppColors.activePalette,
+        themeById(controller.themeId).dark);
   });
 
-  testWidgets('a pushed/navigated screen also follows the switch live',
+  testWidgets('uma tela empurrada (login) também segue a troca',
       (tester) async {
     final controller = ThemeController.instance;
+    controller.setThemeId(kDefaultThemeId);
     controller.setMode(YazzokiThemeMode.dark);
     addTearDown(() => controller.setMode(YazzokiThemeMode.dark));
 
     await tester.pumpWidget(const YazzokiApp());
-    // Splash animation completes → session restore fails (no Services in
-    // tests) → lands on the login screen.
     await tester.pump(const Duration(milliseconds: splashDurationMs));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(LoginScreen), findsOneWidget);
-    expect(scaffoldColor(tester), YazzokiPalette.dark.scaffold);
 
-    controller.setMode(YazzokiThemeMode.light);
+    controller.setThemeId('ai');
     await tester.pump();
     expect(find.byType(LoginScreen), findsOneWidget);
-    expect(scaffoldColor(tester), YazzokiPalette.light.scaffold);
+    expect(scaffoldColor(tester), themeById('ai').dark.scaffold);
   });
 }

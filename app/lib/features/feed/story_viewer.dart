@@ -598,7 +598,7 @@ class _StoryInteractionBar extends StatelessWidget {
                   hintText: 'Responda a esse stories',
                   hintStyle: AppTextStyles.bodyMuted,
                   suffixIcon: sending
-                      ? const Padding(
+                      ? Padding(
                           padding: EdgeInsets.all(
                             AppDimensions.spaceSm,
                           ),
@@ -739,7 +739,7 @@ class _StoryImage extends StatelessWidget {
       child: CachedNetworkImage(
         imageUrl: ApiConfig.resolveUrl(url),
         fit: BoxFit.contain,
-        placeholder: (_, __) => const Center(
+        placeholder: (_, __) => Center(
           child: CircularProgressIndicator(color: AppColors.electricBlue),
         ),
         errorWidget: (_, __, ___) => Center(

@@ -345,7 +345,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
               ),
               const SizedBox(height: AppDimensions.spaceMd),
               if (!_textMode && hasMedia)
-                const Center(
+                Center(
                   child: HudLabel(
                     text: 'PRÉ-VISUALIZAÇÃO',
                     color: AppColors.electricBlue,

@@ -855,7 +855,7 @@ class _StatColumn extends StatelessWidget {
               style: AppTextStyles.h3.copyWith(
                 fontSize: 20,
                 color: AppColors.electricBlue,
-                shadows: const [
+                shadows: [
                   Shadow(color: AppColors.electricBlue, blurRadius: 12),
                 ],
               ),

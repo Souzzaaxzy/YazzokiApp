@@ -209,7 +209,7 @@ class _FollowListSheetState extends State<FollowListSheet> {
   Widget _buildList() {
     if (_users.isEmpty) {
       if (_loading) {
-        return const Padding(
+        return Padding(
           padding: EdgeInsets.all(AppDimensions.spaceXxl),
           child: Center(
             child: CircularProgressIndicator(color: AppColors.electricBlue),
@@ -247,7 +247,7 @@ class _FollowListSheetState extends State<FollowListSheet> {
           Divider(color: AppColors.deepBlue, height: 1, indent: 72),
       itemBuilder: (context, index) {
         if (index >= _users.length) {
-          return const Padding(
+          return Padding(
             padding: EdgeInsets.all(AppDimensions.spaceMd),
             child: Center(
               child: SizedBox(

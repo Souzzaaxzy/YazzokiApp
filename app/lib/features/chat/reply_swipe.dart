@@ -124,7 +124,7 @@ class _ReplySwipeState extends State<ReplySwipe> {
                 AnimatedOpacity(
                   opacity: _selected || _dx > 8 ? 0.9 : 0,
                   duration: const Duration(milliseconds: 120),
-                  child: const Icon(
+                  child: Icon(
                     Icons.reply_rounded,
                     color: AppColors.electricBlue,
                     size: 18,

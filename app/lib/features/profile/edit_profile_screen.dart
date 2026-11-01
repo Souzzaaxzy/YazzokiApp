@@ -275,13 +275,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             HudLabel(text: title),
             const SizedBox(height: AppDimensions.spaceMd),
             ListTile(
-              leading: const Icon(Icons.photo_library_rounded,
+              leading: Icon(Icons.photo_library_rounded,
                   color: AppColors.electricBlue),
               title: Text('Galeria', style: AppTextStyles.body),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_camera_rounded,
+              leading: Icon(Icons.photo_camera_rounded,
                   color: AppColors.electricBlue),
               title: Text('Câmera', style: AppTextStyles.body),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
@@ -419,7 +419,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ring: false,
                           ),
                         if (_uploadingAvatar)
-                          const Positioned.fill(
+                          Positioned.fill(
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 color: Colors.black54,
@@ -442,7 +442,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             right: 0,
                             bottom: 0,
                             child: Container(
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 color: AppColors.primaryBlue,
                                 shape: BoxShape.circle,
                               ),
@@ -657,7 +657,7 @@ class _BannerPreview extends StatelessWidget {
               else
                 const _BannerPlaceholder(),
               if (uploading)
-                const DecoratedBox(
+                DecoratedBox(
                   decoration: BoxDecoration(color: Colors.black54),
                   child: Center(
                     child: SizedBox(
@@ -675,7 +675,7 @@ class _BannerPreview extends StatelessWidget {
                   right: AppDimensions.spaceSm,
                   bottom: AppDimensions.spaceSm,
                   child: Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.primaryBlue,
                       shape: BoxShape.circle,
                     ),
@@ -699,7 +699,7 @@ class _BannerPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
+      decoration: BoxDecoration(gradient: AppColors.primaryGradient),
       child: const Center(child: HudLabel(text: 'SEM BANNER')),
     );
   }
