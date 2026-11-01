@@ -98,20 +98,24 @@ class _ThemePatternBackgroundState extends State<ThemePatternBackground> {
   @override
   Widget build(BuildContext context) {
     final icon = _icon;
-    if (icon == null || !_controller.showIcons) {
-      return const SizedBox.shrink();
-    }
+    // The IgnorePointer wrapper is ALWAYS present, even before the icon has
+    // decoded: "this layer never takes a tap" has to hold at every moment,
+    // not only once the async decode lands. (It also keeps the widget tree
+    // stable across the load, instead of swapping the whole subtree.)
+    final ready = icon != null && _controller.showIcons;
     return IgnorePointer(
-      child: CustomPaint(
-        painter: _ThemePatternPainter(
-          icon: icon,
-          colour: AppColors.electricBlue,
-          cellSize: widget.cellSize,
-          opacity: widget.opacity,
-          rotation: widget.rotation,
-        ),
-        size: Size.infinite,
-      ),
+      child: ready
+          ? CustomPaint(
+              painter: _ThemePatternPainter(
+                icon: icon,
+                colour: AppColors.electricBlue,
+                cellSize: widget.cellSize,
+                opacity: widget.opacity,
+                rotation: widget.rotation,
+              ),
+              size: Size.infinite,
+            )
+          : const SizedBox.expand(),
     );
   }
 }

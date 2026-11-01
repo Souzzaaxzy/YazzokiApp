@@ -36,12 +36,32 @@ class _MemoryStore implements ThemeStore {
 
 /// O fundo de ícones: o tema escolhe QUAL ícone, a opção "Ícones" liga/desliga,
 /// e o widget nunca captura toque (é decoração, não interface).
+///
+/// O ícone é decodificado de forma ASSÍNCRONA pela engine. Num teste de widget
+/// esse trabalho só roda dentro de [WidgetTester.runAsync]; sem isso o painter
+/// nunca aparece e qualquer asserção sobre ele passaria por acidente.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   Widget host(Widget child) => MaterialApp(
         home: Scaffold(body: SizedBox(width: 400, height: 800, child: child)),
       );
+
+  /// Monta o fundo e ESPERA o decode do ícone terminar de verdade.
+  Future<void> pumpAndDecode(WidgetTester tester, Widget child) async {
+    await tester.runAsync(() async {
+      await tester.pumpWidget(host(child));
+      // Dá tempo da engine decodificar o PNG (fora do fake async).
+      for (var i = 0; i < 20; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+    });
+    await tester.pump();
+  }
+
+  bool hasPattern(WidgetTester tester) => tester
+      .widgetList<CustomPaint>(find.byType(CustomPaint))
+      .any((w) => w.painter.runtimeType.toString().contains('Pattern'));
 
   test('cada tema aponta para o SEU arquivo de ícone', () {
     // O asset é derivado do id: um arquivo por tema, sem tabela paralela que
@@ -50,19 +70,27 @@ void main() {
     expect(themeIconAsset('yuki'), 'assets/icons/theme_yuki.png');
   });
 
-  testWidgets('com os ícones DESLIGADOS não monta o painter', (tester) async {
+  testWidgets('com os ícones LIGADOS o padrão é pintado', (tester) async {
     final controller = ThemeController.debug(_MemoryStore());
-    await controller.setShowIcons(false);
     addTearDown(controller.dispose);
+    await controller.setShowIcons(true);
 
-    await tester.pumpWidget(
-        host(ThemePatternBackground(controller: controller)));
-    await tester.pump();
+    await pumpAndDecode(
+        tester, ThemePatternBackground(controller: controller));
 
-    final patterns = tester
-        .widgetList<CustomPaint>(find.byType(CustomPaint))
-        .where((w) => w.painter.runtimeType.toString().contains('Pattern'));
-    expect(patterns, isEmpty,
+    expect(hasPattern(tester), isTrue,
+        reason: 'ligado = o ícone do tema aparece espalhado no fundo');
+  });
+
+  testWidgets('com os ícones DESLIGADOS não pinta nada', (tester) async {
+    final controller = ThemeController.debug(_MemoryStore());
+    addTearDown(controller.dispose);
+    await controller.setShowIcons(false);
+
+    await pumpAndDecode(
+        tester, ThemePatternBackground(controller: controller));
+
+    expect(hasPattern(tester), isFalse,
         reason: 'desligado = só as cores do tema, sem ícones no fundo');
   });
 
@@ -71,7 +99,8 @@ void main() {
     final controller = ThemeController.debug(_MemoryStore());
     addTearDown(controller.dispose);
 
-    await tester.pumpWidget(host(
+    await pumpAndDecode(
+      tester,
       Stack(
         children: [
           Positioned.fill(
@@ -86,7 +115,7 @@ void main() {
           ),
         ],
       ),
-    ));
+    );
 
     // Um toque em qualquer ponto cai no conteúdo, nunca no fundo decorativo.
     await tester.tapAt(const Offset(200, 400));
@@ -94,13 +123,16 @@ void main() {
     expect(tapped, isTrue,
         reason: 'o fundo não pode engolir o toque do conteúdo por cima');
 
-    // E o fundo de fato se declara ignorante a toques.
+    // E o PRÓPRIO fundo se declara ignorante a toques. O finder é
+    // `descendant` (o IgnorePointer que o widget cria), não `ancestor`: um
+    // ancestral qualquer do framework também é IgnorePointer e faria a
+    // asserção passar mesmo sem o nosso.
     expect(
-      find.ancestor(
-        of: find.byType(CustomPaint),
+      find.descendant(
+        of: find.byType(ThemePatternBackground),
         matching: find.byType(IgnorePointer),
       ),
-      findsWidgets,
+      findsOneWidget,
     );
   });
 }
