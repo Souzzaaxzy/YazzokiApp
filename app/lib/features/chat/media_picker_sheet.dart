@@ -7,10 +7,28 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../core/widgets/view_once_icon.dart';
+import 'gallery_source.dart';
 
 /// The most media one send may carry (an album). Enforced here AND on the
 /// server — the client cap is for the UI, the server's is the real rule.
 const int kMaxAlbumItems = 10;
+
+/// What the picker is being opened FOR. The gallery grid is the same
+/// everywhere (it is the app's own gallery UI); what changes is how many files
+/// may be picked and which chat-only affordances appear.
+enum MediaPickerMode {
+  /// Private chat / group: several files (an album), a caption and the
+  /// view-once switch.
+  chat,
+
+  /// Story: ONE file, no caption, no view-once — a story is just media.
+  story,
+
+  /// Post / profile photo / banner: ONE file, no caption, no view-once. A
+  /// post carries its text in the composer, and an avatar/banner has no
+  /// caption at all.
+  single,
+}
 
 /// What the user chose in [MediaPickerSheet].
 class MediaSelection {
@@ -35,17 +53,23 @@ class MediaSelection {
 /// for private chat, groups and stories.
 ///
 /// The sheet is deliberately a single screen: the grid, a caption field and
-/// the VIEW-ONCE switch for the CHAT case. Stories pass [forStory] to hide the
-/// chat-only affordances (caption / view-once) — a story is just media.
+/// the VIEW-ONCE switch for the CHAT case. Stories and single-image flows pass
+/// a [mode] that hides the chat-only affordances (caption / view-once) and
+/// limits the pick to ONE file.
 class MediaPickerSheet extends StatefulWidget {
   const MediaPickerSheet({
     super.key,
-    this.forStory = false,
+    this.mode = MediaPickerMode.chat,
     this.initialCount = 0,
+    this.source = const PhotoManagerGallerySource(),
   });
 
-  /// Stories: media only (no caption, no view-once, single file).
-  final bool forStory;
+  /// What this opening is for (see [MediaPickerMode]).
+  final MediaPickerMode mode;
+
+  /// Where the gallery comes from. Defaults to the real device gallery; tests
+  /// inject a fake so the grid can be driven without a phone.
+  final GallerySource source;
 
   /// How many items the caller already holds (0 for a fresh open).
   final int initialCount;
@@ -60,6 +84,15 @@ class _MediaPickerSheetState extends State<MediaPickerSheet> {
 
   List<AssetEntity> _assets = const [];
   final List<AssetEntity> _selected = [];
+
+  /// Several files are only allowed for the CHAT (an album). Everywhere else
+  /// the pick is a single file, so tapping a second one REPLACES the first.
+  bool get _allowsMultiple => widget.mode == MediaPickerMode.chat;
+
+  /// Caption + view-once are chat-only affordances.
+  bool get _isChat => widget.mode == MediaPickerMode.chat;
+
+  int get _cap => _allowsMultiple ? kMaxAlbumItems : 1;
 
   PermissionState? _permission;
   bool _loading = true;
@@ -81,10 +114,13 @@ class _MediaPickerSheetState extends State<MediaPickerSheet> {
     super.dispose();
   }
 
+  /// One page of the grid. [more] appends the NEXT page (infinite scroll).
+  static const _pageSize = 80;
+
   Future<void> _load({bool more = false}) async {
     try {
       if (!more) {
-        final permission = await PhotoManager.requestPermissionExtend();
+        final permission = await widget.source.requestPermission();
         if (!mounted) return;
         setState(() => _permission = permission);
         if (!permission.isAuth && !permission.hasAccess) {
@@ -92,25 +128,9 @@ class _MediaPickerSheetState extends State<MediaPickerSheet> {
           return;
         }
       }
-      final albums = await PhotoManager.getAssetPathList(
-        type: RequestType.common, // photos + videos, one list
-        onlyAll: true,
-        filterOption: FilterOptionGroup(
-          orders: [const OrderOption(type: OrderOptionType.createDate, asc: false)],
-        ),
-      );
-      if (albums.isEmpty) {
-        if (!mounted) return;
-        setState(() {
-          _loading = false;
-          _assets = const [];
-        });
-        return;
-      }
-      final all = albums.first;
-      final page = await all.getAssetListPaged(
-        page: more ? (_assets.length ~/ 80) : 0,
-        size: 80,
+      final page = await widget.source.recent(
+        page: more ? (_assets.length ~/ _pageSize) : 0,
+        size: _pageSize,
       );
       if (!mounted) return;
       setState(() {
@@ -140,14 +160,17 @@ class _MediaPickerSheetState extends State<MediaPickerSheet> {
       setState(() => _selected.removeAt(idx));
       return;
     }
-    final cap = widget.forStory ? 1 : kMaxAlbumItems;
-    if (_selected.length >= cap) {
+    if (!_allowsMultiple) {
+      // Single-file mode: a new tap simply REPLACES the current choice, so
+      // there is never a "you can't pick more" dead end.
+      setState(() => _selected
+        ..clear()
+        ..add(asset));
+      return;
+    }
+    if (_selected.length >= _cap) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(cap == 1
-              ? 'O story aceita uma mídia.'
-              : 'No máximo $kMaxAlbumItems mídias por envio.'),
-        ),
+        SnackBar(content: Text('No máximo $kMaxAlbumItems mídias por envio.')),
       );
       return;
     }
@@ -164,8 +187,8 @@ class _MediaPickerSheetState extends State<MediaPickerSheet> {
     Navigator.of(context).pop(
       MediaSelection(
         assets: List.of(_selected),
-        caption: widget.forStory ? null : _caption.text.trim(),
-        viewOnce: widget.forStory ? false : _viewOnce,
+        caption: _isChat ? _caption.text.trim() : null,
+        viewOnce: _isChat ? _viewOnce : false,
       ),
     );
   }
@@ -188,15 +211,15 @@ class _MediaPickerSheetState extends State<MediaPickerSheet> {
             _Handle(),
             _Header(
               count: _selected.length,
-              forStory: widget.forStory,
+              mode: widget.mode,
               onClose: () => Navigator.of(context).maybePop(),
             ),
             const Divider(height: 1),
             SizedBox(height: 320, child: _buildGrid()),
-            if (!widget.forStory) _buildComposerBar(),
+            if (_isChat) _buildComposerBar(),
             _ConfirmBar(
               count: _selected.length,
-              forStory: widget.forStory,
+              mode: widget.mode,
               onConfirm: _selected.isEmpty ? null : _confirm,
             ),
           ],
@@ -339,12 +362,12 @@ class _Handle extends StatelessWidget {
 class _Header extends StatelessWidget {
   const _Header({
     required this.count,
-    required this.forStory,
+    required this.mode,
     required this.onClose,
   });
 
   final int count;
-  final bool forStory;
+  final MediaPickerMode mode;
   final VoidCallback onClose;
 
   @override
@@ -363,15 +386,19 @@ class _Header extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  forStory ? 'Novo story' : 'Enviar mídia',
+                  switch (mode) {
+                    MediaPickerMode.story => 'Novo story',
+                    MediaPickerMode.single => 'Escolher mídia',
+                    MediaPickerMode.chat => 'Enviar mídia',
+                  },
                   style: AppTextStyles.title.copyWith(fontSize: 17),
                 ),
                 Text(
-                  forStory
-                      ? 'Escolha uma foto ou vídeo'
-                      : (count == 0
+                  mode == MediaPickerMode.chat
+                      ? (count == 0
                           ? 'Escolha até $kMaxAlbumItems'
-                          : '$count selecionada${count > 1 ? 's' : ''}'),
+                          : '$count selecionada${count > 1 ? 's' : ''}')
+                      : 'Escolha uma foto ou vídeo',
                   style: AppTextStyles.caption,
                 ),
               ],
@@ -569,19 +596,22 @@ class _ViewOnceToggle extends StatelessWidget {
 class _ConfirmBar extends StatelessWidget {
   const _ConfirmBar({
     required this.count,
-    required this.forStory,
+    required this.mode,
     required this.onConfirm,
   });
 
   final int count;
-  final bool forStory;
+  final MediaPickerMode mode;
   final VoidCallback? onConfirm;
 
   @override
   Widget build(BuildContext context) {
-    final label = forStory
-        ? 'PUBLICAR NO STORY'
-        : (count > 1 ? 'ENVIAR $count MÍDIAS' : 'ENVIAR');
+    final label = switch (mode) {
+      MediaPickerMode.story => 'PUBLICAR NO STORY',
+      MediaPickerMode.single => 'USAR ESTA MÍDIA',
+      MediaPickerMode.chat =>
+        count > 1 ? 'ENVIAR $count MÍDIAS' : 'ENVIAR',
+    };
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppDimensions.spaceLg,

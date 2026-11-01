@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 /// Result of an attempted gallery pick. Success carries the picked file
 /// (already resized/compressed by [ImagePicker]); failure carries a
@@ -185,5 +187,43 @@ Future<GalleryPickResult> pickCameraVideo() async {
     return GalleryPickResult.success(file);
   } catch (_) {
     return const GalleryPickResult.failure('Não foi possível abrir a câmera.');
+  }
+}
+
+/// Turns a gallery [AssetEntity] (chosen in the app's own grid) into a file the
+/// uploader can send.
+///
+/// Two rules, and both matter:
+///  * a GIF (or a VIDEO) is passed through UNTOUCHED — re-encoding an animated
+///    GIF flattens it to a single frame, and a video must stay a video;
+///  * anything else is re-encoded DOWN to [maxSide] and JPEG-compressed, so a
+///    modern phone photo never ships at full resolution (memory + upload).
+///
+/// Returns null when the asset cannot be read (the caller surfaces a message).
+Future<File?> assetToUploadFile(
+  AssetEntity asset, {
+  int maxSide = 1600,
+  int quality = 85,
+}) async {
+  try {
+    // Video, or an animated GIF: keep the original bytes.
+    final name = (asset.title ?? '').toLowerCase();
+    if (asset.type == AssetType.video || name.endsWith('.gif')) {
+      return asset.file;
+    }
+    // Everything else: a bounded, compressed JPEG.
+    final bytes = await asset.thumbnailDataWithSize(
+      ThumbnailSize.square(maxSide),
+      quality: quality,
+    );
+    if (bytes == null) return asset.file;
+    final dir = await getTemporaryDirectory();
+    final out = File(
+      '${dir.path}/yazzoki_${asset.id}_$maxSide.jpg',
+    );
+    await out.writeAsBytes(Uint8List.fromList(bytes), flush: true);
+    return out;
+  } catch (_) {
+    return null;
   }
 }

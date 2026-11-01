@@ -70,7 +70,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withValues(alpha: 0.6),
-      builder: (_) => const MediaPickerSheet(forStory: true),
+      builder: (_) => const MediaPickerSheet(mode: MediaPickerMode.story),
     );
     if (!mounted) return;
     if (selection == null || selection.assets.isEmpty) return;

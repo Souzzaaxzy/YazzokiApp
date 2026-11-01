@@ -8,6 +8,7 @@ import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
 import '../../core/utils/gallery_picker.dart';
+import '../chat/media_picker_sheet.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/hud_label.dart';
@@ -293,30 +294,42 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
     if (source == null || !mounted) return null;
 
-    XFile? picked;
-    if (source == ImageSource.gallery) {
-      final result = await pickGalleryImage(
-        imageQuality: imageQuality,
-        maxWidth: maxWidth,
-        maxHeight: maxHeight,
-      );
-      if (!mounted) return null;
-      if (!result.isSuccess) {
-        if (!result.cancelled && result.error != null && result.error!.isNotEmpty) {
-          _showError(result.error!);
-        }
-        return null;
-      }
-      picked = result.file;
-    } else {
-      picked = await ImagePicker().pickImage(
+    if (source == ImageSource.camera) {
+      // A câmera continua nativa (não há câmera no app) e segue arquivo único.
+      return ImagePicker().pickImage(
         source: source,
         imageQuality: imageQuality,
         maxWidth: maxWidth,
         maxHeight: maxHeight,
       );
     }
-    return picked;
+
+    // Galeria: a MESMA grade do app, modo `single` (uma mídia; avatar e banner
+    // não têm legenda nem visualização única).
+    final selection = await showModalBottomSheet<MediaSelection>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (_) => const MediaPickerSheet(mode: MediaPickerMode.single),
+    );
+    if (!mounted) return null;
+    if (selection == null || selection.assets.isEmpty) return null;
+
+    // GIF sai intacto (reencodar mata a animação); o resto vira um JPEG
+    // limitado a `maxWidth`, para o avatar/banner não subirem gigantes.
+    final file = await assetToUploadFile(
+      selection.assets.first,
+      maxSide: maxWidth.round(),
+      quality: imageQuality,
+    );
+    if (!mounted) return null;
+    if (file == null) {
+      _showError('Não foi possível ler a imagem.');
+      return null;
+    }
+    return XFile(file.path);
   }
 
   Future<void> _save() async {

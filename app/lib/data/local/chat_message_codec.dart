@@ -46,6 +46,21 @@ class ChatMessageCodec {
               .toList(),
         if (m.mentionAll) 'mentionAll': true,
         if (m.mentioned) 'mentioned': true,
+        // Media extras. The history is LOCAL-FIRST, so anything missing here
+        // is silently dropped on read-back: the caption would never show and a
+        // view-once would come back as an ordinary photo.
+        if (m.caption != null) 'caption': m.caption,
+        if (m.viewOnce) 'viewOnce': true,
+        if (m.viewedAt != null) 'viewedAt': m.viewedAt!.toIso8601String(),
+        if (m.mediaWithheld) 'mediaWithheld': true,
+        if (m.album != null && m.album!.isNotEmpty)
+          'album': m.album!
+              .map((a) => {
+                    'kind': a.kind,
+                    'url': a.url,
+                    if (a.thumbUrl != null) 'thumbUrl': a.thumbUrl,
+                  })
+              .toList(),
       });
 
   static ChatMessage decode(String raw) {
@@ -84,6 +99,20 @@ class ChatMessageCodec {
           .toList(),
       mentionAll: (j['mentionAll'] as bool?) ?? false,
       mentioned: (j['mentioned'] as bool?) ?? false,
+      caption: j['caption'] as String?,
+      viewOnce: (j['viewOnce'] as bool?) ?? false,
+      viewedAt: j['viewedAt'] != null
+          ? DateTime.tryParse(j['viewedAt'] as String)
+          : null,
+      mediaWithheld: (j['mediaWithheld'] as bool?) ?? false,
+      album: (j['album'] as List?)
+          ?.whereType<Map<String, dynamic>>()
+          .map((a) => AlbumItem(
+                kind: (a['kind'] as String?) ?? 'image',
+                url: (a['url'] as String?) ?? '',
+                thumbUrl: a['thumbUrl'] as String?,
+              ))
+          .toList(),
     );
   }
 

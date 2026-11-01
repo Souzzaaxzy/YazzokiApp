@@ -8,7 +8,7 @@ import 'package:video_thumbnail/video_thumbnail.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
-import '../../core/utils/gallery_picker.dart';
+import '../chat/media_picker_sheet.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/hud_label.dart';
@@ -45,19 +45,28 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   /// photo OR a video directly (no prior step). The type is
   /// detected from the file; for videos a cover/thumbnail is generated.
   Future<void> _pickMedia() async {
-    final result = await pickGalleryMedia();
+    // A MESMA grade de galeria do app (visual único). Modo `single`: uma mídia
+    // só — a legenda do post é o campo de texto da própria tela, então aqui
+    // não há legenda nem visualização única.
+    final selection = await showModalBottomSheet<MediaSelection>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (_) => const MediaPickerSheet(mode: MediaPickerMode.single),
+    );
     if (!mounted) return;
-    if (!result.isSuccess) {
-      if (!result.cancelled &&
-          result.error != null &&
-          result.error!.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.error!)),
-        );
-      }
+    if (selection == null || selection.assets.isEmpty) return;
+    final picked = await selection.assets.first.file;
+    if (!mounted) return;
+    if (picked == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível ler a mídia.')),
+      );
       return;
     }
-    final file = result.file!;
+    final file = File(picked.path);
     final isVideo = _isVideoPath(file.path);
     setState(() {
       _imagePath = isVideo ? null : file.path;
