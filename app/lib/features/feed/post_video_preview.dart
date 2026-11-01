@@ -44,6 +44,14 @@ class PostVideoPreview extends StatefulWidget {
 }
 
 class _PostVideoPreviewState extends State<PostVideoPreview> {
+  /// Cover ratios already resolved, keyed by cover URL.
+  ///
+  /// Same reason as the photo preview: a [SliverList] rebuilds a recycled item
+  /// from scratch, so a widget-local "resolve once" would resolve AGAIN on
+  /// every return and resize the box mid-scroll — the feed shakes. Caching per
+  /// URL keeps the height identical on the first frame of every rebuild.
+  static final Map<String, double> _knownRatios = {};
+
   VideoPlayerController? _controller;
   bool _initialized = false;
 
@@ -56,6 +64,8 @@ class _PostVideoPreviewState extends State<PostVideoPreview> {
   @override
   void initState() {
     super.initState();
+    final url = widget.thumbnailUrl;
+    if (url != null) _ratio = _knownRatios[url];
     _createController();
   }
 
@@ -79,9 +89,13 @@ class _PostVideoPreviewState extends State<PostVideoPreview> {
   @override
   void didUpdateWidget(covariant PostVideoPreview oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.videoUrl != widget.videoUrl) {
+    if (oldWidget.videoUrl != widget.videoUrl ||
+        oldWidget.thumbnailUrl != widget.thumbnailUrl) {
       _controller?.dispose();
+      _controller = null;
       _initialized = false;
+      final url = widget.thumbnailUrl;
+      _ratio = url == null ? null : _knownRatios[url];
       _createController();
     } else {
       _updatePlayback();
@@ -91,6 +105,7 @@ class _PostVideoPreviewState extends State<PostVideoPreview> {
   /// Learns the cover's aspect ratio ONCE (so the box never resizes later).
   void _resolveRatioOnce(ImageProvider provider) {
     if (_ratio != null) return;
+    final url = widget.thumbnailUrl;
     final stream = provider.resolve(ImageConfiguration.empty);
     late final ImageStreamListener listener;
     listener = ImageStreamListener(
@@ -102,6 +117,7 @@ class _PostVideoPreviewState extends State<PostVideoPreview> {
         stream.removeListener(listener);
         if (mounted && w > 0 && h > 0) {
           final r = (w / h).clamp(0.5, 2.0).toDouble();
+          if (url != null) _knownRatios[url] = r;
           if (_ratio != r) setState(() => _ratio = r);
         }
       },

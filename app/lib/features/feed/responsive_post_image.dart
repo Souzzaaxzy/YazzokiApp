@@ -17,6 +17,15 @@ import '../../app/theme/app_dimensions.dart';
 /// image is cached by [CachedNetworkImage] (the app's existing cache) so the
 /// bytes are never re-downloaded.
 class ResponsivePostImage extends StatefulWidget {
+  /// The learned aspect ratios, keyed by image URL.
+  ///
+  /// Exposed so a test can assert the property that stops the feed from
+  /// shaking: a ratio, once learned, must SURVIVE the item being discarded
+  /// and rebuilt by the sliver list.
+  @visibleForTesting
+  static Map<String, double> get knownRatios =>
+      _ResponsivePostImageState._knownRatios;
+
   const ResponsivePostImage({
     super.key,
     required this.imageUrl,
@@ -35,7 +44,38 @@ class ResponsivePostImage extends StatefulWidget {
 }
 
 class _ResponsivePostImageState extends State<ResponsivePostImage> {
+  /// Aspect ratios already discovered, keyed by image URL.
+  ///
+  /// A [SliverList] DESTROYS the off-screen items and rebuilds them when they
+  /// scroll back. Without this cache the rebuilt item starts from the 4:3
+  /// placeholder, measures the real ratio a frame later and resizes — which is
+  /// exactly the jump/shake you see when scrolling back up a feed. Remembering
+  /// the ratio per URL means a returning item is laid out at the right height
+  /// on its FIRST frame.
+  static final Map<String, double> _knownRatios = {};
+
   double? _aspectRatio;
+
+  @override
+  void initState() {
+    super.initState();
+    _aspectRatio = _knownRatios[widget.imageUrl];
+  }
+
+  @override
+  void didUpdateWidget(covariant ResponsivePostImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.imageUrl != widget.imageUrl) {
+      _aspectRatio = _knownRatios[widget.imageUrl];
+    }
+  }
+
+  void _remember(double ratio) {
+    _knownRatios[widget.imageUrl] = ratio;
+    if (mounted && _aspectRatio != ratio) {
+      setState(() => _aspectRatio = ratio);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,9 +106,7 @@ class _ResponsivePostImageState extends State<ResponsivePostImage> {
                 return _ResolvedImage(
                   imageProvider: imageProvider,
                   onResolved: (r) {
-                    if (mounted && r != 0 && _aspectRatio != r) {
-                      setState(() => _aspectRatio = r);
-                    }
+                    if (r != 0) _remember(r);
                   },
                 );
               },

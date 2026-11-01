@@ -96,11 +96,7 @@ class _ThemesScreenState extends State<ThemesScreen> {
             ],
             const SizedBox(height: AppDimensions.spaceMd),
 
-            // ── 3) ícones de fundo ────────────────────────────
-            _IconsToggle(controller: controller),
-            const SizedBox(height: AppDimensions.spaceMd),
-
-            // ── 4) perfil global ──────────────────────────────
+            // ── 3) perfil global ──────────────────────────────
             _GlobalToggle(controller: controller),
             const SizedBox(height: AppDimensions.spaceXl),
 
@@ -233,7 +229,8 @@ class _ThemeCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               child: AspectRatio(
-                aspectRatio: 684 / 466,
+                // Matches the generated preview exactly (3 screens + gaps).
+                aspectRatio: 684 / 432,
                 child: Image.asset(
                   'assets/themes/theme_${theme.id}.png',
                   fit: BoxFit.cover,
@@ -322,54 +319,6 @@ class _GlobalToggle extends StatelessWidget {
           Switch(
             value: controller.applyToProfile,
             onChanged: (v) => controller.setApplyToProfile(v),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// "Ícones" — scatters the theme's motif over the background, or keeps the
-/// colours only. Purely local: it never touches the server, because what
-/// another user sees on their own screen is THEIR choice, not ours.
-class _IconsToggle extends StatelessWidget {
-  const _IconsToggle({required this.controller});
-
-  final ThemeController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    final on = controller.showIcons;
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.bluishBlack,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(color: AppColors.deepBlue),
-      ),
-      padding: const EdgeInsets.all(AppDimensions.spaceLg),
-      child: Row(
-        children: [
-          Icon(Icons.auto_awesome_rounded,
-              color: AppColors.accentInk, size: 22),
-          const SizedBox(width: AppDimensions.spaceMd),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Ícones', style: AppTextStyles.body),
-                const SizedBox(height: 2),
-                Text(
-                  on
-                      ? 'O ícone do tema aparece espalhado pelo fundo.'
-                      : 'Só as cores do tema, sem os ícones no fundo.',
-                  style: AppTextStyles.caption,
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: on,
-            onChanged: (v) => controller.setShowIcons(v),
           ),
         ],
       ),

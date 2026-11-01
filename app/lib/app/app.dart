@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../core/services/app_state.dart';
 import '../core/services/theme_controller.dart';
 import '../core/widgets/app_state_scope.dart';
-import '../core/widgets/theme_pattern_background.dart';
 import '../data/dtos/dtos.dart';
 import '../data/services.dart';
 import '../data/share_sticker_service.dart';
@@ -427,17 +426,16 @@ class _YazzokiAppState extends State<YazzokiApp> with WidgetsBindingObserver {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     _flushPendingShare();
                   });
-                  // The theme's background lives at the ROOT, behind the whole
-                  // Navigator: the base colour plus the scattered motif icons.
-                  // Every route (tab or pushed) is transparent over it, so
-                  // they all share one continuous background — and a pushed
-                  // screen can never reveal the raw canvas.
+                  // The theme's base colour lives at the ROOT, behind the
+                  // whole Navigator. Every route (tab or pushed) is
+                  // transparent over it, so they all share one continuous
+                  // background — and a pushed screen can never reveal the
+                  // raw canvas.
                   return Stack(
                     children: [
                       Positioned.fill(
                         child: ColoredBox(color: AppColors.absoluteBlack),
                       ),
-                      const Positioned.fill(child: ThemePatternBackground()),
                       Positioned.fill(
                         child: child ?? const SizedBox.shrink(),
                       ),

@@ -30,7 +30,6 @@ class ThemeController extends ChangeNotifier with WidgetsBindingObserver {
   String _themeId = kDefaultThemeId;
   YazzokiThemeMode _mode = YazzokiThemeMode.dark;
   bool _applyToProfile = false;
-  bool _showIcons = true;
 
   /// The selected catalog theme id (see [yazzokiThemes]).
   String get themeId => _themeId;
@@ -42,10 +41,6 @@ class ThemeController extends ChangeNotifier with WidgetsBindingObserver {
 
   /// Whether the chosen theme is also shown to OTHER users on the profile.
   bool get applyToProfile => _applyToProfile;
-
-  /// Whether the theme's motif icons are scattered over the background.
-  /// OFF keeps the colours only (a flat, plain surface).
-  bool get showIcons => _showIcons;
 
   ThemeMode get materialMode => switch (_mode) {
         YazzokiThemeMode.dark => ThemeMode.dark,
@@ -68,12 +63,10 @@ class ThemeController extends ChangeNotifier with WidgetsBindingObserver {
           isValidThemeId(saved.themeId) ? saved.themeId : kDefaultThemeId;
       _mode = saved.mode;
       _applyToProfile = saved.applyToProfile;
-      _showIcons = saved.showIcons;
     } catch (_) {
       _themeId = kDefaultThemeId;
       _mode = YazzokiThemeMode.dark;
       _applyToProfile = false;
-      _showIcons = true;
     }
     notifyListeners();
   }
@@ -102,21 +95,12 @@ class ThemeController extends ChangeNotifier with WidgetsBindingObserver {
     await _persist();
   }
 
-  /// Toggles the scattered background icons. Local only — the other users see
-  /// whatever THEIR own preference is, never ours.
-  Future<void> setShowIcons(bool value) async {
-    _showIcons = value;
-    notifyListeners();
-    await _persist();
-  }
-
   Future<void> _persist() async {
     try {
       await _store.writeAll(
         themeId: _themeId,
         mode: _mode,
         applyToProfile: _applyToProfile,
-        showIcons: _showIcons,
       );
     } catch (_) {
       // Persistence is best-effort: the in-memory choice already applied.
