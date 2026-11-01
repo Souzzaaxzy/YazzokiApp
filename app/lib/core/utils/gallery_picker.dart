@@ -209,14 +209,16 @@ Future<File?> assetToUploadFile(
     // Video, or an animated GIF: keep the original bytes.
     final name = (asset.title ?? '').toLowerCase();
     if (asset.type == AssetType.video || name.endsWith('.gif')) {
-      return asset.file;
+      // `await` (not a bare return) so a failure here is caught by this try —
+      // a returned Future would escape the handler.
+      return await asset.file;
     }
     // Everything else: a bounded, compressed JPEG.
     final bytes = await asset.thumbnailDataWithSize(
       ThumbnailSize.square(maxSide),
       quality: quality,
     );
-    if (bytes == null) return asset.file;
+    if (bytes == null) return await asset.file;
     final dir = await getTemporaryDirectory();
     final out = File(
       '${dir.path}/yazzoki_${asset.id}_$maxSide.jpg',
