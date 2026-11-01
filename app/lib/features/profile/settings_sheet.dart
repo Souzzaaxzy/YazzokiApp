@@ -4,9 +4,9 @@ import '../../app/routes.dart';
 import '../../app/theme/app_colors.dart';
 import '../../app/theme/app_dimensions.dart';
 import '../../app/theme/app_text_styles.dart';
-import '../../core/services/theme_controller.dart';
 import '../../core/widgets/app_state_scope.dart';
 import '../../core/widgets/theme_watcher.dart';
+import '../themes/themes_screen.dart';
 
 /// Settings bottom sheet shown ONLY on the session user's own profile.
 ///
@@ -32,7 +32,6 @@ class SettingsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = ThemeController.instance;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
@@ -59,36 +58,9 @@ class SettingsSheet extends StatelessWidget {
             const SizedBox(height: AppDimensions.spaceLg),
             Text('CONFIGURAÇÕES', style: AppTextStyles.title.copyWith(fontSize: 16)),
             const SizedBox(height: AppDimensions.spaceLg),
-            Text('TEMA', style: AppTextStyles.hud),
-            const SizedBox(height: AppDimensions.spaceSm),
-            ListenableBuilder(
-              listenable: controller,
-              builder: (context, _) => Column(
-                children: [
-                  _ThemeOption(
-                    icon: Icons.dark_mode_rounded,
-                    label: 'Escuro',
-                    mode: YazzokiThemeMode.dark,
-                    active: controller.mode == YazzokiThemeMode.dark,
-                    onSelected: () => controller.setMode(YazzokiThemeMode.dark),
-                  ),
-                  _ThemeOption(
-                    icon: Icons.light_mode_rounded,
-                    label: 'Claro',
-                    mode: YazzokiThemeMode.light,
-                    active: controller.mode == YazzokiThemeMode.light,
-                    onSelected: () => controller.setMode(YazzokiThemeMode.light),
-                  ),
-                  _ThemeOption(
-                    icon: Icons.smartphone_rounded,
-                    label: 'Sistema',
-                    mode: YazzokiThemeMode.system,
-                    active: controller.mode == YazzokiThemeMode.system,
-                    onSelected: () => controller.setMode(YazzokiThemeMode.system),
-                  ),
-                ],
-              ),
-            ),
+            // O tema (Claro/Escuro/Sistema + catálogo) saiu daqui e virou
+            // uma tela própria, aberta por esta entrada.
+            const ThemesEntryTile(),
             const Divider(height: AppDimensions.spaceXxl),
             _SettingsRow(
               icon: Icons.logout_rounded,
@@ -231,48 +203,6 @@ class SettingsSheet extends StatelessWidget {
     // must NEVER keep private state behind the back button.
     Navigator.of(context)
         .pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
-  }
-}
-
-class _ThemeOption extends StatelessWidget {
-  const _ThemeOption({
-    required this.icon,
-    required this.label,
-    required this.mode,
-    required this.active,
-    required this.onSelected,
-  });
-
-  final IconData icon;
-  final String label;
-  final YazzokiThemeMode mode;
-  final bool active;
-  final VoidCallback onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onSelected,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.spaceSm,
-          vertical: AppDimensions.spaceMd,
-        ),
-        child: Row(
-          children: [
-            Icon(icon,
-                color: active ? AppColors.electricBlue : AppColors.holographicBlue,
-                size: 20),
-            const SizedBox(width: AppDimensions.spaceMd),
-            Expanded(child: Text(label, style: AppTextStyles.body)),
-            if (active)
-              Icon(Icons.check_rounded,
-                  color: AppColors.electricBlue, size: 18),
-          ],
-        ),
-      ),
-    );
   }
 }
 

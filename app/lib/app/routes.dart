@@ -19,6 +19,7 @@ import '../features/profile/profile_screen.dart';
 import '../features/splash/splash_screen.dart';
 import '../features/chat/chat_navigation.dart';
 import '../features/stickers/sticker_import_screen.dart';
+import '../features/themes/themes_screen.dart';
 
 /// Named routes for the Yazzoki app.
 class AppRoutes {
@@ -34,6 +35,9 @@ class AppRoutes {
   /// Nova publicação OU novo Story — escolhido no mesmo botão "+" do perfil.
   static const String createStory = '/home/create-story';
   static const String editProfile = '/home/edit-profile';
+
+  /// Seletor de tema (Claro/Escuro/Sistema + catálogo + perfil global).
+  static const String themes = '/home/themes';
 
   /// Post detail. Argument: the post's server id (String).
   static const String postDetail = '/home/post';
@@ -114,6 +118,7 @@ Widget _buildPage(RouteSettings settings) {
     AppRoutes.createPost => CreatePostScreen(),
     AppRoutes.createStory => CreateStoryScreen(),
     AppRoutes.editProfile => EditProfileScreen(),
+    AppRoutes.themes => ThemesScreen(),
     AppRoutes.postDetail => _postDetail(settings.arguments as String?),
     AppRoutes.profile =>
       ProfileScreen(nickname: _nicknameArg(settings.arguments)),

@@ -280,6 +280,9 @@ class FakeStore {
   /// Profile views `viewerId>profileId` (one per pair, like the server).
   final Set<String> profileViews = {};
 
+  /// The theme published on the profile (`''` = none), like the server column.
+  String profileThemeId = '';
+
   /// Private chat messages by conversation (pair key `a|b`), in order.
   late final Map<String, List<ChatMessage>> chatMessagesByPair;
 
@@ -608,6 +611,7 @@ class _FakeUserRepository implements UserRepository {
     String? avatarUrl,
     String? bannerUrl,
     String? publicId,
+    String? profileThemeId,
     bool clearBanner = false,
   }) async {
     final old = _store.currentUser;
@@ -626,6 +630,8 @@ class _FakeUserRepository implements UserRepository {
           : old.publicIdLabel,
     );
     _store.users[old.id] = updated;
+    // The public profile theme is stored separately (like the server column).
+    if (profileThemeId != null) _store.profileThemeId = profileThemeId;
     return updated;
   }
 

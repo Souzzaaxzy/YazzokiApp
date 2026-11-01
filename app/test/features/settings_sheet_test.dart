@@ -6,7 +6,9 @@ import 'package:yazzoki/core/services/app_state.dart';
 import 'package:yazzoki/core/services/theme_controller.dart';
 import 'package:yazzoki/core/widgets/app_state_scope.dart';
 import 'package:yazzoki/features/auth/login/login_screen.dart';
+import 'package:yazzoki/app/theme/app_palette.dart';
 import 'package:yazzoki/features/profile/profile_screen.dart';
+import 'package:yazzoki/features/themes/themes_screen.dart';
 
 import '../helpers/fake_repositories.dart';
 
@@ -51,7 +53,7 @@ void main() {
     expect(settingsButton(), findsNothing);
   });
 
-  testWidgets('opens the sheet with theme trio + logout + delete entries',
+  testWidgets('opens the sheet with Temas + logout + delete entries',
       (tester) async {
     final state = AppState(repositories: FakeRepositories());
     addTearDown(state.dispose);
@@ -62,9 +64,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('CONFIGURAÇÕES'), findsOneWidget);
-    expect(find.text('Escuro'), findsOneWidget);
-    expect(find.text('Claro'), findsOneWidget);
-    expect(find.text('Sistema'), findsOneWidget);
+    // O seletor de tema saiu daqui e virou a tela "Temas" (entrada própria).
+    expect(find.text('Temas'), findsOneWidget);
+    expect(find.text('Escuro'), findsNothing);
+    expect(find.text('Claro'), findsNothing);
     // O sistema de personalização foi removido do produto: a entrada não
     // existe mais no menu.
     expect(find.text('Personalizações'), findsNothing);
@@ -78,24 +81,44 @@ void main() {
     expect(find.text('CONFIGURAÇÕES'), findsNothing);
   });
 
-  testWidgets('selecting a theme updates the shared controller',
-      (tester) async {
+  testWidgets('a entrada "Temas" abre a tela de temas', (tester) async {
     final state = AppState(repositories: FakeRepositories());
     addTearDown(state.dispose);
     final controller = ThemeController.instance;
-    addTearDown(() => controller.setMode(YazzokiThemeMode.dark));
+    addTearDown(() {
+      controller.setMode(YazzokiThemeMode.dark);
+      controller.setThemeId(kDefaultThemeId);
+    });
     await pumpProfile(tester, state);
     await tester.tap(settingsButton());
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 500));
 
-    await tester.tap(find.text('Claro'));
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(controller.mode, YazzokiThemeMode.light);
+    await tester.tap(find.text('Temas'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 500));
 
-    await tester.tap(find.text('Sistema'));
+    // A tela abre com os três modos e o catálogo de temas.
+    expect(find.byType(ThemesScreen), findsOneWidget);
+    expect(find.text('MODO'), findsOneWidget);
+    expect(find.text('Claro'), findsOneWidget);
+    expect(find.text('Escuro'), findsOneWidget);
+    expect(find.text('Sistema'), findsOneWidget);
+    // O catálogo é longo: rola até o tema e até o botão de confirmar.
+    await tester.scrollUntilVisible(find.text('Sakura'), 260,
+        scrollable: find.byType(Scrollable).last);
+    expect(find.text('Sakura'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('CONFIRMAR TEMA'), 260,
+        scrollable: find.byType(Scrollable).last);
+    expect(find.text('CONFIRMAR TEMA'), findsOneWidget);
+
+    // Escolher o brilho aplica na hora (é preferência local). Volta ao topo
+    // antes de tocar (a rolagem acima levou os botões para fora da tela).
+    await tester.scrollUntilVisible(find.text('MODO'), -260,
+        scrollable: find.byType(Scrollable).last);
+    await tester.tap(find.text('Claro'));
     await tester.pump();
-    expect(controller.mode, YazzokiThemeMode.system);
+    expect(controller.mode, YazzokiThemeMode.light);
   });
 
   testWidgets('logout asks for confirmation and then lands on login',

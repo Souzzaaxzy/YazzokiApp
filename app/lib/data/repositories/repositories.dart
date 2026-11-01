@@ -266,6 +266,7 @@ class UserRepository {
     String? avatarUrl,
     String? bannerUrl,
     String? publicId,
+    String? profileThemeId,
     bool clearBanner = false,
   }) async {
     final json = await _api.patch<Map<String, dynamic>>(
@@ -275,6 +276,9 @@ class UserRepository {
         if (bio != null) 'bio': bio,
         // The public `#id` the user wants to adopt (server validates it).
         if (publicId != null) 'publicId': publicId,
+        // `null` clears the public profile theme; a value sets it. Omitted
+        // leaves it untouched (same contract as bannerUrl).
+        if (profileThemeId != null) 'profileThemeId': profileThemeId,
         if (avatarUrl != null) 'avatarUrl': avatarUrl,
         // `null` clears the banner server-side; omitting the key leaves it
         // untouched — hence the explicit flag instead of a nullable value.

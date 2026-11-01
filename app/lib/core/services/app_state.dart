@@ -1302,6 +1302,23 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Publishes (or clears) the theme shown to OTHER users on this profile.
+  /// Best-effort: a failure never blocks the local theme from applying.
+  Future<void> syncProfileTheme({
+    required bool apply,
+    required String themeId,
+  }) async {
+    try {
+      final updated = await _users.updateProfile(
+        profileThemeId: apply ? themeId : '',
+      );
+      _currentUser = updated;
+      notifyListeners();
+    } catch (_) {
+      // Offline: the local preference still applies; the next confirm retries.
+    }
+  }
+
   /// Uploads a new avatar image and persists it on the profile.
   /// Returns the public URL of the stored image. Each upload gets a new
   /// unique filename server-side, so the new URL naturally busts any
