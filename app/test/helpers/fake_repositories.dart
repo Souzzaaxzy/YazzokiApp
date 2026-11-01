@@ -1077,12 +1077,24 @@ class _FakeChatRepository implements ChatRepository {
     return message;
   }
 
+  /// Records which messages the fake "server" was told were opened, so a
+  /// test can assert the recipient declared the view.
+  final List<String> viewOnceOpened = [];
+
+  @override
+  Future<void> markViewOnceOpened(String messageId) async {
+    viewOnceOpened.add(messageId);
+  }
+
   @override
   Future<ChatMessage> sendMedia(
     String conversationId, {
     required String kind,
     required String url,
     String? replyToMessageId,
+    String? caption,
+    bool viewOnce = false,
+    List<AlbumItem>? album,
   }) async {
     final me = _store.currentUserId;
     final label = kind == 'video' ? '🎥 Vídeo' : '📷 Foto';
@@ -1352,6 +1364,9 @@ class _FakeChatRepository implements ChatRepository {
     required String kind,
     required String url,
     String? replyToMessageId,
+    String? caption,
+    bool viewOnce = false,
+    List<AlbumItem>? album,
   }) async {
     final me = _store.currentUserId;
     if (me == null || !_store.groups.containsKey(groupId)) {

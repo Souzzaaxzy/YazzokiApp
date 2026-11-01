@@ -867,18 +867,58 @@ class ChatRepository implements ChatApi {
     required String kind,
     required String url,
     String? replyToMessageId,
+    String? caption,
+    bool viewOnce = false,
+    List<AlbumItem>? album,
   }) async {
     final json = await _api.post<Map<String, dynamic>>(
       '/api/conversations/$conversationId/media',
-      data: {
-        'kind': kind,
-        'url': url,
-        if (replyToMessageId != null && replyToMessageId.isNotEmpty)
-          'replyToMessageId': replyToMessageId,
-      },
+      data: _mediaBody(
+        kind: kind,
+        url: url,
+        replyToMessageId: replyToMessageId,
+        caption: caption,
+        viewOnce: viewOnce,
+        album: album,
+      ),
     );
     return ChatMessageDto.fromJson(json['message'] as Map<String, dynamic>)
         .toModel();
+  }
+
+  /// Marks a VIEW-ONCE message as opened by the session user. The server
+  /// stamps it once and from then on WITHHOLDS the media from this user, so
+  /// the "só uma vez" rule survives a re-open or a cached payload.
+  Future<void> markViewOnceOpened(String messageId) async {
+    await _api.post<Map<String, dynamic>>('/api/messages/$messageId/viewed');
+  }
+
+  /// Shared body for the media send (DM + group share the exact same shape).
+  Map<String, dynamic> _mediaBody({
+    required String kind,
+    required String url,
+    String? replyToMessageId,
+    String? caption,
+    bool viewOnce = false,
+    List<AlbumItem>? album,
+  }) {
+    final cap = caption?.trim();
+    return {
+      'kind': kind,
+      'url': url,
+      if (replyToMessageId != null && replyToMessageId.isNotEmpty)
+        'replyToMessageId': replyToMessageId,
+      if (cap != null && cap.isNotEmpty) 'caption': cap,
+      if (viewOnce) 'viewOnce': true,
+      if (album != null && album.length > 1)
+        'items': album
+            .map((a) => {
+                  'kind': a.kind,
+                  'url': a.url,
+                  if (a.thumbUrl != null) 'thumbUrl': a.thumbUrl,
+                })
+            .toList(),
+    };
   }
 
   /// Sends a MEDIA message to a GROUP (see [sendMedia]).
@@ -887,15 +927,20 @@ class ChatRepository implements ChatApi {
     required String kind,
     required String url,
     String? replyToMessageId,
+    String? caption,
+    bool viewOnce = false,
+    List<AlbumItem>? album,
   }) async {
     final json = await _api.post<Map<String, dynamic>>(
       '/api/groups/$groupId/media',
-      data: {
-        'kind': kind,
-        'url': url,
-        if (replyToMessageId != null && replyToMessageId.isNotEmpty)
-          'replyToMessageId': replyToMessageId,
-      },
+      data: _mediaBody(
+        kind: kind,
+        url: url,
+        replyToMessageId: replyToMessageId,
+        caption: caption,
+        viewOnce: viewOnce,
+        album: album,
+      ),
     );
     return ChatMessageDto.fromJson(json['message'] as Map<String, dynamic>)
         .toModel();

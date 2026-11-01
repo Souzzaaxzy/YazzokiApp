@@ -211,6 +211,17 @@ class ChatHistoryService {
 
   /// Messages still waiting for the server (used to retry after reconnect).
   Future<List<ChatMessage>> pending() => _store.pending();
+
+  /// Rewrites the LOCAL copy of a VIEW-ONCE message as consumed, so the
+  /// bubble stops offering the media the moment the viewer closes it. The
+  /// server remains the real gate (it stops serving the URL); this exists so
+  /// the UI does not have to wait for a refetch to reflect it.
+  Future<void> markViewOnceConsumed(String messageId, DateTime at) async {
+    final existing = await _store.messageById(messageId);
+    if (existing == null) return;
+    await _store.upsert(existing.copyWithViewOnceConsumed(at));
+    _notify();
+  }
 }
 
 /// The subset of the chat API the history service needs.

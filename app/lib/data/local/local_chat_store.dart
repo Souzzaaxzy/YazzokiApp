@@ -125,6 +125,16 @@ class LocalChatStore {
   }) =>
       _query(where: 'groupId = ?', arg: groupId, limit: limit, before: before);
 
+  /// One stored message by id (null when absent). Used to rewrite a single
+  /// row in place — e.g. flipping a view-once message to "consumed" without
+  /// reloading the whole page.
+  Future<ChatMessage?> messageById(String id) async {
+    final rows = await _db.query('messages',
+        where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) return null;
+    return ChatMessageCodec.decode(rows.first['body'] as String);
+  }
+
   Future<List<ChatMessage>> _query({
     required String where,
     required String arg,

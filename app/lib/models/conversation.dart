@@ -99,6 +99,28 @@ class ConversationLastMessage {
   final String? senderNickname;
 }
 
+/// One file inside an ALBUM message (a message carrying 2–10 media).
+class AlbumItem {
+  const AlbumItem({
+    required this.kind,
+    required this.url,
+    this.thumbUrl,
+  });
+
+  /// 'image' | 'video'.
+  final String kind;
+  final String url;
+
+  /// Cover for a VIDEO item. Null for images (they use [url]) and for videos
+  /// whose cover could not be generated.
+  final String? thumbUrl;
+
+  bool get isVideo => kind == 'video';
+
+  /// What the tile should show: the cover for a video, the file for an image.
+  String get previewUrl => isVideo ? (thumbUrl ?? url) : url;
+}
+
 /// A single message — private chat (has [conversationId]) or group chat
 /// (has [groupId]). Group messages embed the real sender's compact identity
 /// ([sender], ChatUser) so every bubble can be labeled without a per-message
@@ -127,6 +149,11 @@ class ChatMessage {
     this.mentions = const [],
     this.mentionAll = false,
     this.mentioned = false,
+    this.caption,
+    this.viewOnce = false,
+    this.viewedAt,
+    this.mediaWithheld = false,
+    this.album,
   });
 
   final String id;
@@ -181,11 +208,49 @@ class ChatMessage {
   /// the reference keeps rendering after the story expires. Null otherwise.
   final StoryReference? story;
 
+  /// Caption typed with a media message. Null when there is none — the
+  /// bubble shows only the media. `content` keeps the short label, so the
+  /// chat LIST never shows the caption.
+  final String? caption;
+
+  /// VIEW-ONCE: the media may be opened a single time. The SERVER enforces
+  /// it (the URL stops being served after the recipient opens it), so this
+  /// flag drives the UI, never the protection itself.
+  final bool viewOnce;
+
+  /// When THIS viewer opened a view-once message (null = not opened).
+  final DateTime? viewedAt;
+
+  /// True when the server WITHHELD the media from this viewer because the
+  /// view-once was already consumed. The bubble renders "já visualizado".
+  final bool mediaWithheld;
+
+  /// ALBUM: the files of a multi-media message, in order. Null/empty for a
+  /// single-file message.
+  final List<AlbumItem>? album;
+
   bool get isImage => type == 'image';
   bool get isVideo => type == 'video';
   bool get isMedia => isImage || isVideo;
   bool get isSticker => type == 'sticker';
   bool get isVoice => type == 'voice';
+
+  /// A message carrying several files sent at once.
+  bool get isAlbum => type == 'album' || (album != null && album!.length > 1);
+
+  /// True when this message's media is a view-once that the viewer already
+  /// consumed (or that the server withheld): the bubble shows the consumed
+  /// placeholder instead of the media.
+  bool get isViewOnceConsumed =>
+      viewOnce && (mediaWithheld || (viewedAt != null && !mine));
+
+  /// The same message, marked as a consumed view-once. Used right after the
+  /// viewer closes the media so the bubble stops offering it without waiting
+  /// for a refetch (the server is still the real gate).
+  ChatMessage copyWithViewOnceConsumed(DateTime at) => copyWith(
+        viewedAt: viewedAt ?? at,
+        mediaWithheld: true,
+      );
 
   /// Structured mentions embedded in this (group) message — every mentioned
   /// user id + live nickname. Empty for non-mention messages and DMs.
@@ -220,6 +285,11 @@ class ChatMessage {
     List<ChatMention>? mentions,
     bool? mentionAll,
     bool? mentioned,
+    String? caption,
+    bool? viewOnce,
+    DateTime? viewedAt,
+    bool? mediaWithheld,
+    List<AlbumItem>? album,
   }) =>
       ChatMessage(
         id: id,
@@ -241,6 +311,11 @@ class ChatMessage {
         stickerId: stickerId ?? this.stickerId,
         stickerPackageId: stickerPackageId ?? this.stickerPackageId,
         story: story ?? this.story,
+        caption: caption ?? this.caption,
+        viewOnce: viewOnce ?? this.viewOnce,
+        viewedAt: viewedAt ?? this.viewedAt,
+        mediaWithheld: mediaWithheld ?? this.mediaWithheld,
+        album: album ?? this.album,
         mentions: mentions ?? this.mentions,
         mentionAll: mentionAll ?? this.mentionAll,
         mentioned: mentioned ?? this.mentioned,

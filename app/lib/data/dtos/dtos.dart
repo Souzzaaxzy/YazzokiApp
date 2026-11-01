@@ -476,6 +476,17 @@ class ChatMessageDto {
   final List<ChatMention> mentions;
   final bool mentionAll;
   final bool mentioned;
+  /// Caption typed with a media message (null when none).
+  final String? caption;
+  /// VIEW-ONCE: the media may be opened a single time (server-enforced).
+  final bool viewOnce;
+  /// When the viewer opened a view-once message.
+  final DateTime? viewedAt;
+  /// True when the server WITHHELD the media from this viewer (view-once
+  /// already consumed) — the app renders a "já visualizado" placeholder.
+  final bool mediaWithheld;
+  /// ALBUM: the files of a multi-media message, in order.
+  final List<AlbumItemDto>? album;
 
   const ChatMessageDto({
     required this.id,
@@ -500,6 +511,11 @@ class ChatMessageDto {
     this.mentions = const [],
     this.mentionAll = false,
     this.mentioned = false,
+    this.caption,
+    this.viewOnce = false,
+    this.viewedAt,
+    this.mediaWithheld = false,
+    this.album,
   });
 
   ChatMessage toModel() => ChatMessage(
@@ -519,6 +535,7 @@ class ChatMessageDto {
           'video' => 'video',
           'sticker' => 'sticker',
           'story_reply' => 'story_reply',
+          'album' => 'album',
           _ => 'text',
         },
         audioUrl: audioUrl,
@@ -532,6 +549,11 @@ class ChatMessageDto {
         mentions: mentions,
         mentionAll: mentionAll,
         mentioned: mentioned,
+        caption: caption,
+        viewOnce: viewOnce,
+        viewedAt: viewedAt,
+        mediaWithheld: mediaWithheld,
+        album: album?.map((a) => a.toModel()).toList(),
       );
 
   factory ChatMessageDto.fromJson(Map<String, dynamic> json) {
@@ -539,6 +561,7 @@ class ChatMessageDto {
     final replyRaw = json['replyTo'];
     final senderRaw = json['sender'];
     final mentionsRaw = json['mentions'];
+    final albumRaw = json['album'];
     return ChatMessageDto(
       id: json['id'] as String,
       conversationId: json['conversationId'] as String?,
@@ -580,8 +603,43 @@ class ChatMessageDto {
           : const <ChatMention>[],
       mentionAll: (json['mentionAll'] as bool?) ?? false,
       mentioned: (json['mentioned'] as bool?) ?? false,
+      caption: (json['caption'] as String?)?.trim().isEmpty ?? true
+          ? null
+          : (json['caption'] as String).trim(),
+      viewOnce: (json['viewOnce'] as bool?) ?? false,
+      viewedAt: json['viewedAt'] == null
+          ? null
+          : DateTime.tryParse(json['viewedAt'] as String),
+      mediaWithheld: (json['mediaWithheld'] as bool?) ?? false,
+      album: albumRaw is List
+          ? albumRaw
+              .whereType<Map<String, dynamic>>()
+              .map(AlbumItemDto.fromJson)
+              .toList()
+          : null,
     );
   }
+}
+
+/// One file of an ALBUM chat message.
+class AlbumItemDto {
+  final String kind;
+  final String url;
+  final String? thumbUrl;
+
+  const AlbumItemDto({required this.kind, required this.url, this.thumbUrl});
+
+  AlbumItem toModel() => AlbumItem(
+        kind: kind == 'video' ? 'video' : 'image',
+        url: url,
+        thumbUrl: thumbUrl,
+      );
+
+  factory AlbumItemDto.fromJson(Map<String, dynamic> json) => AlbumItemDto(
+        kind: (json['kind'] as String?) ?? 'image',
+        url: (json['url'] as String?) ?? '',
+        thumbUrl: json['thumbUrl'] as String?,
+      );
 }
 
 /// Structured mention payload (server resolves nickname live from the id).

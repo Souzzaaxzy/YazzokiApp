@@ -1945,16 +1945,49 @@ class AppState extends ChangeNotifier {
     required String url,
     String? replyToMessageId,
     ChatUser? otherUser,
+    String? caption,
+    bool viewOnce = false,
+    List<AlbumItem>? album,
   }) async {
     final message = await _chat.sendMedia(
       conversationId,
       kind: kind,
       url: url,
       replyToMessageId: replyToMessageId,
+      caption: caption,
+      viewOnce: viewOnce,
+      album: album,
     );
     _applyChatMessage(message, otherUser: otherUser ?? _peerOf(conversationId));
     notifyListeners();
     return message;
+  }
+
+  /// Marks a VIEW-ONCE message as opened (the recipient side). Best-effort:
+  /// a failure must never block the viewer from closing the media, and the
+  /// server is the one that actually withholds the URL on the next read.
+  Future<void> markViewOnceOpened(String messageId) async {
+    try {
+      await _chat.markViewOnceOpened(messageId);
+      await _applyViewOnceOpened(messageId);
+      notifyListeners();
+    } catch (_) {
+      // Offline: the local UI already closed it; the next load reconciles.
+    }
+  }
+
+  /// Flips the LOCAL copy to "consumed" so the bubble stops offering the
+  /// media immediately, without waiting for a refetch. The history lives in
+  /// the local store (the phone owns chat history), so that is what we
+  /// rewrite — the server remains the real gate for the URL itself.
+  Future<void> _applyViewOnceOpened(String messageId) async {
+    final history = chatHistory;
+    if (history == null) return;
+    try {
+      await history.markViewOnceConsumed(messageId, DateTime.now());
+    } catch (_) {
+      // The UI already closed it; a failure here only delays the repaint.
+    }
   }
 
   /// Sends a GROUP media message (image/video) and updates the cached group
@@ -1964,12 +1997,18 @@ class AppState extends ChangeNotifier {
     required String kind,
     required String url,
     String? replyToMessageId,
+    String? caption,
+    bool viewOnce = false,
+    List<AlbumItem>? album,
   }) async {
     final message = await _chat.sendGroupMedia(
       groupId,
       kind: kind,
       url: url,
       replyToMessageId: replyToMessageId,
+      caption: caption,
+      viewOnce: viewOnce,
+      album: album,
     );
     _applyChatMessage(message);
     notifyListeners();
