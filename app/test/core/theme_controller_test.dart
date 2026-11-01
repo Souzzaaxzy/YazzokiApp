@@ -11,6 +11,7 @@ class _MemoryThemeStore implements ThemeStore {
   String themeId = '';
   String mode = '';
   bool apply = false;
+  bool? icons;
 
   @override
   Future<SavedTheme> readAll() async {
@@ -18,7 +19,12 @@ class _MemoryThemeStore implements ThemeStore {
     for (final x in YazzokiThemeMode.values) {
       if (x.name == mode) m = x;
     }
-    return SavedTheme(themeId: themeId, mode: m, applyToProfile: apply);
+    return SavedTheme(
+      themeId: themeId,
+      mode: m,
+      applyToProfile: apply,
+      showIcons: icons ?? true,
+    );
   }
 
   @override
@@ -26,10 +32,12 @@ class _MemoryThemeStore implements ThemeStore {
     required String themeId,
     required YazzokiThemeMode mode,
     required bool applyToProfile,
+    required bool showIcons,
   }) async {
     this.themeId = themeId;
     this.mode = mode.name;
     apply = applyToProfile;
+    icons = showIcons;
   }
 }
 
@@ -44,6 +52,8 @@ void main() {
       expect(controller.materialMode, ThemeMode.dark);
       expect(controller.themeId, kDefaultThemeId);
       expect(controller.applyToProfile, isFalse);
+      // The decorated look is the default: icons ON.
+      expect(controller.showIcons, isTrue);
     });
 
     testWidgets('setMode/setThemeId persist across a controller restart',
@@ -54,6 +64,7 @@ void main() {
       await a.setMode(YazzokiThemeMode.light);
       await a.setThemeId('sakura');
       await a.setApplyToProfile(true);
+      await a.setShowIcons(false);
       expect(a.mode, YazzokiThemeMode.light);
       expect(a.themeId, 'sakura');
 
@@ -63,6 +74,28 @@ void main() {
       expect(b.mode, YazzokiThemeMode.light);
       expect(b.themeId, 'sakura');
       expect(b.applyToProfile, isTrue);
+      expect(b.showIcons, isFalse);
+    });
+
+    testWidgets('a preference saved before the Icons option keeps them ON',
+        (tester) async {
+      final store = _MemoryThemeStore()..icons = null; // key never written
+      final controller = ThemeController.debug(store);
+      await controller.load();
+      expect(controller.showIcons, isTrue);
+    });
+
+    testWidgets('toggling the icons notifies and is local-only',
+        (tester) async {
+      final store = _MemoryThemeStore();
+      final controller = ThemeController.debug(store);
+      await controller.load();
+      var notified = 0;
+      controller.addListener(() => notified++);
+      await controller.setShowIcons(false);
+      expect(notified, 1);
+      expect(controller.showIcons, isFalse);
+      expect(store.icons, isFalse);
     });
 
     testWidgets('an unknown theme id falls back to the default',

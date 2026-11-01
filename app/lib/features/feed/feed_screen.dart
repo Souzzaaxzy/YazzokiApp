@@ -95,7 +95,9 @@ class _FeedScreenState extends State<FeedScreen> {
     final posts = state.posts;
 
     return Scaffold(
-      backgroundColor: AppColors.absoluteBlack,
+      // Transparente: a cor do tema + os ícones são pintados na RAIZ do app,
+      // atrás do Navigator, para TODA rota compartilhar o mesmo fundo.
+      backgroundColor: Colors.transparent,
       body: RefreshIndicator(
         color: AppColors.electricBlue,
         backgroundColor: AppColors.nightBlue,

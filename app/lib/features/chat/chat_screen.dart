@@ -237,7 +237,9 @@ class _ChatScreenState extends State<ChatScreen> {
     final hasQuery = _search.text.trim().isNotEmpty;
 
     return Scaffold(
-      backgroundColor: AppColors.absoluteBlack,
+      // Transparente: a cor do tema + os ícones são pintados na RAIZ do app,
+      // atrás do Navigator, para TODA rota compartilhar o mesmo fundo.
+      backgroundColor: Colors.transparent,
       floatingActionButton: _ChatFab(
         onTap: () => Navigator.of(context).pushNamed(AppRoutes.createGroup),
       ),

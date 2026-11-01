@@ -187,7 +187,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Stack(
         children: [
           Scaffold(
-            backgroundColor: AppColors.absoluteBlack,
+            // Transparente: a cor do tema + os ícones são pintados na RAIZ do
+            // app (atrás do Navigator), então TODA rota — aba ou empurrada —
+            // compartilha um fundo contínuo.
+            backgroundColor: Colors.transparent,
             body: IndexedStack(index: _index, children: pages),
             bottomNavigationBar: YazzokiBottomBar(
               currentIndex: _index,

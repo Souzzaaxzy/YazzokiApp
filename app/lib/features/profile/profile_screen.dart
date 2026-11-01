@@ -21,8 +21,9 @@ import '../../core/widgets/hud_label.dart';
 import '../../core/widgets/local_palette.dart';
 import '../../core/widgets/profile_views_icon.dart';
 import '../../core/widgets/repost_icon.dart';
-import '../../core/widgets/yazzoki_button.dart';
+import '../../core/widgets/theme_watcher.dart';
 import '../../core/widgets/user_avatar.dart';
+import '../../core/widgets/yazzoki_button.dart';
 import '../../data/api_config.dart';
 import '../../models/follow.dart';
 import '../../models/yazzoki_user.dart';
@@ -318,7 +319,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           );
 
     return Scaffold(
-      backgroundColor: AppColors.absoluteBlack,
+      // Transparente: a cor do tema + os ícones são pintados na RAIZ do app,
+      // atrás do Navigator, para TODA rota compartilhar o mesmo fundo.
+      backgroundColor: Colors.transparent,
       floatingActionButton: isOwn ? const CreatePostFab() : null,
       body: RefreshIndicator(
         color: AppColors.electricBlue,
@@ -930,17 +933,24 @@ class CreatePostFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlowContainer(
-      glow: Glow.medium,
-      color: AppColors.glowMedium,
-      background: AppColors.primaryBlue,
-      borderRadius: BorderRadius.circular(999),
-      child: InkWell(
-        onTap: () => _openChooser(context),
+    // The accent must follow the ACTIVE theme. `AppColors.primaryBlue` is a
+    // static getter, and a static read registers NO inherited dependency, so
+    // the Scaffold's cached FAB would keep the old colour after a theme
+    // switch. ThemeWatcher registers that dependency and hands back a fresh
+    // instance, which re-resolves the colour.
+    return ThemeWatcher(
+      builder: (_) => GlowContainer(
+        glow: Glow.medium,
+        color: AppColors.glowMedium,
+        background: AppColors.primaryBlue,
         borderRadius: BorderRadius.circular(999),
-        child: Padding(
-          padding: EdgeInsets.all(AppDimensions.spaceLg),
-          child: Icon(Icons.add_rounded, size: 28, color: AppColors.techWhite),
+        child: InkWell(
+          onTap: () => _openChooser(context),
+          borderRadius: BorderRadius.circular(999),
+          child: Padding(
+            padding: EdgeInsets.all(AppDimensions.spaceLg),
+            child: Icon(Icons.add_rounded, size: 28, color: AppColors.techWhite),
+          ),
         ),
       ),
     );
