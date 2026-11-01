@@ -265,6 +265,7 @@ class UserRepository {
     String? bio,
     String? avatarUrl,
     String? bannerUrl,
+    String? publicId,
     bool clearBanner = false,
   }) async {
     final json = await _api.patch<Map<String, dynamic>>(
@@ -272,6 +273,8 @@ class UserRepository {
       data: {
         if (nickname != null) 'nickname': nickname,
         if (bio != null) 'bio': bio,
+        // The public `#id` the user wants to adopt (server validates it).
+        if (publicId != null) 'publicId': publicId,
         if (avatarUrl != null) 'avatarUrl': avatarUrl,
         // `null` clears the banner server-side; omitting the key leaves it
         // untouched — hence the explicit flag instead of a nullable value.
@@ -325,6 +328,7 @@ class ProfileViewRepository {
                 user: PublicUserDto.fromJson(
                   (e['user'] as Map<String, dynamic>?) ?? const {},
                 ).toModel(),
+                views: (e['views'] as num?)?.toInt() ?? 1,
                 viewedAt: DateTime.tryParse((e['viewedAt'] as String?) ?? '') ??
                     DateTime.now(),
               ))

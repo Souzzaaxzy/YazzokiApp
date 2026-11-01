@@ -191,6 +191,8 @@ class _NotificationTile extends StatelessWidget {
         return 'repostou o seu post.';
       case 'STORY_REPOST':
         return 'repostou o seu stories.';
+      case 'PROFILE_VIEW':
+        return 'visualizou o seu perfil.';
       default:
         return 'interagiu com você.';
     }

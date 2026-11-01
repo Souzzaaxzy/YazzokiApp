@@ -47,6 +47,12 @@ class _PostVideoPreviewState extends State<PostVideoPreview> {
   VideoPlayerController? _controller;
   bool _initialized = false;
 
+  /// Display ratio, resolved ONCE. The player's real size is NOT used after
+  /// the first layout: changing an item's height while the list is scrolling
+  /// changes the scroll extent mid-gesture and makes the feed "bounce" on its
+  /// own. With a cover we use the cover; otherwise a stable 16:9 box.
+  double? _ratio;
+
   @override
   void initState() {
     super.initState();
@@ -82,6 +88,28 @@ class _PostVideoPreviewState extends State<PostVideoPreview> {
     }
   }
 
+  /// Learns the cover's aspect ratio ONCE (so the box never resizes later).
+  void _resolveRatioOnce(ImageProvider provider) {
+    if (_ratio != null) return;
+    final stream = provider.resolve(ImageConfiguration.empty);
+    late final ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (ImageInfo info, bool sync) {
+        final img = info.image;
+        final w = img.width.toDouble();
+        final h = img.height.toDouble();
+        info.dispose();
+        stream.removeListener(listener);
+        if (mounted && w > 0 && h > 0) {
+          final r = (w / h).clamp(0.5, 2.0).toDouble();
+          if (_ratio != r) setState(() => _ratio = r);
+        }
+      },
+      onError: (_, __) {},
+    );
+    stream.addListener(listener);
+  }
+
   /// Pause when not visible/active; play (muted) when visible+active.
   void _updatePlayback() {
     if (!mounted || !_initialized) return;
@@ -114,8 +142,7 @@ class _PostVideoPreviewState extends State<PostVideoPreview> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final maxWidth = constraints.maxWidth;
-          final ratio =
-              _initialized ? _aspectOf(_controller?.value.size) : (16 / 9);
+          final ratio = _ratio ?? (16 / 9);
           final height = (maxWidth / ratio).clamp(minHeight, maxHeight);
           return SizedBox(
             width: maxWidth,
@@ -130,6 +157,14 @@ class _PostVideoPreviewState extends State<PostVideoPreview> {
                     CachedNetworkImage(
                       imageUrl: widget.thumbnailUrl!,
                       fit: BoxFit.cover,
+                      imageBuilder: (context, provider) {
+                        _resolveRatioOnce(provider);
+                        return Image(
+                          image: provider,
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.medium,
+                        );
+                      },
                       placeholder: (_, __) =>
                           const _CoverFallback(),
                       errorWidget: (_, __, ___) =>
@@ -180,10 +215,6 @@ class _PostVideoPreviewState extends State<PostVideoPreview> {
     );
   }
 
-  double _aspectOf(Size? size) {
-    if (size == null || size.isEmpty) return 16 / 9;
-    return (size.width / size.height).clamp(0.5, 2.0).toDouble();
-  }
 }
 
 /// Neutral placeholder behind the play badge while the cover loads (or as a

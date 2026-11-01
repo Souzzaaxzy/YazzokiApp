@@ -23,8 +23,9 @@ class _FeedScreenState extends State<FeedScreen> {
   final ScrollController _scroll = ScrollController();
 
   /// Id of the post whose video preview should be playing (single-active).
-  /// Updated on scroll; passed down so only ONE video ever autoplays.
-  String? _activeVideoId;
+  /// A ValueNotifier (NOT setState): only the posts list rebuilds when the
+  /// active video changes, so scrolling never rebuilds the whole screen.
+  final ValueNotifier<String?> _activeVideo = ValueNotifier<String?>(null);
 
   /// Global keys for the video posts, used to compute the most visible one.
   final Map<String, GlobalKey> _videoKeys = {};
@@ -46,6 +47,7 @@ class _FeedScreenState extends State<FeedScreen> {
   void dispose() {
     _scroll.removeListener(_updateActiveVideo);
     _scroll.dispose();
+    _activeVideo.dispose();
     super.dispose();
   }
 
@@ -82,8 +84,8 @@ class _FeedScreenState extends State<FeedScreen> {
         closestId = entry.key;
       }
     }
-    if (closestId != _activeVideoId) {
-      setState(() => _activeVideoId = closestId);
+    if (closestId != _activeVideo.value) {
+      _activeVideo.value = closestId;
     }
   }
 
@@ -164,14 +166,31 @@ class _FeedScreenState extends State<FeedScreen> {
                     // most-visible one for autoplay.
                     final videoKey =
                         isVideo ? (_videoKeys[post.id] ??= GlobalKey()) : null;
+                    if (!isVideo) {
+                      return KeyedSubtree(
+                        key: ObjectKey(post.id),
+                        child: PostCard(
+                          post: post,
+                          onComment: () =>
+                              CommentsSheet.show(context, post: post),
+                        ),
+                      );
+                    }
+                    // Only VIDEO cards listen to the active-video notifier, so
+                    // a scroll frame rebuilds at most the video cards — never
+                    // the whole feed (that was making the list fight the
+                    // user's gesture).
                     return KeyedSubtree(
                       key: ObjectKey(post.id),
-                      child: PostCard(
-                        post: post,
-                        onComment: () =>
-                            CommentsSheet.show(context, post: post),
-                        videoActive: isVideo && _activeVideoId == post.id,
-                        videoKey: videoKey,
+                      child: ValueListenableBuilder<String?>(
+                        valueListenable: _activeVideo,
+                        builder: (context, activeId, _) => PostCard(
+                          post: post,
+                          onComment: () =>
+                              CommentsSheet.show(context, post: post),
+                          videoActive: activeId == post.id,
+                          videoKey: videoKey,
+                        ),
                       ),
                     );
                   },

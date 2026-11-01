@@ -372,6 +372,7 @@ class _YazzokiAppState extends State<YazzokiApp> with WidgetsBindingObserver {
         }
       case 'FOLLOW':
       case 'STORY_REPOST':
+      case 'PROFILE_VIEW':
         // A new follower / a story repost → open the actor's profile.
         final nickname = data['actorNickname'] as String?;
         if (nickname != null && nickname.isNotEmpty) {

@@ -167,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final pages = <Widget>[
       const FeedScreen(),
       ChatScreen(onOpenAkame: _openAkame),
-      const SearchScreen(),
+      SearchScreen(active: _index == 2),
       const NotificationsScreen(),
       ProfileScreen(active: _index == 4),
     ];

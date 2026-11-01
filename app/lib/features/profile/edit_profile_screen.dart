@@ -35,6 +35,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nicknameController;
   late final TextEditingController _bioController;
+  /// The public `#id` the user wants (empty = keep the current one).
+  late final TextEditingController _idController;
   bool _saving = false;
   bool _uploadingAvatar = false;
   bool _uploadingBanner = false;
@@ -49,6 +51,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nicknameController =
         TextEditingController(text: (user?.nickname ?? '').replaceAll('@', ''));
     _bioController = TextEditingController(text: user?.bio ?? '');
+    _idController = TextEditingController(
+      text: (user?.publicId ?? 0) == 0 ? '' : '${user!.publicId}',
+    );
     _initialized = true;
   }
 
@@ -56,6 +61,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void dispose() {
     _nicknameController.dispose();
     _bioController.dispose();
+    _idController.dispose();
     super.dispose();
   }
 
@@ -317,9 +323,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _saving = true);
     try {
+      final typedId =
+          _idController.text.trim().replaceAll('#', '').replaceAll(' ', '');
+      final currentId = '${AppStateScope.of(context).currentUser?.publicId ?? ''}';
       await AppStateScope.of(context).updateProfile(
         nickname: _nicknameController.text.trim().replaceAll(RegExp(r'^@+'), ''),
         bio: _bioController.text.trim(),
+        // Só envia quando o usuário realmente mudou o número.
+        publicId: (typedId.isNotEmpty && typedId != currentId) ? typedId : null,
       );
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -458,6 +469,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       color: AppColors.holographicBlue, size: 20),
                   textInputAction: TextInputAction.next,
                   validator: (v) => Validators.required(v, label: 'Nickname obrigatório'),
+                ),
+                const SizedBox(height: AppDimensions.spaceLg),
+                // ── Mudar ID (#id) ─────────────────────────────────────
+                // O usuário escolhe o número que quiser; o servidor recusa
+                // IDs já em uso ou não numéricos.
+                YazzokiTextField(
+                  label: 'Mudar ID (#id)',
+                  controller: _idController,
+                  keyboardType: TextInputType.number,
+                  prefix: Icon(Icons.tag_rounded,
+                      color: AppColors.holographicBlue, size: 20),
+                  textInputAction: TextInputAction.next,
+                  validator: (v) {
+                    final t = (v ?? '').trim().replaceAll('#', '');
+                    if (t.isEmpty) return null; // manter o atual
+                    if (!RegExp(r'^\d{1,8}$').hasMatch(t)) {
+                      return 'Use de 1 a 8 números';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: AppDimensions.spaceLg),
                 YazzokiTextField(

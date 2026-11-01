@@ -607,6 +607,7 @@ class _FakeUserRepository implements UserRepository {
     String? bio,
     String? avatarUrl,
     String? bannerUrl,
+    String? publicId,
     bool clearBanner = false,
   }) async {
     final old = _store.currentUser;
@@ -618,6 +619,11 @@ class _FakeUserRepository implements UserRepository {
       avatarUrl: avatarUrl ?? old.avatarUrl,
       // Mirrors the server: `null` clears, omitting leaves it untouched.
       bannerUrl: clearBanner ? null : (bannerUrl ?? old.bannerUrl),
+      // The public `#id` the user adopted (numeric).
+      publicId: publicId != null ? int.tryParse(publicId) : old.publicId,
+      publicIdLabel: publicId != null
+          ? '#${publicId.padLeft(8, '0')}'
+          : old.publicIdLabel,
     );
     _store.users[old.id] = updated;
     return updated;

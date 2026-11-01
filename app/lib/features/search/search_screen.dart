@@ -15,7 +15,13 @@ import '../../models/search_history_entry.dart';
 
 /// Yazzoki search — backend search by nickname.
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({super.key, this.active = true});
+
+  /// A aba de Buscar está VISÍVEL? O `IndexedStack` do Home mantém a tela
+  /// VIVA, então o `dispose` não roda ao trocar de aba e o texto digitado
+  /// continuaria lá. O Home informa a visibilidade e a tela LIMPA a busca
+  /// quando ela sai de vista (pedido: "ao sair da aba, a barra reseta").
+  final bool active;
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -26,6 +32,26 @@ class _SearchScreenState extends State<SearchScreen> {
   List<YazzokiUser> _results = const [];
   bool _loading = false;
   bool _searched = false;
+
+  @override
+  void didUpdateWidget(covariant SearchScreen old) {
+    super.didUpdateWidget(old);
+    // A aba saiu de vista → limpa o campo e volta ao estado inicial.
+    if (old.active && !widget.active) {
+      _resetSearch();
+    }
+  }
+
+  /// Limpa a barra e a lista (a busca volta ao estado "sem consulta").
+  void _resetSearch() {
+    if (_controller.text.isEmpty && !_searched && _results.isEmpty) return;
+    _controller.clear();
+    setState(() {
+      _results = const [];
+      _searched = false;
+      _loading = false;
+    });
+  }
 
   @override
   void didChangeDependencies() {

@@ -1287,6 +1287,7 @@ class AppState extends ChangeNotifier {
     String? bio,
     String? avatarUrl,
     String? bannerUrl,
+    String? publicId,
     bool clearBanner = false,
   }) async {
     final updated = await _users.updateProfile(
@@ -1294,6 +1295,7 @@ class AppState extends ChangeNotifier {
       bio: bio,
       avatarUrl: avatarUrl,
       bannerUrl: bannerUrl,
+      publicId: publicId,
       clearBanner: clearBanner,
     );
     _currentUser = updated;

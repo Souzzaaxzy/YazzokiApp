@@ -49,8 +49,9 @@ void main() {
 
       expect(find.byType(ProfileViewsSheet), findsOneWidget);
       expect(find.textContaining('QUEM VIU'), findsOneWidget);
-      // Both visitors are listed with a relative time.
-      expect(find.textContaining('A '), findsWidgets);
+      // Both visitors are listed with the visit count + when they came.
+      expect(find.textContaining('Visualizou seu perfil'), findsWidgets);
+      expect(find.textContaining('Última vez'), findsWidgets);
     });
 
     testWidgets('o perfil próprio NÃO registra auto-visita',

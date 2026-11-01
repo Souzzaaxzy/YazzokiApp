@@ -235,8 +235,9 @@ void main() {
       final state = await seededAppState();
       await pumpYazzokiApp(tester, const EditProfileScreen(), state: state);
 
+      // 0 = Nickname, 1 = Mudar ID, 2 = Bio (a nova ordem dos campos).
       await tester.enterText(find.byType(TextField).at(0), 'Neo');
-      await tester.enterText(find.byType(TextField).at(1), 'The one');
+      await tester.enterText(find.byType(TextField).at(2), 'The one');
       await tester.ensureVisible(find.text('SALVAR'));
       await tester.tap(find.text('SALVAR'));
       await tester.pumpAndSettle();

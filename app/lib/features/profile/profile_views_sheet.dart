@@ -184,10 +184,23 @@ class _ProfileViewsSheetState extends State<ProfileViewsSheet> {
             size: 37,
           ),
           title: Text(v.user.nickname, style: AppTextStyles.body),
-          subtitle: Text(
-            viewedAgo(v.viewedAt),
-            style: AppTextStyles.caption,
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Visualizou seu perfil ${v.views} '
+                '${v.views == 1 ? 'vez' : 'vezes'}',
+                style: AppTextStyles.caption,
+              ),
+              Text(
+                'Última vez ${viewedAgo(v.viewedAt).toLowerCase()}',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.holographicBlue,
+                ),
+              ),
+            ],
           ),
+          isThreeLine: true,
           trailing: Icon(
             Icons.chevron_right_rounded,
             color: AppColors.holographicBlue,
